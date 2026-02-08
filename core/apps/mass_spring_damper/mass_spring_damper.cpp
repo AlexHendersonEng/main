@@ -22,7 +22,7 @@ int main() {
   const double h = 0.1;
 
   // Run simulation
-  Solution solution = euler_forward(f, t0, t1, y0, h);
+  Solution solution = runge_kutta_4(f, t0, t1, y0, h);
 
   // Write simulation data to csv file
   to_csv("output.csv", solution.t, solution.y);
