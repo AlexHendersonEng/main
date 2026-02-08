@@ -1,0 +1,43 @@
+{
+    "version": 10,
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default Config",
+            "description": "Default configuration",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "displayName": "Default Build",
+            "description": "Default build",
+            "configurePreset": "default"
+        }
+    ],
+    "testPresets": [
+
+    ],
+    "packagePresets": [
+
+    ],
+    "workflowPresets": [
+        {
+            "name": "default",
+            "displayName": "Default Workflow",
+            "description": "Default workflow",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "default"
+                },
+                {
+                    "type": "build",
+                    "name": "default"
+                }
+            ]
+        }
+    ]
+}

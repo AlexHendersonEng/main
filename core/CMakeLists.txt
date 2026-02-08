@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.23)
+project(simulation-foundry)
+include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_subdirectory("${CMAKE_SOURCE_DIR}/src")
+add_subdirectory("${CMAKE_SOURCE_DIR}/apps")
