@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "solvers/euler_forward.h"
+#include "ode/euler_forward.h"
 #include "utils/utils.h"
 
 int main() {
