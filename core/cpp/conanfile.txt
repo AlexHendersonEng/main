@@ -1,9 +1,0 @@
-[requires]
-
-
-[tool_requires]
-doxygen/1.16.1
-
-[generators]
-CMakeDeps
-CMakeToolchain

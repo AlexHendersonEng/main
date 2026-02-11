@@ -2,20 +2,28 @@
 
 ## Conan Instructions
 
-Detect profile
+1. Detect profile
 
-```bash
-conan profile detect --force
-```
+    ```bash
+    conan profile detect --force
+    ```
 
-Install
+1. Install
 
-```bash
-conan install . --output-folder=build --build=missing
-```
+    ```bash
+    conan install . --output-folder=build --build=missing
+    ```
 
-Configure
+    To generate .ps1 files required for PowerShell add `--conf tools.env.virtualenv:powershell=pwsh`
 
-```bash
-cmake --preset conan-default
-```
+1. Activate Conan environment
+
+    ```bash
+    conanbuild.(bat|ps1|sh)
+    ```
+
+1. Configure
+
+    ```bash
+    cmake --preset conan-default
+    ```
