@@ -27,3 +27,17 @@
     ```bash
     cmake --preset conan-default
     ```
+
+## Pre-commit Instructions
+
+1. To install pre-commit hooks
+
+    ```bash
+    pre-commit install
+    ```
+
+1. To run hooks on all files
+
+    ```bash
+    pre-commit run --all-files
+    ```
