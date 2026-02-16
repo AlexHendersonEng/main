@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "ode/euler_forward.h"
+#include "ode/runge_kutta_4.h"
 #include "utils/utils.h"
 
 int main() {
@@ -21,11 +22,13 @@ int main() {
   const std::vector<double> y0{1.0, 0.0};
   const double h = 0.1;
 
-  // Run simulation
-  Solution solution = euler_forward(f, t0, t1, y0, h);
+  // Run simulations
+  Solution euler_forward_sol = euler_forward(f, t0, t1, y0, h);
+  Solution runge_kutta_4_sol = runge_kutta_4(f, t0, t1, y0, h);
 
   // Write simulation data to csv file
-  to_csv("output.csv", solution.t, solution.y);
+  to_csv("euler_forward.csv", euler_forward_sol.t, euler_forward_sol.y);
+  to_csv("runge_kutta_4.csv", runge_kutta_4_sol.t, runge_kutta_4_sol.y);
 
   return 0;
 }
