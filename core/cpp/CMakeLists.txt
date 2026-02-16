@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 4.0)
 project(simulation-foundry)
 
 # Includes
+include(CTest)
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
 
 # Variables
