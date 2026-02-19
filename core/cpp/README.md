@@ -35,4 +35,4 @@ This folder contains the C++ core including the source, CMake configuration, exa
 
 ## Examples
 
-After building, example binaries can be found under `build/examples`.
+After building, example binaries can be found under `out/build/<preset>/examples`.
