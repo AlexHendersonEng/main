@@ -5,11 +5,6 @@
 
 This folder contains Python tooling for analysing, visualising and automating experiments driven by the C++ simulation core. The layout uses a modern packaging approach (`pyproject.toml`) and includes example scripts and Jupyter notebooks to help you get started.
 
-## Prerequisites
-
-- Python 3.12 or newer.
-- uv for dependency management.
-
 ## Installing Dependencies
 
 Using uv:

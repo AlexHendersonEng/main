@@ -15,5 +15,4 @@ target_link_libraries(
 )
 
 # Google test
-include(GoogleTest)
 gtest_discover_tests("${target_name}")
