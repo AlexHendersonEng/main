@@ -1,12 +1,46 @@
+/**
+ * @file runge_kutta_4.cpp
+ * @brief Implementation of the classical fourth-order Runge–Kutta ODE solver.
+ *
+ * This file provides the implementation of the RK4 method for numerically
+ * solving initial value problems for systems of ordinary differential
+ * equations.
+ */
+
 #include "ode/runge_kutta_4.h"
 
 #include <iostream>
 
+/**
+ * @brief Solve an initial value problem using the classical fourth-order
+ * Runge–Kutta method.
+ *
+ * This function integrates a system of ordinary differential equations of the
+ * form
+ * \f[
+ *   \frac{dy}{dt} = f(t, y)
+ * \f]
+ * from time \f$t_0\f$ to \f$t_1\f$ using a fixed step size \f$h\f$.
+ *
+ * @param f   Right-hand side function defining the ODE system.
+ * @param t0  Initial time.
+ * @param t1  Final time.
+ * @param y0  Initial state vector at time \f$t_0\f$.
+ * @param h   Time step size (must be positive).
+ *
+ * @return A @c Solution object containing the time points and corresponding
+ *         numerical solution vectors.
+ *
+ * @throws std::invalid_argument if @p h is not positive or if @p t1 <= @p t0.
+ *
+ * @note This method is fourth-order accurate and is widely used for solving
+ *       non-stiff ordinary differential equations.
+ */
 Solution runge_kutta_4(const std::function<std::vector<double>(
                            const double&, const std::vector<double>&)>& f,
                        const double& t0, const double& t1,
                        const std::vector<double>& y0, const double& h) {
-  // Check arguments
+  // Validate input arguments
   if (h <= 0.0) {
     throw std::invalid_argument("Step size h must be positive.");
   }
@@ -14,56 +48,57 @@ Solution runge_kutta_4(const std::function<std::vector<double>(
     throw std::invalid_argument("t1 must be greater than t0.");
   }
 
-  // Compute number of steps
+  // Compute the number of integration steps
   const int steps = static_cast<int>(std::ceil((t1 - t0) / h));
 
-  // Initialise arrays
+  // Initialise solution storage
   std::vector<std::vector<double>> y(steps + 1);
   y[0] = y0;
 
   std::vector<double> t(steps + 1);
   t[0] = t0;
 
-  // Time stepping
+  // Perform time stepping using the RK4 scheme
   for (int i = 0; i < steps; ++i) {
     const std::vector<double>& yi = y[i];
     const double ti = t[i];
     const size_t n = yi.size();
 
-    // k1
+    // First slope: k1 = f(t_n, y_n)
     std::vector<double> k1 = f(ti, yi);
 
-    // k2
+    // Second slope: k2 = f(t_n + h/2, y_n + h/2 * k1)
     std::vector<double> yk2(n);
     for (size_t j = 0; j < n; ++j) {
       yk2[j] = yi[j] + 0.5 * h * k1[j];
     }
     std::vector<double> k2 = f(ti + 0.5 * h, yk2);
 
-    // k3
+    // Third slope: k3 = f(t_n + h/2, y_n + h/2 * k2)
     std::vector<double> yk3(n);
     for (size_t j = 0; j < n; ++j) {
       yk3[j] = yi[j] + 0.5 * h * k2[j];
     }
     std::vector<double> k3 = f(ti + 0.5 * h, yk3);
 
-    // k4
+    // Fourth slope: k4 = f(t_n + h, y_n + h * k3)
     std::vector<double> yk4(n);
     for (size_t j = 0; j < n; ++j) {
       yk4[j] = yi[j] + h * k3[j];
     }
     std::vector<double> k4 = f(ti + h, yk4);
 
-    // Update solution
+    // Combine slopes to compute next state
     y[i + 1].resize(n);
     for (size_t j = 0; j < n; ++j) {
       y[i + 1][j] =
           yi[j] + (h / 6.0) * (k1[j] + 2.0 * k2[j] + 2.0 * k3[j] + k4[j]);
     }
 
-    // Update time
+    // Advance time
     t[i + 1] = ti + h;
   }
 
+  // Return the computed solution
   return {t, y};
 }

@@ -1,3 +1,15 @@
+/**
+ * @file runge_kutta_4_test.cpp
+ * @brief Unit tests for the classical fourth-order Runge–Kutta ODE solver using
+ * Google Test.
+ *
+ * This file contains a set of test cases for the function `runge_kutta_4`.
+ * The tests cover edge cases (invalid arguments), basic functionality, and
+ * correctness for one-dimensional and multi-dimensional systems.
+ *
+ * The tests are implemented using the Google Test framework.
+ */
+
 #include "ode/runge_kutta_4.h"
 
 #include <gtest/gtest.h>
@@ -6,13 +18,21 @@
 #include <functional>
 #include <vector>
 
-// Test fixture for Runge Kutta 4th order method tests
+/**
+ * @brief Test fixture for Runge–Kutta 4th order method tests.
+ *
+ * Provides a shared tolerance for floating-point comparisons and any
+ * setup/teardown logic if needed.
+ */
 class RungeKutta4Test : public ::testing::Test {
  protected:
+  // Allowed numerical tolerance for solution comparisons
   const double tolerance = 1e-6;
 };
 
-// Test: Invalid step size (h <= 0)
+/**
+ * @brief Test that negative step size throws an exception.
+ */
 TEST_F(RungeKutta4Test, NegativeStepSize) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{y[0]};
@@ -22,6 +42,9 @@ TEST_F(RungeKutta4Test, NegativeStepSize) {
       { runge_kutta_4(f, 0.0, 1.0, {1.0}, -0.1); }, std::invalid_argument);
 }
 
+/**
+ * @brief Test that zero step size throws an exception.
+ */
 TEST_F(RungeKutta4Test, ZeroStepSize) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{y[0]};
@@ -31,7 +54,9 @@ TEST_F(RungeKutta4Test, ZeroStepSize) {
       { runge_kutta_4(f, 0.0, 1.0, {1.0}, 0.0); }, std::invalid_argument);
 }
 
-// Test: Invalid time interval (t1 <= t0)
+/**
+ * @brief Test that t1 < t0 throws an exception.
+ */
 TEST_F(RungeKutta4Test, InvalidTimeInterval) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{y[0]};
@@ -41,6 +66,9 @@ TEST_F(RungeKutta4Test, InvalidTimeInterval) {
       { runge_kutta_4(f, 1.0, 0.0, {1.0}, 0.1); }, std::invalid_argument);
 }
 
+/**
+ * @brief Test that t1 == t0 throws an exception.
+ */
 TEST_F(RungeKutta4Test, EqualStartEndTime) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{y[0]};
@@ -50,7 +78,9 @@ TEST_F(RungeKutta4Test, EqualStartEndTime) {
       { runge_kutta_4(f, 1.0, 1.0, {1.0}, 0.1); }, std::invalid_argument);
 }
 
-// Test: Simple constant function dy/dt = 0
+/**
+ * @brief Test RK4 method with constant derivative dy/dt = 0.
+ */
 TEST_F(RungeKutta4Test, ConstantFunction) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{0.0};
@@ -64,7 +94,9 @@ TEST_F(RungeKutta4Test, ConstantFunction) {
   }
 }
 
-// Test: Linear function dy/dt = 1
+/**
+ * @brief Test RK4 method with linear derivative dy/dt = 1.
+ */
 TEST_F(RungeKutta4Test, LinearFunction) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{1.0};
@@ -77,7 +109,9 @@ TEST_F(RungeKutta4Test, LinearFunction) {
   EXPECT_NEAR(sol.y.back()[0], 1.0, tolerance);
 }
 
-// Test: Exponential growth dy/dt = y
+/**
+ * @brief Test RK4 method with exponential growth dy/dt = y.
+ */
 TEST_F(RungeKutta4Test, ExponentialGrowth) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{y[0]};
@@ -88,12 +122,12 @@ TEST_F(RungeKutta4Test, ExponentialGrowth) {
 
   // Exact solution: y(t) = e^t, so y(1) = e ≈ 2.71828
   double exact = std::exp(1.0);
-  EXPECT_NEAR(
-      sol.y.back()[0], exact,
-      0.01);  // Larger tolerance due to Runge Kutta 4th order method error
+  EXPECT_NEAR(sol.y.back()[0], exact, 0.01);  // RK4 approximation error
 }
 
-// Test: Multi-dimensional system
+/**
+ * @brief Test RK4 method on a 2D harmonic oscillator system.
+ */
 TEST_F(RungeKutta4Test, MultiDimensionalSystem) {
   // System: dx/dt = y, dy/dt = -x (harmonic oscillator)
   auto f = [](const double& t, const std::vector<double>& y) {
@@ -117,7 +151,9 @@ TEST_F(RungeKutta4Test, MultiDimensionalSystem) {
   EXPECT_NEAR(sol.y.back()[1], exact_y, 0.05);
 }
 
-// Test: Correct number of steps
+/**
+ * @brief Test that the number of steps in the solution is correct.
+ */
 TEST_F(RungeKutta4Test, CorrectNumberOfSteps) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{0.0};
@@ -131,7 +167,9 @@ TEST_F(RungeKutta4Test, CorrectNumberOfSteps) {
   EXPECT_EQ(sol.y.size(), expected_steps + 1);
 }
 
-// Test: Time array correctness
+/**
+ * @brief Test correctness of the time array values.
+ */
 TEST_F(RungeKutta4Test, TimeArrayCorrectness) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{0.0};
@@ -147,7 +185,10 @@ TEST_F(RungeKutta4Test, TimeArrayCorrectness) {
   EXPECT_NEAR(sol.t[4], 1.0, tolerance);
 }
 
-// Test: Non-integer number of steps (h doesn't divide (t1-t0) evenly)
+/**
+ * @brief Test handling of non-integer number of steps (h does not divide
+ * interval evenly).
+ */
 TEST_F(RungeKutta4Test, NonIntegerSteps) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{1.0};
@@ -160,7 +201,9 @@ TEST_F(RungeKutta4Test, NonIntegerSteps) {
   EXPECT_EQ(sol.t.size(), 5);  // 4 steps + initial point
 }
 
-// Test: Time-dependent function dy/dt = t
+/**
+ * @brief Test RK4 method for a time-dependent derivative dy/dt = t.
+ */
 TEST_F(RungeKutta4Test, TimeDependentFunction) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{t};
@@ -173,7 +216,9 @@ TEST_F(RungeKutta4Test, TimeDependentFunction) {
   EXPECT_NEAR(sol.y.back()[0], 2.0, 0.01);
 }
 
-// Test: Large step size
+/**
+ * @brief Test behavior with a large step size (larger than interval).
+ */
 TEST_F(RungeKutta4Test, LargeStepSize) {
   auto f = [](const double& t, const std::vector<double>& y) {
     return std::vector<double>{1.0};
