@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file solution.hpp
+ * @file solution.h
  * @brief Data structure for storing numerical ODE solutions.
  *
  * This header defines the @c Solution struct, which represents the result of a

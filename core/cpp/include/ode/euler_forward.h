@@ -16,7 +16,7 @@
 
 #include <functional>
 
-#include "solution.hpp"
+#include "solution.h"
 
 /**
  * @brief Solve an initial value problem using the forward (explicit) Euler
