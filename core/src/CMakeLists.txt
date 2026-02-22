@@ -1,5 +1,5 @@
 # Variables
-set("target_name" "simulation_foundry")
+set("target_name" "simulation_foundry_core")
 
 # Library
 file(GLOB_RECURSE "source_files" CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")

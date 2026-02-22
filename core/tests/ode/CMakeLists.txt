@@ -1,14 +1,16 @@
 # Variables
-set("target_name" "utils_test")
+set("target_name" "ode_test")
 
 # Executable
 add_executable(
   "${target_name}"
-  utils_test.cpp
+  ode_test.cpp
+  euler_forward_test.cpp
+  runge_kutta_4_test.cpp
 )
 target_link_libraries(
   "${target_name}"
-  "simulation_foundry"
+  "simulation_foundry_core"
   GTest::gtest
 )
 
