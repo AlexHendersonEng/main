@@ -109,8 +109,3 @@ TEST_F(ToCsvTest, ReturnsOneForInvalidPath) {
   // Writing to a non-existent directory should fail
   EXPECT_EQ(to_csv("/nonexistent_dir/output.csv", t, y), 1);
 }
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
