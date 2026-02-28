@@ -2,7 +2,7 @@
 
 #include "ode/euler_forward.h"
 #include "ode/runge_kutta_4.h"
-#include "utils/utils.h"
+#include "utils/output.h"
 
 int main() {
   // Mass spring damper function

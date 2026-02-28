@@ -1,7 +1,6 @@
-#include "utils/utils.h"
+#include "utils/output.h"
 
 #include <fstream>
-#include <vector>
 
 int to_csv(const std::string& filename, const std::vector<double>& t,
            const std::vector<std::vector<double>>& y) {
@@ -28,12 +27,4 @@ int to_csv(const std::string& filename, const std::vector<double>& t,
   }
 
   return 0;
-}
-
-double vec_norm(const std::vector<double>& v) {
-  double sum = 0.0;
-  for (double val : v)
-    sum += val * val;
-
-  return std::sqrt(sum);
 }

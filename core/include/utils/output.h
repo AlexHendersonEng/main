@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file utils.h
+ * @file output.h
  * @brief Utility functions for input/output operations.
  *
  * This header declares helper functions used for exporting numerical results,
@@ -36,21 +36,3 @@
  */
 int to_csv(const std::string& filename, const std::vector<double>& t,
            const std::vector<std::vector<double>>& y);
-
-/**
- * @brief Compute the Euclidean (L2) norm of a vector.
- *
- * This function calculates the Euclidean norm of the input vector,
- * defined as:
- * @f[
- *   \|v\|_2 = \sqrt{\sum_{i=0}^{n-1} v_i^2}
- * @f]
- *
- * @param v Input vector.
- *
- * @return The Euclidean norm (L2 norm) of @p v. Returns 0.0 if the
- *         vector is empty.
- *
- * @note This function does not modify the input vector.
- */
-double vec_norm(const std::vector<double>& v);
