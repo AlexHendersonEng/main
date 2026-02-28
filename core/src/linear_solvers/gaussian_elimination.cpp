@@ -2,35 +2,6 @@
 
 #include <cmath>
 
-/**
- * @brief Performs Gaussian elimination with partial pivoting.
- *
- * This implementation consists of two main phases:
- *
- * 1. Forward Elimination:
- *    - Converts the matrix A into an upper triangular matrix.
- *    - Uses partial pivoting to improve numerical stability by
- *      selecting the largest pivot element in the current column.
- *
- * 2. Back Substitution:
- *    - Computes the solution vector x starting from the last row
- *      upward once the matrix is in upper triangular form.
- *
- * @param A A square matrix (n x n) of coefficients.
- *          Modified internally during elimination.
- * @param b A vector of size n representing the right-hand side.
- *          Modified internally during elimination.
- *
- * @return std::vector<double> The computed solution vector x.
- *
- * @warning This function does not check for:
- *          - Singular matrices
- *          - Division by zero
- *          - Ill-conditioned systems
- *
- * @complexity Time complexity: O(n^3)
- * @complexity Space complexity: O(n^2) due to matrix copy
- */
 std::vector<double> gaussian_elimination(std::vector<std::vector<double>> A,
                                          std::vector<double> b) {
   // Pre-allocated solution array

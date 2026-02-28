@@ -1,41 +1,7 @@
-/**
- * @file runge_kutta_4.cpp
- * @brief Implementation of the classical fourth-order Runge–Kutta ODE solver.
- *
- * This file provides the implementation of the RK4 method for numerically
- * solving initial value problems for systems of ordinary differential
- * equations.
- */
-
 #include "ode/runge_kutta_4.h"
 
 #include <iostream>
 
-/**
- * @brief Solve an initial value problem using the classical fourth-order
- * Runge–Kutta method.
- *
- * This function integrates a system of ordinary differential equations of the
- * form
- * \f[
- *   \frac{dy}{dt} = f(t, y)
- * \f]
- * from time \f$t_0\f$ to \f$t_1\f$ using a fixed step size \f$h\f$.
- *
- * @param f   Right-hand side function defining the ODE system.
- * @param t0  Initial time.
- * @param t1  Final time.
- * @param y0  Initial state vector at time \f$t_0\f$.
- * @param h   Time step size (must be positive).
- *
- * @return A @c Solution object containing the time points and corresponding
- *         numerical solution vectors.
- *
- * @throws std::invalid_argument if @p h is not positive or if @p t1 <= @p t0.
- *
- * @note This method is fourth-order accurate and is widely used for solving
- *       non-stiff ordinary differential equations.
- */
 Solution runge_kutta_4(const std::function<std::vector<double>(
                            const double&, const std::vector<double>&)>& f,
                        const double& t0, const double& t1,
