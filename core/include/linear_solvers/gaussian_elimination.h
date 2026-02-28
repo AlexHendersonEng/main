@@ -1,3 +1,10 @@
+#pragma once
+
+/**
+ * @file gaussian_elimination.h
+ * @brief Solves linear system using Gaussian elimination method.
+ */
+
 #include <vector>
 
 /**
