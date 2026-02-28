@@ -21,7 +21,6 @@ std::vector<double> newton_raphson(
 
     // Check if converged
     if (vec_norm(Fx) < tol) {
-      std::cout << "Converged in " << iter << " iterations.\n";
       return x;
     }
 
