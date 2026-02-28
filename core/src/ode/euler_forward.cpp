@@ -2,9 +2,8 @@
 
 #include <iostream>
 
-
 Solution euler_forward(const std::function<std::vector<double>(
-                       const double&, const std::vector<double>&)>& f,
+                           const double&, const std::vector<double>&)>& f,
                        const double& t0, const double& t1,
                        const std::vector<double>& y0, const double& h) {
   // Validate input arguments
@@ -16,7 +15,7 @@ Solution euler_forward(const std::function<std::vector<double>(
   }
 
   // Compute the number of integration steps
-  const int steps = static_cast<int>(std::ceil((t1 - t0) / h));
+  const auto steps = static_cast<int>(std::ceil((t1 - t0) / h));
 
   // Initialise solution storage
   std::vector<std::vector<double>> y(steps + 1);

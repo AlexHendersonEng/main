@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "ode/euler_backward.h"
 #include "ode/euler_forward.h"
 #include "ode/runge_kutta_4.h"
 #include "utils/output.h"
@@ -7,7 +8,7 @@
 int main() {
   // Mass spring damper function
   std::function<std::vector<double>(const double&, const std::vector<double>&)>
-      f = [](const double& t, const std::vector<double>& y) {
+      f = [](const double& t [[maybe_unused]], const std::vector<double>& y) {
         const double k = 0.2;
         const double c = 0.2;
 
@@ -25,10 +26,12 @@ int main() {
   // Run simulations
   Solution euler_forward_sol = euler_forward(f, t0, t1, y0, h);
   Solution runge_kutta_4_sol = runge_kutta_4(f, t0, t1, y0, h);
+  Solution euler_backward_sol = euler_backward(f, t0, t1, y0, h);
 
   // Write simulation data to csv file
   to_csv("euler_forward.csv", euler_forward_sol.t, euler_forward_sol.y);
   to_csv("runge_kutta_4.csv", runge_kutta_4_sol.t, runge_kutta_4_sol.y);
+  to_csv("euler_backward.csv", euler_backward_sol.t, euler_backward_sol.y);
 
   return 0;
 }

@@ -7,6 +7,7 @@ add_executable(
   ode_test.cpp
   euler_forward_test.cpp
   runge_kutta_4_test.cpp
+  euler_backward_test.cpp
 )
 target_link_libraries(
   "${target_name}"

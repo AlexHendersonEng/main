@@ -15,7 +15,7 @@ Solution runge_kutta_4(const std::function<std::vector<double>(
   }
 
   // Compute the number of integration steps
-  const int steps = static_cast<int>(std::ceil((t1 - t0) / h));
+  const auto steps = static_cast<int>(std::ceil((t1 - t0) / h));
 
   // Initialise solution storage
   std::vector<std::vector<double>> y(steps + 1);
