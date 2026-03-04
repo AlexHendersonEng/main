@@ -1,0 +1,20 @@
+#!/bin/bash
+set -eo pipefail
+cd "${0%/*}" || exit 1
+source $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# Set number of processors if not already set
+if [ -z "${NUMBER_OF_PROCESSORS}" ]; then
+    export NUMBER_OF_PROCESSORS=$(nproc --all)
+fi
+
+# Mesh
+bash ./Allrun-parallel.pre
+
+# Run
+if ! [ -z "$1" ]; then
+    runParallel mapFieldsPar -consistent -sourceTime latestTime $1
+fi
+runParallel $(getApplication)
+runParallel -s reconstruct redistributePar -reconstruct -overwrite
+rm -rf processor*

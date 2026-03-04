@@ -1,0 +1,140 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+
+application     simpleFoam;
+startFrom       startTime;
+startTime       0;
+stopAt          endTime;
+endTime         2000;
+deltaT          1;
+writeControl    timeStep;
+writeInterval   100;
+purgeWrite      5;
+writeFormat     ascii;
+writePrecision  6;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable true;
+
+functions
+{
+    stressComponents
+    {
+        type            turbulenceFields;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+        fields          (devReff);
+
+    }
+
+    pressureCoefficient
+    {
+        type            pressure;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+        mode            staticCoeff;
+        result          cp;
+        rho             rhoInf;
+        rhoInf          1;
+        pInf            0;
+        UInf            (44.2 0 0);
+    }
+
+    sample
+    {
+        type            sets;
+        libs            (sampling);
+        writeControl    onEnd;
+        interpolationScheme cellPoint;
+        setFormat       raw;
+        fields          (p U turbulenceProperties:devReff);
+
+        sets
+        {
+            Uref
+            {
+                type    cloud;
+                axis    y;
+                points  ((-0.0508 0.0508 0.01));
+            }
+
+            x_by_h_m04
+            {
+                type    face;
+                axis    y;
+                start   (-0.0508 -0.0127 0);
+                end     (-0.0508 0.1016 0);
+                nPoints 100;
+            }
+
+            x_by_h_01
+            {
+                type    face;
+                axis    y;
+                start   (0.0127 -0.0127 0);
+                end     (0.0127 0.1016 0);
+                nPoints 100;
+            }
+
+            x_by_h_04
+            {
+                type    face;
+                axis    y;
+                start   (0.0508 -0.0127 0);
+                end     (0.0508 0.1016 0);
+                nPoints 100;
+            }
+
+            x_by_h_06
+            {
+                type    face;
+                axis    y;
+                start   (0.0762 -0.0127 0);
+                end     (0.0762 0.1016 0);
+                nPoints 100;
+            }
+
+            x_by_h_10
+            {
+                type    face;
+                axis    y;
+                start   (0.127 -0.0127 0);
+                end     (0.127 0.1016 0);
+                nPoints 100;
+            }
+        }
+    }
+
+    sampleCp
+    {
+        type            patchProbes;
+        libs            (sampling);
+        writeControl    writeTime;
+        patch           lowerWall;
+        probeLocations  ((0 0 0.0127));
+        fields          (cp);
+    }
+
+    writeCellCentres
+    {
+        type            writeCellCentres;
+        libs            (fieldFunctionObjects);
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+
+    wallShearStress
+    {
+        type            wallShearStress;
+        libs            (fieldFunctionObjects);
+        writeFields     yes;
+        executeControl  writeTime;
+        writeControl    writeTime;
+    }
+}

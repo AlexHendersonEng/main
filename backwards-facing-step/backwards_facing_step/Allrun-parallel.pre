@@ -1,0 +1,15 @@
+#!/bin/bash
+set -eo pipefail
+cd "${0%/*}" || exit 1
+source $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# Set number of processors if not already set
+if [ -z "${NUMBER_OF_PROCESSORS}" ]; then
+    export NUMBER_OF_PROCESSORS=$(nproc --all)
+fi
+
+# Mesh
+touch foam.foam
+runApplication blockMesh
+runApplication restore0Dir
+runParallel -s decompose redistributePar -decompose -overwrite

@@ -1,0 +1,13 @@
+#!/bin/bash
+set -eo pipefail
+cd "${0%/*}" || exit 1
+source $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# Mesh
+bash ./Allrun.pre
+
+# Run
+if ! [ -z "$1" ]; then
+    runApplication mapFields -consistent -sourceTime latestTime $1
+fi
+runApplication $(getApplication)
