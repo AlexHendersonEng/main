@@ -1,0 +1,18 @@
+[project]
+name = "simulation-foundry-learn"
+version = "0.1.0"
+description = "Simulation Foundry Learn"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.2.0",
+    "ipympl>=0.10.0",
+    "matplotlib>=3.10.8",
+    "pandas>=3.0.1",
+    "pre-commit>=4.5.1",
+    "torch>=2.10.0",
+    "torchvision>=0.25.0",
+]
+
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cu130"
