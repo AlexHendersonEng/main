@@ -1,6 +1,13 @@
+# Allow unsupported compilers for CUDA
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
+
 # Project
 cmake_minimum_required(VERSION 4.0)
-project(simulation-foundry-core)
+project(
+    simulation-foundry-core
+    VERSION 0.1.0
+    LANGUAGES CXX CUDA
+)
 
 # Includes
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
@@ -10,6 +17,7 @@ include(CTest)
 
 # Variables
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CUDA_ARCHITECTURES native) # Auto-detect GPU architecture
 
 # Source
 add_subdirectory("${CMAKE_SOURCE_DIR}/src")
