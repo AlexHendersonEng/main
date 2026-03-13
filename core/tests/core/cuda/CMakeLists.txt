@@ -9,7 +9,7 @@ add_executable(
 )
 target_link_libraries(
   "${target_name}"
-  "simulation_foundry_cuda"
+  "simulation_foundry_core"
   GTest::gtest
 )
 
