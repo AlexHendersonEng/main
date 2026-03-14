@@ -21,3 +21,21 @@ repos:
         args: [-i]
       - id: clang-tidy
         args: [--fix, --fix-errors, --fix-notes, -p=out/build]
+        exclude: ^(include|src)/(bindings/python|core/cuda)/
+
+  # Python
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.10.0
+    hooks:
+      - id: uv-lock
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.0
+    hooks:
+      - id: nbstripout

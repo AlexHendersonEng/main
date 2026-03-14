@@ -1,0 +1,41 @@
+[project]
+name = "simulation_foundry_core_py"
+version = "0.1.0"
+description = "Simulation Foundry Core Python bindings"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">= 3.12"
+dependencies = [
+    "numpy>=2.4.3",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+    "ipympl>=0.10.0",
+    "ipython>=9.11.0",
+    "matplotlib>=3.10.8",
+    "pre-commit>=4.5.1",
+    "pybind11-stubgen>=2.5.5",
+    "pytest>=9.0.2",
+]
+
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+build.verbose = true
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "win32"
+cmake.args = ["--preset", "windows-x64-msvc-release", "-A", "", "-DPYTHON_BINDINGS=ON"]
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "linux"
+cmake.args = ["--preset", "linux-x64-gcc-release", "-DPYTHON_BINDINGS=ON"]
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "darwin"
+cmake.args = ["--preset", "macos-x64-clang-release", "-DPYTHON_BINDINGS=ON"]

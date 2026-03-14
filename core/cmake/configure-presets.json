@@ -6,9 +6,16 @@
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "installDir": "${sourceDir}/out/install/${presetName}",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_CUDA_COMPILER": "nvcc",
+                "CMAKE_CUDA_ARCHITECTURES": "native",
+                "CMAKE_CUDA_FLAGS": "-allow-unsupported-compiler",
+                "BUILD_DOCS": true,
+                "BUILD_EXAMPLES": true,
+                "BUILD_TESTS": true,
+                "BUILD_CUDA": true,
+                "PYTHON_BINDINGS": false
             }
         },
         {

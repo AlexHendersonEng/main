@@ -1,6 +1,3 @@
-# Allow unsupported compilers for CUDA
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
-
 # Project
 cmake_minimum_required(VERSION 4.0)
 project(
@@ -17,17 +14,29 @@ include(CTest)
 
 # Variables
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CUDA_ARCHITECTURES native) # Auto-detect GPU architecture
+option(BUILD_DOCS OFF)
+option(BUILD_EXAMPLES OFF)
+option(BUILD_TESTS OFF)
+option(BUILD_CUDA OFF)
+option(PYTHON_BINDINGS OFF)
 
 # Source
 add_subdirectory("${CMAKE_SOURCE_DIR}/src")
-add_subdirectory("${CMAKE_SOURCE_DIR}/examples")
+
+# Examples
+if (BUILD_EXAMPLES)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/examples")
+endif()
 
 # Tests
-add_subdirectory("${CMAKE_SOURCE_DIR}/tests")
+if (BUILD_TESTS)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/tests")
+endif()
 
 # Documentation
-add_subdirectory("${CMAKE_SOURCE_DIR}/docs")
+if (BUILD_DOCS)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/docs")
+endif()
 
 # Add a custom target to copy 'compile-commands.json' to parent directory
 add_custom_target(copy_compile_commands ALL

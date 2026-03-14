@@ -1,3 +1,8 @@
+# Only build if CUDA is enabled
+if (NOT BUILD_CUDA)
+    return()
+endif()
+
 # Variables
 set("target_name" "cuda_test")
 
