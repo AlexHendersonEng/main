@@ -33,7 +33,10 @@ repos:
     rev: v0.15.0
     hooks:
       - id: ruff-check
+        types_or: [ python, pyi ]
+        args: [ --fix ]
       - id: ruff-format
+        types_or: [ python, pyi ]
 
   - repo: https://github.com/kynan/nbstripout
     rev: 0.9.0
