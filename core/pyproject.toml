@@ -17,7 +17,6 @@ dev = [
     "ipython>=9.11.0",
     "matplotlib>=3.10.8",
     "pre-commit>=4.5.1",
-    "pybind11-stubgen>=2.5.5",
     "pytest>=9.0.2",
 ]
 
@@ -25,11 +24,17 @@ dev = [
 testpaths = ["tests/bindings/python"]
 
 [build-system]
-requires = ["scikit-build-core", "pybind11"]
+requires = [
+    "scikit-build-core",
+    "pybind11",
+    "pybind11-stubgen",
+    "numpy"
+]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 build.verbose = true
+wheel.packages = ["simulation_foundry_core_py"]
 
 [[tool.scikit-build.overrides]]
 if.platform-system = "win32"
