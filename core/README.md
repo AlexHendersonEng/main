@@ -111,7 +111,11 @@ uv run pytest
 
 ### Documentation
 
-TODO: Generate python documentation with Sphinx
+Generate Python bindings documentation using Sphinx:
+
+```bash
+uv run sphinx-build ./docs/bindings/python/source ./out/build/docs/bindings/python
+```
 
 ## Git Hooks
 
@@ -129,4 +133,4 @@ pre-commit run --all-files
 
 ## License
 
-This project is released under the terms in the `LICENSE` file: [LICENSE](LICENSE)
+This project is released under the terms in the `LICENSE` file: [LICENSE](https://github.com/AlexHendersonEng/simulation-foundry-core/blob/main/LICENSE)
