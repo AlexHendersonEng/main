@@ -1,18 +1,18 @@
 #pragma once
 
 #include "simulation/blocks/block.hpp"
-#include "simulation/system/port.hpp"
+#include "simulation/core/port.hpp"
 
 template <typename T>
 class Terminator : public Block {
  public:
-  // Called at the start of the simulation
+  // Initialise block
   void init(double t) override {};
 
-  // Called at each simulation step
+  // Step block
   void step(double t) override {};
 
-  // Called at the end of the simulation
+  // Terminate block
   void term(double t) override {};
 
   // Ports

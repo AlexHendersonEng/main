@@ -8,13 +8,13 @@ class Constant : public Block {
   // Constructor
   Constant(T value) : _value(value) {};
 
-  // Called at the start of the simulation
+  // Initialise block
   void init(double t) override { outport.set(_value); };
 
-  // Called at each simulation step
+  // Step block
   void step(double t) override { outport.set(_value); };
 
-  // Called at the end of the simulation
+  // Terminate block
   void term(double t) override {};
 
   // Ports

@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "simulation/system/port.hpp"
+#include "simulation/core/port.hpp"
 
 class Block {
  public:
@@ -12,12 +12,20 @@ class Block {
   // Destructor
   virtual ~Block() = default;
 
-  // Called at the start of the simulation
+  // Initialise block
   virtual void init(double t) = 0;
 
-  // Called at each simulation step
+  // Step block
   virtual void step(double t) = 0;
 
-  // Called at the end of the simulation
+  // Terminate block
   virtual void term(double t) = 0;
+
+  // States
+  virtual size_t num_states() { return 0; };
+  virtual void get_states(std::vector<double>& states) {};
+  virtual void set_states(const std::vector<double>& states, size_t& offset) {};
+
+  // Derivatives
+  virtual void get_derivatives(std::vector<double>& derivatives) {};
 };

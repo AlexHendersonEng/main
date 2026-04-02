@@ -5,7 +5,7 @@
 #include <typeinfo>
 
 #include "simulation/blocks/block.hpp"
-#include "simulation/system/signal.hpp"
+#include "simulation/core/signal.hpp"
 
 class Port {
  public:

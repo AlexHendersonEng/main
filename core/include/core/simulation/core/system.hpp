@@ -41,21 +41,24 @@ class System {
     in.signal = out.signal;
   }
 
-  // Initialise simulation
-  void init();
+  // Initialise system
+  void init(double t);
 
-  // Step simulation
-  void step();
+  // Step system
+  void step(double t);
 
-  // Terminate simuation
-  void term();
+  // Terminate system
+  void term(double t);
+
+  // States
+  size_t num_states();
+  void get_states(std::vector<double>& states);
+  void set_states(const std::vector<double>& states);
+
+  // Derivatives
+  void get_derivatives(std::vector<double>& derivatives);
 
  private:
   // Blocks
   std::vector<std::unique_ptr<Block>> blocks;
-
-  // Time
-  double start_time = 0.0;
-  double stop_time = 10.0;
-  double time = 0.0;
 };
