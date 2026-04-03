@@ -52,13 +52,19 @@ class System {
 
   // States
   size_t num_states();
-  void get_states(std::vector<double>& states);
+  std::vector<double>& get_states();
   void set_states(const std::vector<double>& states);
 
   // Derivatives
-  void get_derivatives(std::vector<double>& derivatives);
+  std::vector<double>& get_derivatives();
 
  private:
   // Blocks
   std::vector<std::unique_ptr<Block>> blocks;
+
+  // States
+  std::vector<double> states;
+
+  // Derivatives
+  std::vector<double> derivatives;
 };

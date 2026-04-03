@@ -23,9 +23,10 @@ class Block {
 
   // States
   virtual size_t num_states() { return 0; };
-  virtual void get_states(std::vector<double>& states) {};
+  virtual void get_states(std::vector<double>& states, size_t& offset) {};
   virtual void set_states(const std::vector<double>& states, size_t& offset) {};
 
   // Derivatives
-  virtual void get_derivatives(std::vector<double>& derivatives) {};
+  virtual void get_derivatives(std::vector<double>& derivatives,
+                               size_t& offset) {};
 };

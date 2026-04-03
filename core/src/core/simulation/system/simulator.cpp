@@ -8,11 +8,11 @@ void Simulator::init() {
 }
 
 void Simulator::step() {
-  // Integration step
-  integration_scheme.step(system, t);
-
   // Step system
   system.step(t);
+
+  // Integration step
+  integration_scheme.step(system, t);
 }
 
 void Simulator::term() {

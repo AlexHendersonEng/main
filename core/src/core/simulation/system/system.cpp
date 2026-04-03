@@ -1,6 +1,12 @@
 #include "simulation/core/system.hpp"
 
 void System::init(double t) {
+  // Initialise state and derivative vectors
+  size_t num_states = 0;
+  for (auto& block : blocks) num_states += block->num_states();
+  states.resize(num_states);
+  derivatives.resize(num_states);
+
   // Loop through all blocks and initialise
   for (auto& block : blocks) block->init(t);
 }
@@ -23,9 +29,12 @@ size_t System::num_states() {
   return num_states;
 }
 
-void System::get_states(std::vector<double>& states) {
+std::vector<double>& System::get_states() {
   // Loop through all blocks and get states
-  for (auto& block : blocks) block->get_states(states);
+  size_t offset = 0;
+  for (auto& block : blocks) block->get_states(states, offset);
+
+  return states;
 }
 
 void System::set_states(const std::vector<double>& states) {
@@ -36,7 +45,10 @@ void System::set_states(const std::vector<double>& states) {
   }
 }
 
-void System::get_derivatives(std::vector<double>& derivatives) {
-  // Loop through all blocks and compute derivatives
-  for (auto& block : blocks) block->get_derivatives(derivatives);
+std::vector<double>& System::get_derivatives() {
+  // Loop through all blocks and get derivatives
+  size_t offset = 0;
+  for (auto& block : blocks) block->get_derivatives(derivatives, offset);
+
+  return derivatives;
 }

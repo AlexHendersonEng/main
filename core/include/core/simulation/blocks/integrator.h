@@ -18,11 +18,12 @@ class Integrator : public Block {
 
   // States
   size_t num_states() override;
-  void get_states(std::vector<double>& states) override;
+  void get_states(std::vector<double>& states, size_t& offset) override;
   void set_states(const std::vector<double>& states, size_t& offset) override;
 
   // Derivatives
-  void get_derivatives(std::vector<double>& derivatives) override;
+  void get_derivatives(std::vector<double>& derivatives,
+                       size_t& offset) override;
 
   // Ports
   Inport<double> inport;
