@@ -1,6 +1,6 @@
 #include "simulation/blocks/integrator.h"
 
-void Integrator::init(double t) { outport.set(_state); };
+void Integrator::init(double t) {};
 
 void Integrator::step(double t) { outport.set(_state); };
 

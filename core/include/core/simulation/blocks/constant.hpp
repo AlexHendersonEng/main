@@ -9,7 +9,7 @@ class Constant : public Block {
   Constant(T value) : _value(value) {};
 
   // Initialise block
-  void init(double t) override { outport.set(_value); };
+  void init(double t) override {};
 
   // Step block
   void step(double t) override { outport.set(_value); };

@@ -5,6 +5,7 @@
 #include "simulation/blocks/block.hpp"
 #include "simulation/blocks/constant.hpp"
 #include "simulation/blocks/integrator.h"
+#include "simulation/blocks/logger.hpp"
 #include "simulation/blocks/terminator.hpp"
 #include "simulation/core/simulator.h"
 #include "simulation/core/system.hpp"
@@ -21,21 +22,21 @@ int main() {
 
   // Add blocks
   auto& constant = system.add_block<Constant<double>>(1.0);
-  auto& integrator = system.add_block<Integrator>(0.0);
+  auto& integrator = system.add_block<Integrator>(1.0);
+  auto& logger = system.add_block<Logger<double>>("log.csv");
   auto& terminator = system.add_block<Terminator<double>>();
 
   // Connect blocks
   system.connect(constant.outport, integrator.inport);
-  system.connect(integrator.outport, terminator.inport);
+  system.connect(integrator.outport, logger.inport);
+  system.connect(logger.outport, terminator.inport);
 
   // Setup integration scheme
   EulerForward integration_scheme(step_size);
 
   // Simulation loop
   Simulator sim(system, integration_scheme);
-  sim.init();
-  sim.step();
-  sim.term();
+  sim.run(start_time, stop_time);
 
   return 0;
 }

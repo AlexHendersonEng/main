@@ -16,13 +16,16 @@ class Simulator {
   double time() const { return t; }
 
   // Initialise simulation
-  void init();
+  void init(double start_time);
 
   // Step simulation
   void step();
 
   // Terminate simlation
   void term();
+
+  // Run simulation
+  void run(double start_time, double stop_time);
 
  private:
   // Time
