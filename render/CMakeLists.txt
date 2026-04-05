@@ -1,6 +1,6 @@
 # Project
 cmake_minimum_required(VERSION 4.0)
-project(simulation-foundry-render)
+project(vanta-render)
 
 # Includes
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")

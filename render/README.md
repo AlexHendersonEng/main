@@ -1,9 +1,9 @@
-# Simulation Foundry Render
+# Vanta Render
 
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
-Simulation Foundry Render is a developer friendly repository for rendering simulation data generated in Simulation Foundry Core.
+Vanta Render is a developer friendly repository for rendering simulation data generated in Vanta Core.
 
 ## Prerequisites
 
