@@ -1,7 +1,7 @@
 [project]
-name = "simulation-foundry-learn"
+name = "vanta-learn"
 version = "0.1.0"
-description = "Simulation Foundry Learn"
+description = "Vanta Learn"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
