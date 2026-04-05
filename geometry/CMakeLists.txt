@@ -1,6 +1,6 @@
 # Project
 cmake_minimum_required(VERSION 4.0)
-project(simulation-foundry-geometry)
+project(vanta-geometry)
 
 # Includes
 include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
