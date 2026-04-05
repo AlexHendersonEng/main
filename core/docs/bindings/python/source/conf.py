@@ -14,7 +14,7 @@ with open(pyproj_path, "rb") as f:
     data = tomllib.load(f)
 
 project = data["project"]["name"]
-copyright = f"2026, {data["project"]["authors"][0]["name"]}"
+copyright = f"2026, {data['project']['authors'][0]['name']}"
 author = data["project"]["authors"][0]["name"]
 release = data["project"]["version"]
 
