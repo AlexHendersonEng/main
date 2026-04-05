@@ -1,5 +1,7 @@
 #include "finite_difference/forward_difference.hpp"
 
+namespace vanta::finite_difference {
+
 std::vector<std::vector<double>> ForwardDifference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x, double h) {
@@ -19,3 +21,5 @@ std::vector<std::vector<double>> ForwardDifference(
 
   return J;
 }
+
+}  // namespace vanta::finite_difference

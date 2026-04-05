@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+namespace vanta::utils {
+
 /**
  * @brief Write time-series solution data to a CSV file.
  *
@@ -37,5 +39,7 @@
  */
 int ToCSV(const std::string& filename, const std::vector<double>& t,
           const std::vector<std::vector<double>>& y);
+
+}  // namespace vanta::utils
 
 #endif  // CORE_UTILS_OUTPUT_HPP_

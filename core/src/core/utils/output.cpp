@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+namespace vanta::utils {
+
 int ToCSV(const std::string& filename, const std::vector<double>& t,
           const std::vector<std::vector<double>>& y) {
   // Open output file
@@ -28,3 +30,5 @@ int ToCSV(const std::string& filename, const std::vector<double>& t,
 
   return 0;
 }
+
+}  // namespace vanta::utils

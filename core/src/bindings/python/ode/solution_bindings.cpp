@@ -3,7 +3,7 @@
 #include <pybind11/numpy.h>
 
 void BindSolution(pybind11::module_& m) {
-  pybind11::class_<Solution>(m, "Solution", R"pbdoc(
+  pybind11::class_<vanta::ode::Solution>(m, "Solution", R"pbdoc(
         Container for a numerical ODE solution.
  
         Attributes
@@ -18,10 +18,10 @@ void BindSolution(pybind11::module_& m) {
       .def(pybind11::init<>())
       .def_property(
           "t",
-          [](const Solution& s) {
+          [](const vanta::ode::Solution& s) {
             return pybind11::array_t<double>(s.t.size(), s.t.data());
           },
-          [](Solution& s, pybind11::array_t<double> arr) {
+          [](vanta::ode::Solution& s, pybind11::array_t<double> arr) {
             auto buf = arr.request();
             auto* ptr = static_cast<double*>(buf.ptr);
             s.t.assign(ptr, ptr + buf.size);
@@ -29,7 +29,7 @@ void BindSolution(pybind11::module_& m) {
           "Time points at which the solution is evaluated.")
       .def_property(
           "y",
-          [](const Solution& s) {
+          [](const vanta::ode::Solution& s) {
             if (s.y.empty()) return pybind11::array_t<double>({0, 0});
             size_t rows = s.y.size();
             size_t cols = s.y[0].size();
@@ -39,7 +39,7 @@ void BindSolution(pybind11::module_& m) {
               for (size_t j = 0; j < cols; j++) buf(i, j) = s.y[i][j];
             return arr;
           },
-          [](Solution& s, pybind11::array_t<double> arr) {
+          [](vanta::ode::Solution& s, pybind11::array_t<double> arr) {
             auto buf = arr.request();
             if (buf.ndim != 2) throw std::runtime_error("y must be a 2D array");
             auto* ptr = static_cast<double*>(buf.ptr);
@@ -51,8 +51,8 @@ void BindSolution(pybind11::module_& m) {
           },
           "Solution vectors corresponding to each time point.")
       .def("__repr__",
-           [](const Solution& s) {
+           [](const vanta::ode::Solution& s) {
              return "<Solution: " + std::to_string(s.t.size()) + " time steps>";
            })
-      .def("__len__", [](const Solution& s) { return s.t.size(); });
+      .def("__len__", [](const vanta::ode::Solution& s) { return s.t.size(); });
 }

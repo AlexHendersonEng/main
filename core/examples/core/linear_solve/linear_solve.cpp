@@ -9,7 +9,8 @@ int main() {
   std::vector<double> b = {8, -11, -3};
 
   // Solve
-  std::vector<double> solution = GaussianElimination(A, b);
+  std::vector<double> solution =
+      vanta::linear_solvers::GaussianElimination(A, b);
 
   // Print solution
   std::cout << "Solution:\n";

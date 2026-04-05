@@ -13,12 +13,14 @@ include("${CMAKE_SOURCE_DIR}/cmake/utils.cmake")
 include(CTest)
 
 # Variables
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_DOCS OFF)
 option(BUILD_EXAMPLES OFF)
 option(BUILD_TESTS OFF)
 option(BUILD_CUDA OFF)
 option(PYTHON_BINDINGS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Source
 add_subdirectory("${CMAKE_SOURCE_DIR}/src")

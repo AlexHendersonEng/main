@@ -9,6 +9,8 @@
 #include <functional>
 #include <vector>
 
+namespace vanta::finite_difference {
+
 /**
  * Computes the forward-difference numerical approximation of the Jacobian
  * matrix for a vector-valued function.
@@ -34,5 +36,7 @@
 std::vector<std::vector<double>> ForwardDifference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x, double h = 1e-8);
+
+}  // namespace vanta::finite_difference
 
 #endif  // CORE_FINITE_DIFFERENCE_FORWARD_DIFFERENCE_HPP_

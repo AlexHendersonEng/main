@@ -14,6 +14,8 @@
 
 #include "solution.hpp"
 
+namespace vanta::ode {
+
 /**
  * @brief Solve an initial value problem using the classical fourth-order
  * Runge–Kutta method.
@@ -49,5 +51,7 @@ Solution RungeKutta4(const std::function<std::vector<double>(
                          const double&, const std::vector<double>&)>& f,
                      const double& t0, const double& t1,
                      const std::vector<double>& y0, const double& h);
+
+}  // namespace vanta::ode
 
 #endif  // CORE_ODE_RUNGE_KUTTA_4_HPP_

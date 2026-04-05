@@ -6,6 +6,8 @@
 #include "linear_solvers/gaussian_elimination.hpp"
 #include "utils/math.hpp"
 
+namespace vanta::root_finders {
+
 std::vector<double> NewtonRaphson(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x0,
@@ -20,7 +22,7 @@ std::vector<double> NewtonRaphson(
     std::vector<double> Fx = f(x);
 
     // Check if converged
-    if (VecNorm(Fx) < tol) {
+    if (vanta::utils::VecNorm(Fx) < tol) {
       return x;
     }
 
@@ -32,13 +34,14 @@ std::vector<double> NewtonRaphson(
       J = J_f(x);
     } else {
       // Use numerical approximation
-      J = ForwardDifference(f, x);
+      J = vanta::finite_difference::ForwardDifference(f, x);
     }
 
     // Solve J * delta = -F
     for (double& val : Fx) val = -val;
 
-    std::vector<double> delta = GaussianElimination(J, Fx);
+    std::vector<double> delta =
+        vanta::linear_solvers::GaussianElimination(J, Fx);
 
     // Update state vector
     for (size_t i = 0; i < x.size(); ++i) x[i] += delta[i];
@@ -46,3 +49,5 @@ std::vector<double> NewtonRaphson(
 
   return x;
 }
+
+}  // namespace vanta::root_finders

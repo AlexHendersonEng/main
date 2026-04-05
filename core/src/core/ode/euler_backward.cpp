@@ -4,6 +4,8 @@
 
 #include "root_finders/newton_raphson.hpp"
 
+namespace vanta::ode {
+
 Solution EulerBackward(const std::function<std::vector<double>(
                            const double&, const std::vector<double>&)>& f,
                        const double& t0, const double& t1,
@@ -43,9 +45,11 @@ Solution EulerBackward(const std::function<std::vector<double>(
     };
 
     // Solve using Newton-Raphson
-    y[i + 1] = NewtonRaphson(F, y[i]);
+    y[i + 1] = vanta::root_finders::NewtonRaphson(F, y[i]);
   }
 
   // Return the computed solution
   return {t, y};
 }
+
+}  // namespace vanta::ode

@@ -18,7 +18,8 @@ TEST_F(EulerForwardTest, NegativeStepSize) {
   };
 
   EXPECT_THROW(
-      { EulerForward(f, 0.0, 1.0, {1.0}, -0.1); }, std::invalid_argument);
+      { vanta::ode::EulerForward(f, 0.0, 1.0, {1.0}, -0.1); },
+      std::invalid_argument);
 }
 
 TEST_F(EulerForwardTest, ZeroStepSize) {
@@ -27,7 +28,8 @@ TEST_F(EulerForwardTest, ZeroStepSize) {
   };
 
   EXPECT_THROW(
-      { EulerForward(f, 0.0, 1.0, {1.0}, 0.0); }, std::invalid_argument);
+      { vanta::ode::EulerForward(f, 0.0, 1.0, {1.0}, 0.0); },
+      std::invalid_argument);
 }
 
 TEST_F(EulerForwardTest, InvalidTimeInterval) {
@@ -36,7 +38,8 @@ TEST_F(EulerForwardTest, InvalidTimeInterval) {
   };
 
   EXPECT_THROW(
-      { EulerForward(f, 1.0, 0.0, {1.0}, 0.1); }, std::invalid_argument);
+      { vanta::ode::EulerForward(f, 1.0, 0.0, {1.0}, 0.1); },
+      std::invalid_argument);
 }
 
 TEST_F(EulerForwardTest, EqualStartEndTime) {
@@ -45,14 +48,15 @@ TEST_F(EulerForwardTest, EqualStartEndTime) {
   };
 
   EXPECT_THROW(
-      { EulerForward(f, 1.0, 1.0, {1.0}, 0.1); }, std::invalid_argument);
+      { vanta::ode::EulerForward(f, 1.0, 1.0, {1.0}, 0.1); },
+      std::invalid_argument);
 }
 
 TEST_F(EulerForwardTest, ConstantFunction) {
   auto f = [](const double& t [[maybe_unused]], const std::vector<double>& y
               [[maybe_unused]]) { return std::vector<double>{0.0}; };
 
-  Solution sol = EulerForward(f, 0.0, 1.0, {5.0}, 0.1);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, 0.0, 1.0, {5.0}, 0.1);
 
   // Verify solution remains constant
   for (const auto& y_val : sol.y) {
@@ -67,7 +71,7 @@ TEST_F(EulerForwardTest, LinearFunction) {
   double t0 = 0.0;
   double t1 = 1.0;
   double h = 0.1;
-  Solution sol = EulerForward(f, t0, t1, {0.0}, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {0.0}, h);
 
   // y(t) = t, so y(1.0) should be approximately 1.0
   EXPECT_NEAR(sol.y.back()[0], 1.0, tolerance);
@@ -81,7 +85,7 @@ TEST_F(EulerForwardTest, ExponentialGrowth) {
   double t0 = 0.0;
   double t1 = 1.0;
   double h = 0.01;
-  Solution sol = EulerForward(f, t0, t1, {1.0}, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {1.0}, h);
 
   // Exact solution: y(t) = e^t, so y(1) = e ≈ 2.71828
   double exact = std::exp(1.0);
@@ -99,7 +103,7 @@ TEST_F(EulerForwardTest, MultiDimensionalSystem) {
   double h = 0.01;
   std::vector<double> y0 = {1.0, 0.0};  // x(0) = 1, y(0) = 0
 
-  Solution sol = EulerForward(f, t0, t1, y0, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, y0, h);
 
   // Check solution dimensions
   EXPECT_EQ(sol.y[0].size(), 2);
@@ -120,7 +124,7 @@ TEST_F(EulerForwardTest, CorrectNumberOfSteps) {
   double t0 = 0.0;
   double t1 = 1.0;
   double h = 0.1;
-  Solution sol = EulerForward(f, t0, t1, {1.0}, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {1.0}, h);
 
   auto expected_steps = static_cast<int>(std::ceil((t1 - t0) / h));
   EXPECT_EQ(sol.t.size(), expected_steps + 1);
@@ -134,7 +138,7 @@ TEST_F(EulerForwardTest, TimeArrayCorrectness) {
   double t0 = 0.0;
   double t1 = 1.0;
   double h = 0.25;
-  Solution sol = EulerForward(f, t0, t1, {1.0}, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {1.0}, h);
 
   EXPECT_NEAR(sol.t[0], 0.0, tolerance);
   EXPECT_NEAR(sol.t[1], 0.25, tolerance);
@@ -150,7 +154,7 @@ TEST_F(EulerForwardTest, NonIntegerSteps) {
   double t0 = 0.0;
   double t1 = 1.0;
   double h = 0.3;
-  Solution sol = EulerForward(f, t0, t1, {0.0}, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {0.0}, h);
 
   // Should have ceil(1.0/0.3) = 4 steps
   EXPECT_EQ(sol.t.size(), 5);  // 4 steps + initial point
@@ -164,7 +168,7 @@ TEST_F(EulerForwardTest, TimeDependentFunction) {
   double t0 = 0.0;
   double t1 = 2.0;
   double h = 0.01;
-  Solution sol = EulerForward(f, t0, t1, {0.0}, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {0.0}, h);
 
   // Exact solution: y(t) = t^2/2, so y(2) = 2
   EXPECT_NEAR(sol.y.back()[0], 2.0, 0.01);
@@ -177,7 +181,7 @@ TEST_F(EulerForwardTest, LargeStepSize) {
   double t0 = 0.0;
   double t1 = 1.0;
   double h = 2.0;  // Step size larger than interval
-  Solution sol = EulerForward(f, t0, t1, {0.0}, h);
+  vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {0.0}, h);
 
   EXPECT_EQ(sol.t.size(), 2);  // One step plus initial
 }

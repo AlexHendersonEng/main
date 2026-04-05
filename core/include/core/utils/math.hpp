@@ -11,6 +11,8 @@
 
 #include <vector>
 
+namespace vanta::utils {
+
 /**
  * @brief Compute the Euclidean (L2) norm of a vector.
  *
@@ -28,5 +30,7 @@
  * @note This function does not modify the input vector.
  */
 double VecNorm(const std::vector<double>& v);
+
+}  // namespace vanta::utils
 
 #endif  // CORE_UTILS_MATH_HPP_

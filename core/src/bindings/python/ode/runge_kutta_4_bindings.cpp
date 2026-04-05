@@ -27,7 +27,7 @@ void BindRungeKutta4(pybind11::module_& m) {
         auto* ptr = static_cast<double*>(buf.ptr);
         std::vector<double> y0_vec(ptr, ptr + buf.size);
 
-        return RungeKutta4(f_wrapped, t0, t1, y0_vec, h);
+        return vanta::ode::RungeKutta4(f_wrapped, t0, t1, y0_vec, h);
       },
       pybind11::arg("f"), pybind11::arg("t0"), pybind11::arg("t1"),
       pybind11::arg("y0"), pybind11::arg("h"),

@@ -9,6 +9,8 @@
 #include <functional>
 #include <vector>
 
+namespace vanta::root_finders {
+
 /**
  * @brief Solves a system of nonlinear equations using the Newton-Raphson
  * method.
@@ -59,5 +61,7 @@ std::vector<double> NewtonRaphson(
     const std::function<std::vector<std::vector<double>>(
         const std::vector<double>&)>& J_f = nullptr,
     int maxIter = 100, double tol = 1e-10);
+
+}  // namespace vanta::root_finders
 
 #endif  // CORE_ROOT_FINDERS_NEWTON_RAPHSON_HPP_

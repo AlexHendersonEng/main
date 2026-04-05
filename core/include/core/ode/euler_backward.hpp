@@ -18,6 +18,8 @@
 
 #include "solution.hpp"
 
+namespace vanta::ode {
+
 /**
  * @brief Solve an initial value problem using the backward (implicit) Euler
  * method.
@@ -48,5 +50,7 @@ Solution EulerBackward(const std::function<std::vector<double>(
                            const double&, const std::vector<double>&)>& f,
                        const double& t0, const double& t1,
                        const std::vector<double>& y0, const double& h);
+
+}  // namespace vanta::ode
 
 #endif  // CORE_ODE_EULER_BACKWARD_HPP_

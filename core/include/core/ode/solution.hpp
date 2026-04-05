@@ -13,6 +13,8 @@
 
 #include <vector>
 
+namespace vanta::ode {
+
 /**
  * @brief Container for a numerical solution of an ODE system.
  *
@@ -36,5 +38,7 @@ struct Solution {
    */
   std::vector<std::vector<double>> y;
 };
+
+}  // namespace vanta::ode
 
 #endif  // CORE_ODE_SOLUTION_HPP_

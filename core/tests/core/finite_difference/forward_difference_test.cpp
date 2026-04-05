@@ -10,7 +10,7 @@ TEST(ForwardDifferenceTest, IdentityFunction) {
   std::vector<double> x = {1.0, 2.0, 3.0};
   double h = 1e-6;
 
-  auto J = ForwardDifference(f, x, h);
+  auto J = vanta::finite_difference::ForwardDifference(f, x, h);
 
   ASSERT_EQ(J.size(), 3);
   ASSERT_EQ(J[0].size(), 3);
@@ -34,7 +34,7 @@ TEST(ForwardDifferenceTest, LinearFunction) {
   std::vector<double> x = {1.0, 2.0};
   double h = 1e-6;
 
-  auto J = ForwardDifference(f, x, h);
+  auto J = vanta::finite_difference::ForwardDifference(f, x, h);
 
   EXPECT_NEAR(J[0][0], 2.0, 1e-6);
   EXPECT_NEAR(J[0][1], 3.0, 1e-6);
@@ -50,7 +50,7 @@ TEST(ForwardDifferenceTest, NonlinearFunction) {
   std::vector<double> x = {3.0, 0.5};
   double h = 1e-6;
 
-  auto J = ForwardDifference(f, x, h);
+  auto J = vanta::finite_difference::ForwardDifference(f, x, h);
 
   EXPECT_NEAR(J[0][0], 2.0 * x[0], 1e-5);
   EXPECT_NEAR(J[0][1], 0.0, 1e-6);
@@ -68,8 +68,8 @@ TEST(ForwardDifferenceTest, SmallerStepImprovesAccuracy) {
   double h1 = 1e-3;
   double h2 = 1e-6;
 
-  auto J1 = ForwardDifference(f, x, h1);
-  auto J2 = ForwardDifference(f, x, h2);
+  auto J1 = vanta::finite_difference::ForwardDifference(f, x, h1);
+  auto J2 = vanta::finite_difference::ForwardDifference(f, x, h2);
 
   double exact = 2.0 * x[0];
 
