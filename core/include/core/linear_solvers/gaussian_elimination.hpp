@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CORE_LINEAR_SOLVERS_GAUSSIAN_ELIMINATION_HPP_
+#define CORE_LINEAR_SOLVERS_GAUSSIAN_ELIMINATION_HPP_
 
 /**
  * @file GaussianElimination.h
@@ -38,3 +39,5 @@
  */
 std::vector<double> GaussianElimination(std::vector<std::vector<double>> A,
                                         std::vector<double> b);
+
+#endif  // CORE_LINEAR_SOLVERS_GAUSSIAN_ELIMINATION_HPP_

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CORE_ODE_RUNGE_KUTTA_4_HPP_
+#define CORE_ODE_RUNGE_KUTTA_4_HPP_
 
 /**
  * @file RungeKutta4.h
@@ -48,3 +49,5 @@ Solution RungeKutta4(const std::function<std::vector<double>(
                          const double&, const std::vector<double>&)>& f,
                      const double& t0, const double& t1,
                      const std::vector<double>& y0, const double& h);
+
+#endif  // CORE_ODE_RUNGE_KUTTA_4_HPP_

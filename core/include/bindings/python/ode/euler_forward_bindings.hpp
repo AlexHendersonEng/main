@@ -1,5 +1,8 @@
-#pragma once
+#ifndef BINDINGS_PYTHON_ODE_EULER_FORWARD_BINDINGS_HPP_
+#define BINDINGS_PYTHON_ODE_EULER_FORWARD_BINDINGS_HPP_
 
 #include <pybind11/pybind11.h>
 
 void BindEulerForward(pybind11::module_& m);
+
+#endif  // BINDINGS_PYTHON_ODE_EULER_FORWARD_BINDINGS_HPP_

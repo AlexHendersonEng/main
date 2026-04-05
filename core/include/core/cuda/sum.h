@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CORE_CUDA_SUM_H_
+#define CORE_CUDA_SUM_H_
 
 /**
  * @file CudaVectorSum.h
@@ -33,3 +34,5 @@ void CudaVectorSum(const float* A, const float* B, float* C, int n);
 #ifdef __cplusplus
 }
 #endif
+
+#endif  // CORE_CUDA_SUM_H_

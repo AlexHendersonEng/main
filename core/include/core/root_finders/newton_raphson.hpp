@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CORE_ROOT_FINDERS_NEWTON_RAPHSON_HPP_
+#define CORE_ROOT_FINDERS_NEWTON_RAPHSON_HPP_
 
 /**
  * @file NewtonRaphson.h
@@ -58,3 +59,5 @@ std::vector<double> NewtonRaphson(
     const std::function<std::vector<std::vector<double>>(
         const std::vector<double>&)>& J_f = nullptr,
     int maxIter = 100, double tol = 1e-10);
+
+#endif  // CORE_ROOT_FINDERS_NEWTON_RAPHSON_HPP_

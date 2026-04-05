@@ -1,3 +1,6 @@
+#ifndef CORE_UTILS_MATH_HPP_
+#define CORE_UTILS_MATH_HPP_
+
 /**
  * @file math.h
  * @brief Utility functions for mathematical operations.
@@ -25,3 +28,5 @@
  * @note This function does not modify the input vector.
  */
 double VecNorm(const std::vector<double>& v);
+
+#endif  // CORE_UTILS_MATH_HPP_

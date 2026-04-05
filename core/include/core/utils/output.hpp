@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CORE_UTILS_OUTPUT_HPP_
+#define CORE_UTILS_OUTPUT_HPP_
 
 /**
  * @file output.h
@@ -36,3 +37,5 @@
  */
 int ToCSV(const std::string& filename, const std::vector<double>& t,
           const std::vector<std::vector<double>>& y);
+
+#endif  // CORE_UTILS_OUTPUT_HPP_

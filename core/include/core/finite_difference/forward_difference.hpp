@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CORE_FINITE_DIFFERENCE_FORWARD_DIFFERENCE_HPP_
+#define CORE_FINITE_DIFFERENCE_FORWARD_DIFFERENCE_HPP_
 
 /**
  * @file ForwardDifference.h
@@ -33,3 +34,5 @@
 std::vector<std::vector<double>> ForwardDifference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x, double h = 1e-8);
+
+#endif  // CORE_FINITE_DIFFERENCE_FORWARD_DIFFERENCE_HPP_

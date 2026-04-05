@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CORE_ODE_SOLUTION_HPP_
+#define CORE_ODE_SOLUTION_HPP_
 
 /**
  * @file solution.h
@@ -35,3 +36,5 @@ struct Solution {
    */
   std::vector<std::vector<double>> y;
 };
+
+#endif  // CORE_ODE_SOLUTION_HPP_
