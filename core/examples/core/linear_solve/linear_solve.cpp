@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "linear_solvers/gaussian_elimination.h"
+#include "linear_solvers/gaussian_elimination.hpp"
 
 int main() {
   // Problem setup

@@ -1,9 +1,9 @@
-#include "ode/euler_forward_bindings.h"
+#include "ode/euler_forward_bindings.hpp"
 
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 
-#include "ode/euler_forward.h"
+#include "ode/euler_forward.hpp"
 
 void bind_euler_forward(pybind11::module_& m) {
   m.def(

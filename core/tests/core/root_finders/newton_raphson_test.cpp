@@ -1,4 +1,4 @@
-#include "root_finders/newton_raphson.h"
+#include "root_finders/newton_raphson.hpp"
 
 #include <gtest/gtest.h>
 
@@ -6,7 +6,7 @@
 #include <functional>
 #include <vector>
 
-#include "utils/math.h"
+#include "utils/math.hpp"
 
 TEST(NewtonRaphsonTest, ScalarWithAnalyticJacobian) {
   auto f = [](const std::vector<double>& x) {

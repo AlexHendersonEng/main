@@ -1,4 +1,4 @@
-#include "finite_difference/forward_difference.h"
+#include "finite_difference/forward_difference.hpp"
 
 std::vector<std::vector<double>> forward_difference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,

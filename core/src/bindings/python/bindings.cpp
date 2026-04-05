@@ -1,10 +1,10 @@
 #include <pybind11/pybind11.h>
 
-#include "ode/euler_backward_bindings.h"
-#include "ode/euler_forward.h"
-#include "ode/euler_forward_bindings.h"
-#include "ode/runge_kutta_4_bindings.h"
-#include "ode/solution_bindings.h"
+#include "ode/euler_backward_bindings.hpp"
+#include "ode/euler_forward.hpp"
+#include "ode/euler_forward_bindings.hpp"
+#include "ode/runge_kutta_4_bindings.hpp"
+#include "ode/solution_bindings.hpp"
 
 namespace py = pybind11;
 

@@ -1,8 +1,8 @@
-#include "ode/euler_backward.h"
+#include "ode/euler_backward.hpp"
 
 #include <iostream>
 
-#include "root_finders/newton_raphson.h"
+#include "root_finders/newton_raphson.hpp"
 
 Solution euler_backward(const std::function<std::vector<double>(
                             const double&, const std::vector<double>&)>& f,

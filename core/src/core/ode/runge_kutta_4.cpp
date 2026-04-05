@@ -1,4 +1,4 @@
-#include "ode/runge_kutta_4.h"
+#include "ode/runge_kutta_4.hpp"
 
 #include <iostream>
 

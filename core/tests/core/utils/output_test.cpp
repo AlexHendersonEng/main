@@ -1,4 +1,4 @@
-#include "utils/output.h"
+#include "utils/output.hpp"
 
 #include <gtest/gtest.h>
 

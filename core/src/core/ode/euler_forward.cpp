@@ -1,4 +1,4 @@
-#include "ode/euler_forward.h"
+#include "ode/euler_forward.hpp"
 
 #include <iostream>
 

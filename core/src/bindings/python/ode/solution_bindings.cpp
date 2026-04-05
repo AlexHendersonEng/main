@@ -1,4 +1,4 @@
-#include "ode/solution_bindings.h"
+#include "ode/solution_bindings.hpp"
 
 #include <pybind11/numpy.h>
 

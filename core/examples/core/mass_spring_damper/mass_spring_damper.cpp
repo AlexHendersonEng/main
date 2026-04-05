@@ -1,9 +1,9 @@
 #include <iostream>
 
-#include "ode/euler_backward.h"
-#include "ode/euler_forward.h"
-#include "ode/runge_kutta_4.h"
-#include "utils/output.h"
+#include "ode/euler_backward.hpp"
+#include "ode/euler_forward.hpp"
+#include "ode/runge_kutta_4.hpp"
+#include "utils/output.hpp"
 
 int main() {
   // Mass spring damper function

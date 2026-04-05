@@ -1,4 +1,4 @@
-#include "linear_solvers/gaussian_elimination.h"
+#include "linear_solvers/gaussian_elimination.hpp"
 
 #include <gtest/gtest.h>
 

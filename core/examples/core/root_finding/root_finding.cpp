@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 
-#include "root_finders/newton_raphson.h"
+#include "root_finders/newton_raphson.hpp"
 
 int main() {
   // Define example system of equations:

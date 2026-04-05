@@ -1,9 +1,9 @@
-#include "ode/runge_kutta_4_bindings.h"
+#include "ode/runge_kutta_4_bindings.hpp"
 
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 
-#include "ode/runge_kutta_4.h"
+#include "ode/runge_kutta_4.hpp"
 
 void bind_runge_kutta_4(pybind11::module_& m) {
   m.def(

@@ -1,10 +1,10 @@
-#include "root_finders/newton_raphson.h"
+#include "root_finders/newton_raphson.hpp"
 
 #include <iostream>
 
-#include "finite_difference/forward_difference.h"
-#include "linear_solvers/gaussian_elimination.h"
-#include "utils/math.h"
+#include "finite_difference/forward_difference.hpp"
+#include "linear_solvers/gaussian_elimination.hpp"
+#include "utils/math.hpp"
 
 std::vector<double> newton_raphson(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,

@@ -1,4 +1,4 @@
-#include "ode/euler_backward.h"
+#include "ode/euler_backward.hpp"
 
 #include <gtest/gtest.h>
 

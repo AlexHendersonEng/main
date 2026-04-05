@@ -1,4 +1,4 @@
-#include "finite_difference/forward_difference.h"
+#include "finite_difference/forward_difference.hpp"
 
 #include <gtest/gtest.h>
 
