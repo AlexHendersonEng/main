@@ -1,5 +1,5 @@
 export default function Home() {
   return (
-    <h1>Simulation Foundry</h1>
+    <h1>Vanta Monitor</h1>
   );
 }
