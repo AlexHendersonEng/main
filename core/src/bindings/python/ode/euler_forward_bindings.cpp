@@ -71,7 +71,7 @@ void BindEulerForward(pybind11::module_& m) {
             --------
             Solve the scalar decay equation  dy/dt = -y,  y(0) = 1:
 
-            >>> from simulation_foundry_core_py import euler_forward
+            >>> from vanta_core_py import euler_forward
             >>> sol = euler_forward(
             ...     f=lambda t, y: [-y[0]],
             ...     t0=0.0, t1=5.0,

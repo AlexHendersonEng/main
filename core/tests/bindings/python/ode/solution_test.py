@@ -1,5 +1,5 @@
 import math
-from simulation_foundry_core_py.ode import Solution
+from vanta_core_py.ode import Solution
 
 
 class TestSolutionInit:

@@ -1,6 +1,6 @@
 # API Reference
 
-:::{automodule} simulation_foundry_core_py
+:::{automodule} vanta_core_py
 :synopsis:
 :members:
 :show-inheritance:

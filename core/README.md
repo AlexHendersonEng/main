@@ -1,11 +1,11 @@
-# Simulation Foundry Core
+# Vanta Core
 
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![uv](https://img.shields.io/badge/uv-%23DE5FE9.svg?style=for-the-badge&logo=uv&logoColor=white)
 
-Simulation Foundry Core is a developer friendly toolkit for designing, running, and analysing numerical simulations.
+Vanta Core is a developer friendly toolkit for designing, running, and analysing numerical simulations.
 
 ## Prerequisites
 

@@ -1,4 +1,4 @@
-# Simulation Foundry Core Py documentation
+# Vanta Core Py documentation
 
 :::{include} ../../../../README.md
 :::

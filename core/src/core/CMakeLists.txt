@@ -1,5 +1,5 @@
 # Variables
-set("target_name" "simulation_foundry_core")
+set("target_name" "vanta_core")
 
 # Get files
 file(GLOB_RECURSE "core_source_files" CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")

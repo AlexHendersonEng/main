@@ -1,6 +1,6 @@
 # ODE
 
-:::{automodule} simulation_foundry_core_py.ode
+:::{automodule} vanta_core_py.ode
 :synopsis:
 :members:
 :show-inheritance:

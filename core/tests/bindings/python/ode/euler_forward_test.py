@@ -1,5 +1,6 @@
 import math
-from simulation_foundry_core_py.ode import euler_forward
+from vanta_core_py.ode import euler_forward
+from vanta_core_py.ode import Solution
 
 
 # Helpers
@@ -24,8 +25,6 @@ def linear_growth(t, y):
 
 class TestEulerForwardOutputStructure:
     def test_returns_solution(self):
-        from simulation_foundry_core_py.ode import Solution
-
         sol = euler_forward(f=decay, t0=0.0, t1=1.0, y0=[1.0], h=0.1)
         assert isinstance(sol, Solution)
 

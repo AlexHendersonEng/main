@@ -9,8 +9,8 @@
 namespace py = pybind11;
 
 // Python module definition
-PYBIND11_MODULE(simulation_foundry_core_py, m, pybind11::mod_gil_not_used()) {
-  m.doc() = "Simulation Foundry Core Python bindings";
+PYBIND11_MODULE(vanta_core_py, m, pybind11::mod_gil_not_used()) {
+  m.doc() = "Vanta Core Python bindings";
 
   auto m_ode = m.def_submodule("ode", R"pbdoc(
         Ordinary Differential Equation solvers

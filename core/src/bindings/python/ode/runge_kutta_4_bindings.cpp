@@ -7,7 +7,7 @@
 
 void BindRungeKutta4(pybind11::module_& m) {
   m.def(
-      "RungeKutta4",
+      "runge_kutta_4",
       [](std::function<pybind11::array_t<double>(double,
                                                  pybind11::array_t<double>)>
              f,
@@ -70,7 +70,7 @@ void BindRungeKutta4(pybind11::module_& m) {
             --------
             Solve the scalar decay equation  dy/dt = -y,  y(0) = 1:
 
-            >>> from simulation_foundry_core_py import runge_kutta_4
+            >>> from vanta_core_py import runge_kutta_4
             >>> sol = runge_kutta_4(
             ...     f=lambda t, y: [-y[0]],
             ...     t0=0.0, t1=5.0,

@@ -9,7 +9,7 @@ add_executable(
 )
 target_link_libraries(
   "${target_name}"
-  "simulation_foundry_core"
+  "vanta_core"
   GTest::gtest
 )
 

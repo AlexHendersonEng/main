@@ -1,5 +1,6 @@
 import math
-from simulation_foundry_core_py.ode import runge_kutta_4
+from vanta_core_py.ode import runge_kutta_4
+from vanta_core_py.ode import Solution
 
 
 # Helpers
@@ -29,8 +30,6 @@ def cubic(t, y):
 
 class TestRungeKutta4OutputStructure:
     def test_returns_solution(self):
-        from simulation_foundry_core_py.ode import Solution
-
         sol = runge_kutta_4(f=decay, t0=0.0, t1=1.0, y0=[1.0], h=0.1)
         assert isinstance(sol, Solution)
 

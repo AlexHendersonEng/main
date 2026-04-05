@@ -1,7 +1,7 @@
 [project]
-name = "simulation_foundry_core_py"
+name = "vanta-core-py"
 version = "0.1.0"
-description = "Simulation Foundry Core Python bindings"
+description = "Vanta Core Python bindings"
 authors = [
     {name = "Alex Henderson"}
 ]
@@ -41,7 +41,7 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 build.verbose = true
-wheel.packages = ["simulation_foundry_core_py"]
+wheel.packages = ["vanta_core_py"]
 
 [[tool.scikit-build.overrides]]
 if.platform-system = "win32"

@@ -1,7 +1,7 @@
 # Project
 cmake_minimum_required(VERSION 4.0)
 project(
-    simulation-foundry-core
+    vanta-core
     VERSION 0.1.0
     LANGUAGES CXX CUDA
 )
