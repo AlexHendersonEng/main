@@ -6,7 +6,7 @@
 #include "linear_solvers/gaussian_elimination.hpp"
 #include "utils/math.hpp"
 
-std::vector<double> newton_raphson(
+std::vector<double> NewtonRaphson(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x0,
     const std::function<
@@ -20,7 +20,7 @@ std::vector<double> newton_raphson(
     std::vector<double> Fx = f(x);
 
     // Check if converged
-    if (vec_norm(Fx) < tol) {
+    if (VecNorm(Fx) < tol) {
       return x;
     }
 
@@ -32,13 +32,13 @@ std::vector<double> newton_raphson(
       J = J_f(x);
     } else {
       // Use numerical approximation
-      J = forward_difference(f, x);
+      J = ForwardDifference(f, x);
     }
 
     // Solve J * delta = -F
     for (double& val : Fx) val = -val;
 
-    std::vector<double> delta = gaussian_elimination(J, Fx);
+    std::vector<double> delta = GaussianElimination(J, Fx);
 
     // Update state vector
     for (size_t i = 0; i < x.size(); ++i) x[i] += delta[i];

@@ -8,12 +8,12 @@
 
 static constexpr float kEps = 1e-5f;
 
-// Run cuda_vector_sum and return the result vector.
+// Run CudaVectorSum and return the result vector.
 static std::vector<float> run(const std::vector<float>& a,
                               const std::vector<float>& b) {
   const int n = static_cast<int>(a.size());
   std::vector<float> c(n, 0.0f);
-  cuda_vector_sum(a.data(), b.data(), c.data(), n);
+  CudaVectorSum(a.data(), b.data(), c.data(), n);
   return c;
 }
 
@@ -134,6 +134,6 @@ TEST(VectorSum, OutputBufferIsFullyOverwritten) {
   const int n = 64;
   std::vector<float> a(n, 1.0f), b(n, 1.0f);
   std::vector<float> c(n, 999.0f);  // pre-fill with sentinel
-  cuda_vector_sum(a.data(), b.data(), c.data(), n);
+  CudaVectorSum(a.data(), b.data(), c.data(), n);
   for (int i = 0; i < n; ++i) EXPECT_FLOAT_EQ(c[i], 2.0f) << "index " << i;
 }

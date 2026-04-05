@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file runge_kutta_4.h
+ * @file RungeKutta4.h
  * @brief Classical fourth-order Runge–Kutta method for ODEs.
  *
  * This header declares a function implementing the classical fourth-order
@@ -44,7 +44,7 @@
  * @note The classical RK4 method is fourth-order accurate and provides a good
  *       balance between accuracy and computational cost for non-stiff problems.
  */
-Solution runge_kutta_4(const std::function<std::vector<double>(
-                           const double&, const std::vector<double>&)>& f,
-                       const double& t0, const double& t1,
-                       const std::vector<double>& y0, const double& h);
+Solution RungeKutta4(const std::function<std::vector<double>(
+                         const double&, const std::vector<double>&)>& f,
+                     const double& t0, const double& t1,
+                     const std::vector<double>& y0, const double& h);

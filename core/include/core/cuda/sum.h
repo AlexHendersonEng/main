@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file cuda_vector_sum.h
+ * @file CudaVectorSum.h
  * @brief Compute element-wise vector addition on the GPU using CUDA.
  */
 
@@ -28,7 +28,7 @@ extern "C" {
  *          pre-allocated by the caller
  * @param n the number of elements in each array
  */
-void cuda_vector_sum(const float* A, const float* B, float* C, int n);
+void CudaVectorSum(const float* A, const float* B, float* C, int n);
 
 #ifdef __cplusplus
 }

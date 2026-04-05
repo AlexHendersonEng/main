@@ -26,7 +26,7 @@ __global__ void kernel_vector_sum(const float *A, const float *B,
     }
 }
 
-void cuda_vector_sum(const float *A, const float *B, float *C, int n) {
+void CudaVectorSum(const float *A, const float *B, float *C, int n) {
     const size_t bytes = n * sizeof(float);
 
     // Allocate device memory for both inputs and the output.

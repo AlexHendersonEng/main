@@ -4,10 +4,10 @@
 
 #include "root_finders/newton_raphson.hpp"
 
-Solution euler_backward(const std::function<std::vector<double>(
-                            const double&, const std::vector<double>&)>& f,
-                        const double& t0, const double& t1,
-                        const std::vector<double>& y0, const double& h) {
+Solution EulerBackward(const std::function<std::vector<double>(
+                           const double&, const std::vector<double>&)>& f,
+                       const double& t0, const double& t1,
+                       const std::vector<double>& y0, const double& h) {
   // Validate input arguments
   if (h <= 0.0) {
     throw std::invalid_argument("Step size h must be positive.");
@@ -43,7 +43,7 @@ Solution euler_backward(const std::function<std::vector<double>(
     };
 
     // Solve using Newton-Raphson
-    y[i + 1] = newton_raphson(F, y[i]);
+    y[i + 1] = NewtonRaphson(F, y[i]);
   }
 
   // Return the computed solution

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file newton_raphson.h
+ * @file NewtonRaphson.h
  * @brief Solves system of equations using Newton-Raphson method.
  */
 
@@ -52,7 +52,7 @@
  * @throws Undefined behavior if the Jacobian matrix is singular
  *         or dimensions are inconsistent.
  */
-std::vector<double> newton_raphson(
+std::vector<double> NewtonRaphson(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x0,
     const std::function<std::vector<std::vector<double>>(

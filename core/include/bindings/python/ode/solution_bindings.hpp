@@ -4,4 +4,4 @@
 
 #include "ode/solution.hpp"
 
-void bind_solution(pybind11::module_& m);
+void BindSolution(pybind11::module_& m);

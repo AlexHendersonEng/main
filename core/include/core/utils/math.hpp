@@ -24,4 +24,4 @@
  *
  * @note This function does not modify the input vector.
  */
-double vec_norm(const std::vector<double>& v);
+double VecNorm(const std::vector<double>& v);

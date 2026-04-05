@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file euler_forward.h
+ * @file EulerForward.h
  * @brief Forward (explicit) Euler method for solving ordinary differential
  * equations.
  *
@@ -42,7 +42,7 @@
  * @note This method is first-order accurate and conditionally stable. Small
  * step sizes may be required for stiff problems.
  */
-Solution euler_forward(const std::function<std::vector<double>(
-                           const double&, const std::vector<double>&)>& f,
-                       const double& t0, const double& t1,
-                       const std::vector<double>& y0, const double& h);
+Solution EulerForward(const std::function<std::vector<double>(
+                          const double&, const std::vector<double>&)>& f,
+                      const double& t0, const double& t1,
+                      const std::vector<double>& y0, const double& h);

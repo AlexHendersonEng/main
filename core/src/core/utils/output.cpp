@@ -2,8 +2,8 @@
 
 #include <fstream>
 
-int to_csv(const std::string& filename, const std::vector<double>& t,
-           const std::vector<std::vector<double>>& y) {
+int ToCSV(const std::string& filename, const std::vector<double>& t,
+          const std::vector<std::vector<double>>& y) {
   // Open output file
   std::ofstream file(filename);
   if (!file.is_open()) {

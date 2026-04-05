@@ -5,14 +5,14 @@
 
 #include "ode/euler_backward.hpp"
 
-void bind_euler_backward(pybind11::module_& m) {
+void BindEulerBackward(pybind11::module_& m) {
   m.def(
       "euler_backward",
       [](std::function<pybind11::array_t<double>(double,
                                                  pybind11::array_t<double>)>
              f,
          double t0, double t1, pybind11::array_t<double> y0, double h) {
-        // Wrap the numpy-compatible callable into the signature euler_backward
+        // Wrap the numpy-compatible callable into the signature EulerBackward
         // expects
         auto f_wrapped = [&f](double t, const std::vector<double>& y) {
           pybind11::array_t<double> y_arr(y.size(), y.data());
@@ -27,7 +27,7 @@ void bind_euler_backward(pybind11::module_& m) {
         auto* ptr = static_cast<double*>(buf.ptr);
         std::vector<double> y0_vec(ptr, ptr + buf.size);
 
-        return euler_backward(f_wrapped, t0, t1, y0_vec, h);
+        return EulerBackward(f_wrapped, t0, t1, y0_vec, h);
       },
       pybind11::arg("f"), pybind11::arg("t0"), pybind11::arg("t1"),
       pybind11::arg("y0"), pybind11::arg("h"),

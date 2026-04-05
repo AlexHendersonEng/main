@@ -34,5 +34,5 @@
  * @note The size of @p t must match the size of @p y, and all entries in
  *       @p y must have the same length.
  */
-int to_csv(const std::string& filename, const std::vector<double>& t,
-           const std::vector<std::vector<double>>& y);
+int ToCSV(const std::string& filename, const std::vector<double>& t,
+          const std::vector<std::vector<double>>& y);

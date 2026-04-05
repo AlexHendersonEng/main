@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-std::vector<double> gaussian_elimination(std::vector<std::vector<double>> A,
-                                         std::vector<double> b) {
+std::vector<double> GaussianElimination(std::vector<std::vector<double>> A,
+                                        std::vector<double> b) {
   // Pre-allocated solution array
   size_t n = A.size();
   std::vector<double> x(n);

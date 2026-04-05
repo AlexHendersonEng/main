@@ -61,6 +61,10 @@ Packaging is run using `cpack` and is run automatically when executing a `cmake`
 
 Documentation is generated using `doxygen` and is run automatically when executing a `cmake` workflow.
 
+### Style
+
+C/C++ code follows [Google's C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
+
 ## Python
 
 ### Build Instructions
@@ -117,6 +121,10 @@ Generate Python bindings documentation using Sphinx:
 uv run sphinx-build ./docs/bindings/python/source ./out/build/docs/bindings/python
 ```
 
+### Style
+
+Python code follows [Google's Python Style Guide](https://google.github.io/styleguide/pyguide.html).
+
 ## Git Hooks
 
 Install hooks locally:
@@ -133,4 +141,4 @@ pre-commit run --all-files
 
 ## License
 
-This project is released under the terms in the `LICENSE` file: [LICENSE](https://github.com/AlexHendersonEng/simulation-foundry-core/blob/main/LICENSE)
+This project is released under the terms in the [LICENSE](https://github.com/AlexHendersonEng/simulation-foundry-core/blob/main/LICENSE) file.

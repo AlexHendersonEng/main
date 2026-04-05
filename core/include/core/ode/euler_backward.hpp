@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file euler_backward.h
+ * @file EulerBackward.h
  * @brief Backward (implicit) Euler method for solving ordinary differential
  * equations.
  *
@@ -43,7 +43,7 @@
  * @note This method is first-order accurate but unconditionally stable for
  * linear problems, making it suitable for stiff ODEs.
  */
-Solution euler_backward(const std::function<std::vector<double>(
-                            const double&, const std::vector<double>&)>& f,
-                        const double& t0, const double& t1,
-                        const std::vector<double>& y0, const double& h);
+Solution EulerBackward(const std::function<std::vector<double>(
+                           const double&, const std::vector<double>&)>& f,
+                       const double& t0, const double& t1,
+                       const std::vector<double>& y0, const double& h);

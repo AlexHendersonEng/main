@@ -23,7 +23,7 @@ int main() {
 
   // Solve using analytial Jacobian
   std::cout << "Using analytical Jacobian:\n";
-  std::vector<double> sol1 = newton_raphson(f, initialGuess, J_f);
+  std::vector<double> sol1 = NewtonRaphson(f, initialGuess, J_f);
 
   std::cout << "Solution:\n";
   for (size_t i = 0; i < sol1.size(); ++i)
@@ -32,7 +32,7 @@ int main() {
 
   // Solve using numerical Jacobian
   std::cout << "\nUsing numerical Jacobian:\n";
-  std::vector<double> sol2 = newton_raphson(f, initialGuess);
+  std::vector<double> sol2 = NewtonRaphson(f, initialGuess);
 
   std::cout << "Solution:\n";
   for (size_t i = 0; i < sol2.size(); ++i)

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file gaussian_elimination.h
+ * @file GaussianElimination.h
  * @brief Solves linear system using Gaussian elimination method.
  */
 
@@ -36,5 +36,5 @@
  *
  * @throws Undefined behavior if A is singular or dimensions are inconsistent.
  */
-std::vector<double> gaussian_elimination(std::vector<std::vector<double>> A,
-                                         std::vector<double> b);
+std::vector<double> GaussianElimination(std::vector<std::vector<double>> A,
+                                        std::vector<double> b);

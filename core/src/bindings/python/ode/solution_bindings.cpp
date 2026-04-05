@@ -2,7 +2,7 @@
 
 #include <pybind11/numpy.h>
 
-void bind_solution(pybind11::module_& m) {
+void BindSolution(pybind11::module_& m) {
   pybind11::class_<Solution>(m, "Solution", R"pbdoc(
         Container for a numerical ODE solution.
  

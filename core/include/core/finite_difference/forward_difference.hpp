@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @file forward_difference.h
+ * @file ForwardDifference.h
  * @brief Compute numerical Jacobian using the forward differencing method.
  */
 
@@ -30,6 +30,6 @@
  * @return a 2D vector representing the m × n Jacobian matrix,
  *         where element (i, j) corresponds to ∂f_i/∂x_j
  */
-std::vector<std::vector<double>> forward_difference(
+std::vector<std::vector<double>> ForwardDifference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x, double h = 1e-8);

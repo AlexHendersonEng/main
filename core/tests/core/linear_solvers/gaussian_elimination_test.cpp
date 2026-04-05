@@ -20,7 +20,7 @@ TEST(GaussianEliminationTest, Solves1x1System) {
   std::vector<std::vector<double>> A = {{4.0}};
   std::vector<double> b = {8.0};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   ExpectVectorsNear({2.0}, x);
 }
@@ -31,7 +31,7 @@ TEST(GaussianEliminationTest, Solves2x2System) {
   std::vector<std::vector<double>> A = {{2.0, 1.0}, {1.0, 3.0}};
   std::vector<double> b = {5.0, 6.0};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   // Solution: x = 1.8, y = 1.4
   ExpectVectorsNear({1.8, 1.4}, x);
@@ -42,7 +42,7 @@ TEST(GaussianEliminationTest, Solves3x3System) {
   std::vector<std::vector<double>> A = {{2, 1, -1}, {-3, -1, 2}, {-2, 1, 2}};
   std::vector<double> b = {8, -11, -3};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   ExpectVectorsNear({2.0, 3.0, -1.0}, x);
 }
@@ -52,7 +52,7 @@ TEST(GaussianEliminationTest, HandlesPartialPivoting) {
   std::vector<std::vector<double>> A = {{1e-10, 1.0}, {1.0, 1.0}};
   std::vector<double> b = {1.0, 2.0};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   // Expected solution: x = 1, y = 1
   ExpectVectorsNear({1.0, 1.0}, x);
@@ -62,7 +62,7 @@ TEST(GaussianEliminationTest, IdentityMatrixReturnsB) {
   std::vector<std::vector<double>> A = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   std::vector<double> b = {5, -3, 2};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   ExpectVectorsNear({5.0, -3.0, 2.0}, x);
 }
@@ -71,7 +71,7 @@ TEST(GaussianEliminationTest, UpperTriangularMatrix) {
   std::vector<std::vector<double>> A = {{2, 1, -1}, {0, 3, 2}, {0, 0, 4}};
   std::vector<double> b = {2, 5, 8};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   // Solve manually:
   // z = 8/4 = 2
@@ -84,7 +84,7 @@ TEST(GaussianEliminationTest, HandlesNegativeCoefficients) {
   std::vector<std::vector<double>> A = {{-2, -1}, {5, 3}};
   std::vector<double> b = {-1, 13};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   ExpectVectorsNear({-10.0, 21.0}, x);
 }
@@ -94,7 +94,7 @@ TEST(GaussianEliminationTest, LargerSystem4x4) {
       {1, 2, 3, 4}, {2, 5, 2, 1}, {3, 1, 3, 2}, {4, 2, 1, 4}};
   std::vector<double> b = {30, 22, 23, 26};
 
-  auto x = gaussian_elimination(A, b);
+  auto x = GaussianElimination(A, b);
 
   // Validate Ax ≈ b
   std::vector<double> computed_b(4, 0.0);

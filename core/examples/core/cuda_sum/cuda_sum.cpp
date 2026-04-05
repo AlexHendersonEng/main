@@ -11,7 +11,7 @@
 
 // CPU implementation of vector sum for correctness verification and
 // benchmarking
-static void cpu_vector_sum(const float* A, const float* B, float* C, int n) {
+static void CpuVectorSum(const float* A, const float* B, float* C, int n) {
   for (int i = 0; i < n; ++i) {
     C[i] = A[i] + B[i];
   }
@@ -19,7 +19,7 @@ static void cpu_vector_sum(const float* A, const float* B, float* C, int n) {
 
 // Utility to measure execution time of a function in milliseconds
 template <typename Fn>
-static double time_ms(Fn&& fn) {
+static double TimeMs(Fn&& fn) {
   auto t0 = std::chrono::high_resolution_clock::now();
   fn();
   auto t1 = std::chrono::high_resolution_clock::now();
@@ -27,7 +27,7 @@ static double time_ms(Fn&& fn) {
 }
 
 // Verify that the results from CPU and GPU match within a specified tolerance
-static bool verify(const float* ref, const float* got, int n,
+static bool Verify(const float* ref, const float* got, int n,
                    float tol = 1e-5f) {
   for (int i = 0; i < n; ++i) {
     if (std::fabs(ref[i] - got[i]) > tol) {
@@ -70,23 +70,23 @@ int main() {
     double cpu_total = 0.0;
     for (int r = 0; r < kRuns; ++r) {
       cpu_total +=
-          time_ms([&] { cpu_vector_sum(A.data(), B.data(), C_cpu.data(), N); });
+          TimeMs([&] { CpuVectorSum(A.data(), B.data(), C_cpu.data(), N); });
     }
     const double cpu_avg = cpu_total / kRuns;
 
     // Benchmark CUDA
     // Warm-up: first CUDA launch includes driver init overhead
-    cuda_vector_sum(A.data(), B.data(), C_gpu.data(), N);
+    CudaVectorSum(A.data(), B.data(), C_gpu.data(), N);
 
     double gpu_total = 0.0;
     for (int r = 0; r < kRuns; ++r) {
-      gpu_total += time_ms(
-          [&] { cuda_vector_sum(A.data(), B.data(), C_gpu.data(), N); });
+      gpu_total +=
+          TimeMs([&] { CudaVectorSum(A.data(), B.data(), C_gpu.data(), N); });
     }
     const double gpu_avg = gpu_total / kRuns;
 
     // Verify
-    bool match = verify(C_cpu.data(), C_gpu.data(), N);
+    bool match = Verify(C_cpu.data(), C_gpu.data(), N);
 
     std::cout << std::setw(10) << N << std::setw(14) << cpu_avg << std::setw(14)
               << gpu_avg << std::setw(11) << (cpu_avg / gpu_avg) << "x"

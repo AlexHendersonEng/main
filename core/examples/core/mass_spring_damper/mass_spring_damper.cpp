@@ -24,14 +24,14 @@ int main() {
   const double h = 0.1;
 
   // Run simulations
-  Solution euler_forward_sol = euler_forward(f, t0, t1, y0, h);
-  Solution runge_kutta_4_sol = runge_kutta_4(f, t0, t1, y0, h);
-  Solution euler_backward_sol = euler_backward(f, t0, t1, y0, h);
+  Solution euler_forward_sol = EulerForward(f, t0, t1, y0, h);
+  Solution runge_kutta_4_sol = RungeKutta4(f, t0, t1, y0, h);
+  Solution euler_backward_sol = EulerBackward(f, t0, t1, y0, h);
 
   // Write simulation data to csv file
-  to_csv("euler_forward.csv", euler_forward_sol.t, euler_forward_sol.y);
-  to_csv("runge_kutta_4.csv", runge_kutta_4_sol.t, runge_kutta_4_sol.y);
-  to_csv("euler_backward.csv", euler_backward_sol.t, euler_backward_sol.y);
+  ToCSV("euler_forward.csv", euler_forward_sol.t, euler_forward_sol.y);
+  ToCSV("runge_kutta_4.csv", runge_kutta_4_sol.t, runge_kutta_4_sol.y);
+  ToCSV("euler_backward.csv", euler_backward_sol.t, euler_backward_sol.y);
 
   return 0;
 }

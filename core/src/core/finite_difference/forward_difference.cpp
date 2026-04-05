@@ -1,6 +1,6 @@
 #include "finite_difference/forward_difference.hpp"
 
-std::vector<std::vector<double>> forward_difference(
+std::vector<std::vector<double>> ForwardDifference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x, double h) {
   size_t n = x.size();
