@@ -9,9 +9,14 @@
  * mathematical operations.
  */
 
+#include <cmath>
+#include <type_traits>
 #include <vector>
 
 namespace vanta::utils {
+
+template <typename T>
+concept FloatOrDouble = std::is_same_v<T, float> || std::is_same_v<T, double>;
 
 /**
  * @brief Compute the Euclidean (L2) norm of a vector.
@@ -29,7 +34,23 @@ namespace vanta::utils {
  *
  * @note This function does not modify the input vector.
  */
-double VecNorm(const std::vector<double>& v);
+template <FloatOrDouble T>
+T VecNorm(const std::vector<T>& v) {
+  T sum = 0.0;
+  for (T val : v) sum += val * val;
+
+  return std::sqrt(sum);
+};
+
+template <FloatOrDouble T>
+T Clamp(T min, T max, T val) {
+  return std::min(std::max(val, min), max);
+};
+
+template <FloatOrDouble T>
+bool Near(T a, T b, T tol = 1e-4) {
+  return std::abs(a - b) < tol;
+};
 
 }  // namespace vanta::utils
 

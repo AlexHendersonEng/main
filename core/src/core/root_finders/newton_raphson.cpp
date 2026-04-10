@@ -22,7 +22,7 @@ std::vector<double> NewtonRaphson(
     std::vector<double> Fx = f(x);
 
     // Check if converged
-    if (vanta::utils::VecNorm(Fx) < tol) {
+    if (vanta::utils::VecNorm<double>(Fx) < tol) {
       return x;
     }
 
