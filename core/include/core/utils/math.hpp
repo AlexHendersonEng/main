@@ -40,7 +40,7 @@ T VecNorm(const std::vector<T>& v) {
 };
 
 template <typename T>
-T Clamp(T min, T max, T val) {
+T Clamp(T val, T min, T max) {
   return std::min(std::max(val, min), max);
 };
 

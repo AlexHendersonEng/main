@@ -1,7 +1,6 @@
 #ifndef CORE_OPTIMISERS_GRADIENT_DESCENT_HPP_
 #define CORE_OPTIMISERS_GRADIENT_DESCENT_HPP_
 
-#include <cmath>
 #include <functional>
 #include <vector>
 
@@ -24,7 +23,7 @@ vanta::optimisers::Solution GradientDescent(
     std::vector<double> x,
     std::function<std::vector<double>(const std::vector<double>&)> grad_f =
         nullptr,
-    GDOptions opts = GDOptions{});
+    GDOptions opts = {});
 
 }  // namespace vanta::optimisers
 

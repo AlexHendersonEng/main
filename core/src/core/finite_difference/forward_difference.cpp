@@ -5,21 +5,25 @@ namespace vanta::finite_difference {
 std::vector<std::vector<double>> ForwardDifference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
     const std::vector<double>& x, double h) {
-  size_t n = x.size();
-  std::vector<std::vector<double>> J(n, std::vector<double>(n));
-  std::vector<double> Fx = f(x);
+  // Evaluate function
+  std::vector<double> fx = f(x);
 
-  for (size_t i = 0; i < n; ++i) {
-    std::vector<double> xPerturbed = x;
-    xPerturbed[i] += h;
-    std::vector<double> FxPerturbed = f(xPerturbed);
+  // Determine sizes
+  size_t n_x = x.size();
+  size_t n_f = fx.size();
+  std::vector<std::vector<double>> jacobian(n_f, std::vector<double>(n_x));
 
-    for (size_t j = 0; j < n; ++j) {
-      J[j][i] = (FxPerturbed[j] - Fx[j]) / h;
+  for (size_t i = 0; i < n_x; ++i) {
+    std::vector<double> x_perturbed = x;
+    x_perturbed[i] += h;
+    std::vector<double> fx_perturbed = f(x_perturbed);
+
+    for (size_t j = 0; j < n_f; ++j) {
+      jacobian[j][i] = (fx_perturbed[j] - fx[j]) / h;
     }
   }
 
-  return J;
+  return jacobian;
 }
 
 }  // namespace vanta::finite_difference
