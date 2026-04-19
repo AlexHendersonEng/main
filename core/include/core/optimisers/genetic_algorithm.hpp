@@ -73,18 +73,19 @@ struct GAOptions {
  *         - Number of iterations performed
  *
  * @pre @p lower_bounds and @p upper_bounds must have the same size.
- * @pre Each lower bound must be less than or equal to its corresponding upper bound.
+ * @pre Each lower bound must be less than or equal to its corresponding upper
+ * bound.
  *
  * @note The algorithm assumes a minimisation problem.
- * @note Random number generation is internally handled and not seeded externally.
+ * @note Random number generation is internally handled and not seeded
+ * externally.
  * @note Convergence is determined solely by the objective value falling below
  *       @p opts.tolerance.
  */
 vanta::optimisers::Solution GeneticAlgorithm(
     const std::function<double(const std::vector<double>&)>& f,
     const std::vector<double>& lower_bounds,
-    const std::vector<double>& upper_bounds,
-    GAOptions opts = {});
+    const std::vector<double>& upper_bounds, GAOptions opts = {});
 
 }  // namespace vanta::optimisers
 

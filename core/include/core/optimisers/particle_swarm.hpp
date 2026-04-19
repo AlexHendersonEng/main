@@ -70,7 +70,8 @@ struct PSOptions {
  *         - Number of iterations performed
  *
  * @pre @p lower_bounds and @p upper_bounds must have the same size.
- * @pre Each lower bound must be less than or equal to its corresponding upper bound.
+ * @pre Each lower bound must be less than or equal to its corresponding upper
+ * bound.
  *
  * @note The algorithm assumes a minimisation problem.
  * @note Convergence is determined solely by the objective value falling
@@ -80,8 +81,7 @@ struct PSOptions {
 vanta::optimisers::Solution ParticleSwarm(
     const std::function<double(const std::vector<double>&)>& f,
     const std::vector<double>& lower_bounds,
-    const std::vector<double>& upper_bounds,
-    PSOptions opts = {});
+    const std::vector<double>& upper_bounds, PSOptions opts = {});
 
 }  // namespace vanta::optimisers
 

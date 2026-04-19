@@ -55,7 +55,7 @@ void Mutate(std::vector<double>& genes, double rate, double strength,
   }
 }
 
-} // namespace
+}  // namespace
 
 namespace vanta::optimisers {
 

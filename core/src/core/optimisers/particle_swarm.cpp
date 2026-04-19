@@ -12,17 +12,17 @@ struct Particle {
   double best_value;
 };
 
-} // namespace
+}  // namespace
 
 namespace vanta::optimisers {
 
 vanta::optimisers::Solution ParticleSwarm(
     const std::function<double(const std::vector<double>&)>& f,
-    const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds,
-    PSOptions opts) {
+    const std::vector<double>& lower_bounds,
+    const std::vector<double>& upper_bounds, PSOptions opts) {
   // Number of dimensions
   int dim = lower_bounds.size();
-  
+
   // Create swarm
   std::vector<Particle> swarm(opts.n_particles);
 
