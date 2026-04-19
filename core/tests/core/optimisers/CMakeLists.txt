@@ -7,6 +7,7 @@ add_executable(
   optimisers_test.cpp
   gradient_descent_test.cpp
   particle_swarm_test.cpp
+  genetic_algorithm_test.cpp
 )
 target_link_libraries(
   "${target_name}"
