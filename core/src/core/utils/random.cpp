@@ -2,16 +2,23 @@
 
 namespace vanta::utils {
 
+namespace {
+std::mt19937& Engine() {
+  static std::mt19937 gen{std::random_device{}()};
+  return gen;
+}
+}  // namespace
+
+void SetRandomSeed(unsigned int seed) { Engine().seed(seed); }
+
 double RandUniform() {
-  static std::mt19937 gen(std::random_device{}());
   std::uniform_real_distribution<double> dist(0.0, 1.0);
-  return dist(gen);
+  return dist(Engine());
 }
 
 int RandInt(int min, int max) {
-  static std::mt19937 gen(std::random_device{}());
   std::uniform_int_distribution<int> dist(min, max);
-  return dist(gen);
+  return dist(Engine());
 }
 
 }  // namespace vanta::utils

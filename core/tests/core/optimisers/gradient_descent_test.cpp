@@ -6,17 +6,21 @@
 #include <functional>
 #include <vector>
 
-static double Quadratic(const std::vector<double>& x) {
+namespace {
+
+double Quadratic(const std::vector<double>& x) {
   // f(x) = (x[0]-3)^2 + (x[1]+2)^2
   return std::pow(x[0] - 3.0, 2) + std::pow(x[1] + 2.0, 2);
 }
 
 // Analytic gradient of the quadratic above
-static std::vector<double> QuadraticGrad(const std::vector<double>& x) {
+std::vector<double> QuadraticGrad(const std::vector<double>& x) {
   // ∂f/∂x[0] = 2*(x[0]-3)
   // ∂f/∂x[1] = 2*(x[1]+2)
   return {2.0 * (x[0] - 3.0), 2.0 * (x[1] + 2.0)};
 }
+
+}  // namespace
 
 TEST(GradientDescentTest, ConvergesToMinimumWithAnalyticGradient) {
   // Initial conditions

@@ -14,6 +14,23 @@
 namespace vanta::utils {
 
 /**
+ * @brief Sets the seed for the global random number generator.
+ *
+ * This function initializes or reinitializes the internal pseudo-random
+ * number generator used by RandUniform() and RandInt().
+ *
+ * Calling this function with a specific seed will make the sequence of
+ * generated random numbers deterministic and reproducible.
+ *
+ * @param seed The seed value used to initialize the random engine.
+ *
+ * @note This affects all subsequent calls to random generation functions
+ * that rely on the shared generator.
+ * @note Thread safety is not guaranteed due to the shared generator.
+ */
+void SetRandomSeed(unsigned int seed);
+
+/**
  * @brief Generate a uniformly distributed random floating-point value.
  *
  * This function returns a random double sampled from a uniform
