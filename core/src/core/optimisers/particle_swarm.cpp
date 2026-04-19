@@ -6,24 +6,28 @@
 namespace vanta::optimisers {
 
 vanta::optimisers::Solution ParticleSwarm(
-    int n_vars, const std::function<double(const std::vector<double>&)>& f,
+    const std::function<double(const std::vector<double>&)>& f,
+    const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds,
     PSOptions opts) {
+  // Number of dimensions
+  int dim = lower_bounds.size();
+  
   // Create swarm
   std::vector<Particle> swarm(opts.n_particles);
 
-  std::vector<double> global_best_position(n_vars);
+  std::vector<double> global_best_position(dim);
   double global_best_value = std::numeric_limits<double>::infinity();
 
   // Initialize swarm
   for (auto& p : swarm) {
-    p.position.resize(n_vars);
-    p.velocity.resize(n_vars);
-    p.best_position.resize(n_vars);
+    p.position.resize(dim);
+    p.velocity.resize(dim);
+    p.best_position.resize(dim);
 
-    for (int i = 0; i < n_vars; ++i) {
-      p.position[i] = (opts.upper_bounds[i] - opts.lower_bounds[i]) *
-                          vanta::utils::RandUniform() -
-                      opts.lower_bounds[i];
+    for (int i = 0; i < dim; ++i) {
+      p.position[i] =
+          (upper_bounds[i] - lower_bounds[i]) * vanta::utils::RandUniform() -
+          lower_bounds[i];
       p.velocity[i] = 2.0 * vanta::utils::RandUniform() - 1.0;
     }
 
@@ -40,7 +44,7 @@ vanta::optimisers::Solution ParticleSwarm(
   int iter = 0;
   for (; iter < opts.max_iters; ++iter) {
     for (auto& p : swarm) {
-      for (int i = 0; i < n_vars; ++i) {
+      for (int i = 0; i < dim; ++i) {
         // Random values
         double r1 = vanta::utils::RandUniform();
         double r2 = vanta::utils::RandUniform();
@@ -55,8 +59,8 @@ vanta::optimisers::Solution ParticleSwarm(
         p.position[i] += p.velocity[i];
 
         // Clamp to bounds
-        p.position[i] = vanta::utils::Clamp(p.position[i], opts.lower_bounds[i],
-                                            opts.upper_bounds[i]);
+        p.position[i] = vanta::utils::Clamp(p.position[i], lower_bounds[i],
+                                            upper_bounds[i]);
       }
 
       // Assess value

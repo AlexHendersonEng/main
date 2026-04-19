@@ -16,8 +16,6 @@ struct PSOptions {
   double c1 = 1.5;  // cognitive
   double c2 = 1.5;  // social
   double tolerance = 1e-6;
-  std::vector<double> lower_bounds;
-  std::vector<double> upper_bounds;
 };
 
 struct Particle {
@@ -28,7 +26,8 @@ struct Particle {
 };
 
 vanta::optimisers::Solution ParticleSwarm(
-    int n_vars, const std::function<double(const std::vector<double>&)>& f,
+    const std::function<double(const std::vector<double>&)>& f,
+    const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds,
     PSOptions opts = {});
 
 }  // namespace vanta::optimisers

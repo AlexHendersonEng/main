@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 
+#include "optimisers/genetic_algorithm.hpp"
 #include "optimisers/gradient_descent.hpp"
 #include "optimisers/particle_swarm.hpp"
 
@@ -53,22 +54,37 @@ int main() {
       "GradientDescent with finite difference gradient approximation", gd_sol1);
 
   // Particle swarm options
-  vanta::optimisers::PSOptions ps_opts{
-      .n_particles = 100,
-      .max_iters = 1000,
-      .w = 0.7,
-      .c1 = 1.5,
-      .c2 = 1.5,
-      .tolerance = 1e-6,
-      .lower_bounds = std::vector<double>{-10.0, -10.0},
-      .upper_bounds = std::vector<double>{10.0, 10.0}};
+  vanta::optimisers::PSOptions ps_opts{.n_particles = 100,
+                                       .max_iters = 1000,
+                                       .w = 0.7,
+                                       .c1 = 1.5,
+                                       .c2 = 1.5,
+                                       .tolerance = 1e-6};
 
   // Particle swarm optimiser
-  vanta::optimisers::Solution ps_sol =
-      vanta::optimisers::ParticleSwarm(2, f, ps_opts);
+  vanta::optimisers::Solution ps_sol = vanta::optimisers::ParticleSwarm(
+      f, std::vector<double>{-10.0, -10.0}, std::vector<double>{10.0, 10.0},
+      ps_opts);
 
   // Convergence check
   ConvergenceStatistics("ParticleSwarm", ps_sol);
+
+  // Genetic algorithm options
+  vanta::optimisers::GAOptions ga_opts{.population_size = 50,
+                                       .max_generations = 500,
+                                       .crossover_rate = 0.8,
+                                       .mutation_rate = 0.1,
+                                       .mutation_strength = 0.1,
+                                       .tournament_size = 3,
+                                       .tolerance = 1e-6};
+
+  // Genetic algorithm optimiser
+  vanta::optimisers::Solution ga_sol = vanta::optimisers::GeneticAlgorithm(
+      f, std::vector<double>{-10.0, -10.0}, std::vector<double>{10.0, 10.0},
+      ga_opts);
+
+  // Convergence check
+  ConvergenceStatistics("GeneticAlgotithm", ga_sol);
 
   return 0;
 }
