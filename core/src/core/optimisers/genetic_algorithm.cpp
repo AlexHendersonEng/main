@@ -3,8 +3,7 @@
 #include "utils/math.hpp"
 #include "utils/random.hpp"
 
-namespace vanta::optimisers {
-
+namespace {
 struct Individual {
   std::vector<double> genes;
   double fitness;
@@ -29,7 +28,7 @@ std::vector<double> Crossover(const std::vector<double>& a,
                               double alpha = 0.5) {
   // Define child vector
   std::vector<double> child(a.size());
-  
+
   // BLX-alpha crossover
   for (size_t i = 0; i < a.size(); ++i) {
     double minv = std::min(a[i], b[i]);
@@ -49,12 +48,16 @@ void Mutate(std::vector<double>& genes, double rate, double strength,
   for (size_t i = 0; i < genes.size(); ++i) {
     if (vanta::utils::RandUniform() < rate) {
       double range = (upper[i] - lower[i]);
-      genes[i] +=
-          (vanta::utils::RandUniform() * 2 * strength * range) - strength * range;
+      genes[i] += (vanta::utils::RandUniform() * 2 * strength * range) -
+                  strength * range;
       genes[i] = vanta::utils::Clamp(genes[i], lower[i], upper[i]);
     }
   }
 }
+
+} // namespace
+
+namespace vanta::optimisers {
 
 vanta::optimisers::Solution GeneticAlgorithm(
     const std::function<double(const std::vector<double>&)>& f,
@@ -70,7 +73,8 @@ vanta::optimisers::Solution GeneticAlgorithm(
     ind.genes.resize(dim);
     for (int i = 0; i < dim; ++i) {
       ind.genes[i] =
-          vanta::utils::RandUniform() * (upper_bounds[i] - lower_bounds[i]) + lower_bounds[i];
+          vanta::utils::RandUniform() * (upper_bounds[i] - lower_bounds[i]) +
+          lower_bounds[i];
     }
     ind.fitness = f(ind.genes);
   }
@@ -127,11 +131,10 @@ vanta::optimisers::Solution GeneticAlgorithm(
   }
 
   // Create solution structure
-  vanta::optimisers::Solution sol{
-      .f_val = best.fitness,
-      .x = best.genes,
-      .converged = best.fitness < opts.tolerance,
-      .iters = gen};
+  vanta::optimisers::Solution sol{.f_val = best.fitness,
+                                  .x = best.genes,
+                                  .converged = best.fitness < opts.tolerance,
+                                  .iters = gen};
 
   return sol;
 }

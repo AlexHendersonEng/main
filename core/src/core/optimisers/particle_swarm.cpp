@@ -3,6 +3,17 @@
 #include "utils/math.hpp"
 #include "utils/random.hpp"
 
+namespace {
+
+struct Particle {
+  std::vector<double> position;
+  std::vector<double> velocity;
+  std::vector<double> best_position;
+  double best_value;
+};
+
+} // namespace
+
 namespace vanta::optimisers {
 
 vanta::optimisers::Solution ParticleSwarm(
