@@ -2,6 +2,8 @@
 
 #include <pybind11/numpy.h>
 
+namespace vanta::bindings::python::ode {
+
 void BindSolution(pybind11::module_& m) {
   pybind11::class_<vanta::ode::Solution>(m, "Solution", R"pbdoc(
         Container for a numerical ODE solution.
@@ -56,3 +58,5 @@ void BindSolution(pybind11::module_& m) {
            })
       .def("__len__", [](const vanta::ode::Solution& s) { return s.t.size(); });
 }
+
+}  // namespace vanta::bindings::python::ode

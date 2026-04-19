@@ -5,6 +5,8 @@
 
 #include "ode/euler_backward.hpp"
 
+namespace vanta::bindings::python::ode {
+
 void BindEulerBackward(pybind11::module_& m) {
   m.def(
       "euler_backward",
@@ -82,3 +84,5 @@ void BindEulerBackward(pybind11::module_& m) {
             [1.0]
         )pbdoc");
 }
+
+}  // namespace vanta::bindings::python::ode

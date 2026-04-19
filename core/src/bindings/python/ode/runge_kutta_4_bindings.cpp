@@ -5,6 +5,8 @@
 
 #include "ode/runge_kutta_4.hpp"
 
+namespace vanta::bindings::python::ode {
+
 void BindRungeKutta4(pybind11::module_& m) {
   m.def(
       "runge_kutta_4",
@@ -82,3 +84,5 @@ void BindRungeKutta4(pybind11::module_& m) {
             [1.0]
         )pbdoc");
 }
+
+}  // namespace vanta::bindings::python::ode
