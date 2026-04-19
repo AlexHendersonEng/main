@@ -7,6 +7,7 @@ add_executable(
   utils_test.cpp
   output_test.cpp
   math_test.cpp
+  random_test.cpp
 )
 target_link_libraries(
   "${target_name}"
