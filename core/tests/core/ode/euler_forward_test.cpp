@@ -9,7 +9,7 @@
 class EulerForwardTest : public ::testing::Test {
  protected:
   // Allowed numerical tolerance for solution comparisons
-  const double tolerance = 1e-6;
+  const double kTolerance = 1e-6;
 };
 
 TEST_F(EulerForwardTest, NegativeStepSize) {
@@ -60,7 +60,7 @@ TEST_F(EulerForwardTest, ConstantFunction) {
 
   // Verify solution remains constant
   for (const auto& y_val : sol.y) {
-    EXPECT_NEAR(y_val[0], 5.0, tolerance);
+    EXPECT_NEAR(y_val[0], 5.0, kTolerance);
   }
 }
 
@@ -74,7 +74,7 @@ TEST_F(EulerForwardTest, LinearFunction) {
   vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {0.0}, h);
 
   // y(t) = t, so y(1.0) should be approximately 1.0
-  EXPECT_NEAR(sol.y.back()[0], 1.0, tolerance);
+  EXPECT_NEAR(sol.y.back()[0], 1.0, kTolerance);
 }
 
 TEST_F(EulerForwardTest, ExponentialGrowth) {
@@ -140,11 +140,11 @@ TEST_F(EulerForwardTest, TimeArrayCorrectness) {
   double h = 0.25;
   vanta::ode::Solution sol = vanta::ode::EulerForward(f, t0, t1, {1.0}, h);
 
-  EXPECT_NEAR(sol.t[0], 0.0, tolerance);
-  EXPECT_NEAR(sol.t[1], 0.25, tolerance);
-  EXPECT_NEAR(sol.t[2], 0.5, tolerance);
-  EXPECT_NEAR(sol.t[3], 0.75, tolerance);
-  EXPECT_NEAR(sol.t[4], 1.0, tolerance);
+  EXPECT_NEAR(sol.t[0], 0.0, kTolerance);
+  EXPECT_NEAR(sol.t[1], 0.25, kTolerance);
+  EXPECT_NEAR(sol.t[2], 0.5, kTolerance);
+  EXPECT_NEAR(sol.t[3], 0.75, kTolerance);
+  EXPECT_NEAR(sol.t[4], 1.0, kTolerance);
 }
 
 TEST_F(EulerForwardTest, NonIntegerSteps) {
