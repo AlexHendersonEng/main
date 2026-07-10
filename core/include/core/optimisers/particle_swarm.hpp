@@ -15,7 +15,7 @@
 #include "finite_difference/forward_difference.hpp"
 #include "optimisers/solution.hpp"
 
-namespace vanta::optimisers {
+namespace core::optimisers {
 
 /**
  * @brief Configuration options for particle swarm optimisation.
@@ -63,7 +63,7 @@ struct PSOptions {
  * @param upper_bounds Upper bounds for each dimension.
  * @param opts Configuration parameters for the algorithm (optional).
  *
- * @return A @ref vanta::optimisers::Solution containing:
+ * @return A @ref core::optimisers::Solution containing:
  *         - Best solution found
  *         - Objective value
  *         - Convergence status
@@ -78,11 +78,11 @@ struct PSOptions {
  *       below @p opts.tolerance.
  * @note Random number generation is handled internally.
  */
-vanta::optimisers::Solution ParticleSwarm(
+core::optimisers::Solution ParticleSwarm(
     const std::function<double(const std::vector<double>&)>& f,
     const std::vector<double>& lower_bounds,
     const std::vector<double>& upper_bounds, PSOptions opts = {});
 
-}  // namespace vanta::optimisers
+}  // namespace core::optimisers
 
 #endif  // CORE_OPTIMISERS_PARTICLE_SWARM_HPP_

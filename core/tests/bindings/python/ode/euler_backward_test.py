@@ -1,6 +1,6 @@
 import math
-from vanta_core_py.ode import euler_backward
-from vanta_core_py.ode import Solution
+from core_py.ode import euler_backward
+from core_py.ode import Solution
 
 
 # Helpers

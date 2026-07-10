@@ -6,17 +6,17 @@
 
 #include "optimisers/particle_swarm.hpp"
 
-namespace vanta::bindings::python::optimisers {
+namespace core::bindings::python::optimisers {
 
 void BindPSOptions(pybind11::module_& m) {
-  pybind11::class_<vanta::optimisers::PSOptions>(m, "PSOptions")
+  pybind11::class_<core::optimisers::PSOptions>(m, "PSOptions")
       .def(pybind11::init<>())
-      .def_readwrite("n_particles", &vanta::optimisers::PSOptions::n_particles)
-      .def_readwrite("max_iters", &vanta::optimisers::PSOptions::max_iters)
-      .def_readwrite("w", &vanta::optimisers::PSOptions::w)
-      .def_readwrite("c1", &vanta::optimisers::PSOptions::c1)
-      .def_readwrite("c2", &vanta::optimisers::PSOptions::c2)
-      .def_readwrite("tolerance", &vanta::optimisers::PSOptions::tolerance)
+      .def_readwrite("n_particles", &core::optimisers::PSOptions::n_particles)
+      .def_readwrite("max_iters", &core::optimisers::PSOptions::max_iters)
+      .def_readwrite("w", &core::optimisers::PSOptions::w)
+      .def_readwrite("c1", &core::optimisers::PSOptions::c1)
+      .def_readwrite("c2", &core::optimisers::PSOptions::c2)
+      .def_readwrite("tolerance", &core::optimisers::PSOptions::tolerance)
       .doc() = R"pbdoc(
 Particle Swarm Optimisation configuration options.
 
@@ -45,7 +45,7 @@ void BindParticleSwarm(pybind11::module_& m) {
       [](std::function<double(pybind11::array_t<double>)> f,
          pybind11::array_t<double> lower_bounds,
          pybind11::array_t<double> upper_bounds,
-         vanta::optimisers::PSOptions opts) {
+         core::optimisers::PSOptions opts) {
         // Wrap objective: numpy -> std::vector
         auto f_wrapped = [&f](const std::vector<double>& x_vec) {
           pybind11::array_t<double> x_arr(x_vec.size(), x_vec.data());
@@ -62,11 +62,11 @@ void BindParticleSwarm(pybind11::module_& m) {
         std::vector<double> lb(lb_ptr, lb_ptr + lb_buf.size);
         std::vector<double> ub(ub_ptr, ub_ptr + ub_buf.size);
 
-        return vanta::optimisers::ParticleSwarm(f_wrapped, lb, ub, opts);
+        return core::optimisers::ParticleSwarm(f_wrapped, lb, ub, opts);
       },
       pybind11::arg("f"), pybind11::arg("lower_bounds"),
       pybind11::arg("upper_bounds"),
-      pybind11::arg("opts") = vanta::optimisers::PSOptions{},
+      pybind11::arg("opts") = core::optimisers::PSOptions{},
       R"pbdoc(
 Minimise a function using Particle Swarm Optimisation (PSO).
 
@@ -101,4 +101,4 @@ Notes
 )pbdoc");
 }
 
-}  // namespace vanta::bindings::python::optimisers
+}  // namespace core::bindings::python::optimisers

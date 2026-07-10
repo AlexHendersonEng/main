@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace vanta::ode {
+namespace core::ode {
 
 Solution EulerForward(const std::function<std::vector<double>(
                           const double&, const std::vector<double>&)>& f,
@@ -44,4 +44,4 @@ Solution EulerForward(const std::function<std::vector<double>(
   return {t, y};
 }
 
-}  // namespace vanta::ode
+}  // namespace core::ode

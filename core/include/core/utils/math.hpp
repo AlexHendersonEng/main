@@ -13,7 +13,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace vanta::utils {
+namespace core::utils {
 
 /**
  * @brief Compute the Euclidean (L2) norm of a vector.
@@ -85,6 +85,6 @@ bool Near(T a, T b, T tol = 1e-4) {
   return std::abs(a - b) < tol;
 };
 
-}  // namespace vanta::utils
+}  // namespace core::utils
 
 #endif  // CORE_UTILS_MATH_HPP_

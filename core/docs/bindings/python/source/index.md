@@ -1,4 +1,4 @@
-# Vanta Core Py documentation
+# Core Py documentation
 
 :::{include} ../../../../README.md
 :::

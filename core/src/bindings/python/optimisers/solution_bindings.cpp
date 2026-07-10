@@ -5,19 +5,19 @@
 
 #include "optimisers/solution.hpp"
 
-namespace vanta::bindings::python::optimisers {
+namespace core::bindings::python::optimisers {
 
 void BindSolution(pybind11::module_& m) {
-  pybind11::class_<vanta::optimisers::Solution>(m, "Solution")
+  pybind11::class_<core::optimisers::Solution>(m, "Solution")
       .def(pybind11::init<>())
-      .def_readwrite("f_val", &vanta::optimisers::Solution::f_val)
+      .def_readwrite("f_val", &core::optimisers::Solution::f_val)
       .def_property_readonly(
           "x",
-          [](const vanta::optimisers::Solution& self) {
+          [](const core::optimisers::Solution& self) {
             return pybind11::array(self.x.size(), self.x.data()).attr("copy")();
           })
-      .def_readwrite("converged", &vanta::optimisers::Solution::converged)
-      .def_readwrite("iters", &vanta::optimisers::Solution::iters)
+      .def_readwrite("converged", &core::optimisers::Solution::converged)
+      .def_readwrite("iters", &core::optimisers::Solution::iters)
       .doc() = R"pbdoc(
 Optimisation result container.
 
@@ -41,4 +41,4 @@ x_np : numpy.ndarray
 )pbdoc";
 }
 
-}  // namespace vanta::bindings::python::optimisers
+}  // namespace core::bindings::python::optimisers

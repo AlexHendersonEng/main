@@ -18,7 +18,7 @@ std::vector<double> ForwardDifferenceWrapper(
 
   // Compute Jacobian
   std::vector<std::vector<double>> J =
-      vanta::finite_difference::ForwardDifference(f_wrapper, x, h);
+      core::finite_difference::ForwardDifference(f_wrapper, x, h);
 
   // Extract gradient
   std::vector<double> grad(x.size());
@@ -31,9 +31,9 @@ std::vector<double> ForwardDifferenceWrapper(
 
 }  // namespace
 
-namespace vanta::optimisers {
+namespace core::optimisers {
 
-vanta::optimisers::Solution GradientDescent(
+core::optimisers::Solution GradientDescent(
     const std::function<double(const std::vector<double>&)>& f,
     std::vector<double> x,
     std::function<std::vector<double>(const std::vector<double>&)> grad_f,
@@ -67,7 +67,7 @@ vanta::optimisers::Solution GradientDescent(
     }
 
     // Check convergence
-    if (vanta::utils::VecNorm<double>(grad) < opts.tolerance) {
+    if (core::utils::VecNorm<double>(grad) < opts.tolerance) {
       break;
     }
 
@@ -86,13 +86,13 @@ vanta::optimisers::Solution GradientDescent(
   }
 
   // Create solution structure
-  vanta::optimisers::Solution sol{
+  core::optimisers::Solution sol{
       .f_val = f(x),
       .x = x,
-      .converged = vanta::utils::VecNorm<double>(grad) < opts.tolerance,
+      .converged = core::utils::VecNorm<double>(grad) < opts.tolerance,
       .iters = iter};
 
   return sol;
 }
 
-}  // namespace vanta::optimisers
+}  // namespace core::optimisers

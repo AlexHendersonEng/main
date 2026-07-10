@@ -14,9 +14,9 @@ struct Particle {
 
 }  // namespace
 
-namespace vanta::optimisers {
+namespace core::optimisers {
 
-vanta::optimisers::Solution ParticleSwarm(
+core::optimisers::Solution ParticleSwarm(
     const std::function<double(const std::vector<double>&)>& f,
     const std::vector<double>& lower_bounds,
     const std::vector<double>& upper_bounds, PSOptions opts) {
@@ -37,9 +37,9 @@ vanta::optimisers::Solution ParticleSwarm(
 
     for (int i = 0; i < dim; ++i) {
       p.position[i] =
-          (upper_bounds[i] - lower_bounds[i]) * vanta::utils::RandUniform() -
+          (upper_bounds[i] - lower_bounds[i]) * core::utils::RandUniform() -
           lower_bounds[i];
-      p.velocity[i] = 2.0 * vanta::utils::RandUniform() - 1.0;
+      p.velocity[i] = 2.0 * core::utils::RandUniform() - 1.0;
     }
 
     p.best_position = p.position;
@@ -57,8 +57,8 @@ vanta::optimisers::Solution ParticleSwarm(
     for (auto& p : swarm) {
       for (int i = 0; i < dim; ++i) {
         // Random values
-        double r1 = vanta::utils::RandUniform();
-        double r2 = vanta::utils::RandUniform();
+        double r1 = core::utils::RandUniform();
+        double r2 = core::utils::RandUniform();
 
         // Velocity update
         p.velocity[i] =
@@ -70,8 +70,8 @@ vanta::optimisers::Solution ParticleSwarm(
         p.position[i] += p.velocity[i];
 
         // Clamp to bounds
-        p.position[i] = vanta::utils::Clamp(p.position[i], lower_bounds[i],
-                                            upper_bounds[i]);
+        p.position[i] =
+            core::utils::Clamp(p.position[i], lower_bounds[i], upper_bounds[i]);
       }
 
       // Assess value
@@ -97,7 +97,7 @@ vanta::optimisers::Solution ParticleSwarm(
   }
 
   // Create solution structure
-  vanta::optimisers::Solution sol{
+  core::optimisers::Solution sol{
       .f_val = global_best_value,
       .x = global_best_position,
       .converged = global_best_value < opts.tolerance,
@@ -106,4 +106,4 @@ vanta::optimisers::Solution ParticleSwarm(
   return sol;
 }
 
-}  // namespace vanta::optimisers
+}  // namespace core::optimisers

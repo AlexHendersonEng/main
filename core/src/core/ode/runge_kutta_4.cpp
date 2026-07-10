@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace vanta::ode {
+namespace core::ode {
 
 Solution RungeKutta4(const std::function<std::vector<double>(
                          const double&, const std::vector<double>&)>& f,
@@ -71,4 +71,4 @@ Solution RungeKutta4(const std::function<std::vector<double>(
   return {t, y};
 }
 
-}  // namespace vanta::ode
+}  // namespace core::ode

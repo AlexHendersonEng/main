@@ -10,7 +10,7 @@ int main() {
 
   // Solve
   std::vector<double> solution =
-      vanta::linear_solvers::GaussianElimination(A, b);
+      core::linear_solvers::GaussianElimination(A, b);
 
   // Print solution
   std::cout << "Solution:\n";

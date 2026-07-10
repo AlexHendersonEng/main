@@ -6,21 +6,19 @@
 
 #include "optimisers/gradient_descent.hpp"
 
-namespace vanta::bindings::python::optimisers {
+namespace core::bindings::python::optimisers {
 
 void BindGDOptions(pybind11::module_& m) {
-  pybind11::class_<vanta::optimisers::GDOptions>(m, "GDOptions")
+  pybind11::class_<core::optimisers::GDOptions>(m, "GDOptions")
       .def(pybind11::init<>())
       .def_readwrite("learning_rate",
-                     &vanta::optimisers::GDOptions::learning_rate)
-      .def_readwrite("max_iters", &vanta::optimisers::GDOptions::max_iters)
-      .def_readwrite("tolerance", &vanta::optimisers::GDOptions::tolerance)
+                     &core::optimisers::GDOptions::learning_rate)
+      .def_readwrite("max_iters", &core::optimisers::GDOptions::max_iters)
+      .def_readwrite("tolerance", &core::optimisers::GDOptions::tolerance)
       .def_readwrite("finite_difference_step",
-                     &vanta::optimisers::GDOptions::finite_difference_step)
-      .def_readwrite("lower_bounds",
-                     &vanta::optimisers::GDOptions::lower_bounds)
-      .def_readwrite("upper_bounds",
-                     &vanta::optimisers::GDOptions::upper_bounds)
+                     &core::optimisers::GDOptions::finite_difference_step)
+      .def_readwrite("lower_bounds", &core::optimisers::GDOptions::lower_bounds)
+      .def_readwrite("upper_bounds", &core::optimisers::GDOptions::upper_bounds)
       .doc() = R"pbdoc(
 Gradient Descent configuration options.
 
@@ -48,7 +46,7 @@ void BindGradientDescent(pybind11::module_& m) {
       "gradient_descent",
       [](std::function<double(pybind11::array_t<double>)> f,
          pybind11::array_t<double> x0, pybind11::object grad_f_obj,
-         vanta::optimisers::GDOptions opts) {
+         core::optimisers::GDOptions opts) {
         // Wrap f: numpy -> std::vector
         auto f_wrapped = [&f](const std::vector<double>& x_vec) {
           pybind11::array_t<double> x_arr(x_vec.size(), x_vec.data());
@@ -81,8 +79,8 @@ void BindGradientDescent(pybind11::module_& m) {
         }
 
         // Call core function
-        return vanta::optimisers::GradientDescent(f_wrapped, x_vec,
-                                                  grad_f_wrapped, opts);
+        return core::optimisers::GradientDescent(f_wrapped, x_vec,
+                                                 grad_f_wrapped, opts);
       },
       pybind11::arg("f"), pybind11::arg("x0"),
       pybind11::arg("grad_f") = pybind11::none(), pybind11::arg("opts"),
@@ -123,7 +121,7 @@ Notes
 
 Examples
 --------
->>> from vanta_core_py import gradient_descent, GDOptions
+>>> from core_py import gradient_descent, GDOptions
 >>> import numpy as np
 >>>
 >>> f = lambda x: (x[0] - 3.0)**2
@@ -139,4 +137,4 @@ Examples
 )pbdoc");
 }
 
-}  // namespace vanta::bindings::python::optimisers
+}  // namespace core::bindings::python::optimisers

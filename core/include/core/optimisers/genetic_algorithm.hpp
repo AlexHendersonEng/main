@@ -15,7 +15,7 @@
 #include "finite_difference/forward_difference.hpp"
 #include "optimisers/solution.hpp"
 
-namespace vanta::optimisers {
+namespace core::optimisers {
 
 /**
  * @brief Configuration options for the genetic algorithm.
@@ -66,7 +66,7 @@ struct GAOptions {
  * @param upper_bounds Upper bounds for each dimension.
  * @param opts Configuration parameters for the algorithm (optional).
  *
- * @return A @ref vanta::optimisers::Solution containing:
+ * @return A @ref core::optimisers::Solution containing:
  *         - Best solution found
  *         - Objective value
  *         - Convergence status
@@ -82,11 +82,11 @@ struct GAOptions {
  * @note Convergence is determined solely by the objective value falling below
  *       @p opts.tolerance.
  */
-vanta::optimisers::Solution GeneticAlgorithm(
+core::optimisers::Solution GeneticAlgorithm(
     const std::function<double(const std::vector<double>&)>& f,
     const std::vector<double>& lower_bounds,
     const std::vector<double>& upper_bounds, GAOptions opts = {});
 
-}  // namespace vanta::optimisers
+}  // namespace core::optimisers
 
 #endif  // CORE_OPTIMISERS_GENETIC_ALGORITHM_HPP_

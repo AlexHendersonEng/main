@@ -27,14 +27,14 @@ TEST(GradientDescentTest, ConvergesToMinimumWithAnalyticGradient) {
   std::vector<double> x0 = {0.0, 0.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.learning_rate = 0.1;
   opts.max_iters = 1000;
   opts.tolerance = 1e-6;
 
   // Solve
   auto sol =
-      vanta::optimisers::GradientDescent(Quadratic, x0, QuadraticGrad, opts);
+      core::optimisers::GradientDescent(Quadratic, x0, QuadraticGrad, opts);
 
   // Check results
   EXPECT_TRUE(sol.converged);
@@ -48,14 +48,14 @@ TEST(GradientDescentTest, ConvergesWithoutExplicitGradient) {
   std::vector<double> x0 = {5.0, -5.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.learning_rate = 0.1;
   opts.max_iters = 2000;
   opts.tolerance = 1e-6;
   opts.finite_difference_step = 1e-6;
 
   // No gradient provided -> uses finite difference
-  auto sol = vanta::optimisers::GradientDescent(Quadratic, x0, nullptr, opts);
+  auto sol = core::optimisers::GradientDescent(Quadratic, x0, nullptr, opts);
 
   // Check results
   EXPECT_TRUE(sol.converged);
@@ -68,7 +68,7 @@ TEST(GradientDescentTest, RespectsLowerBounds) {
   std::vector<double> x0 = {0.0, 0.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.learning_rate = 0.2;
   opts.max_iters = 500;
   opts.tolerance = 1e-6;
@@ -87,7 +87,7 @@ TEST(GradientDescentTest, RespectsUpperBounds) {
   std::vector<double> x0 = {10.0, 10.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.learning_rate = 0.2;
   opts.max_iters = 500;
   opts.tolerance = 1e-6;
@@ -95,7 +95,7 @@ TEST(GradientDescentTest, RespectsUpperBounds) {
 
   // Solve
   auto sol =
-      vanta::optimisers::GradientDescent(Quadratic, x0, QuadraticGrad, opts);
+      core::optimisers::GradientDescent(Quadratic, x0, QuadraticGrad, opts);
 
   // Check results
   EXPECT_LE(sol.x[0], 4.0);
@@ -107,7 +107,7 @@ TEST(GradientDescentTest, RespectsBothBounds) {
   std::vector<double> x0 = {10.0, -10.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.learning_rate = 0.2;
   opts.max_iters = 500;
   opts.tolerance = 1e-6;
@@ -130,7 +130,7 @@ TEST(GradientDescentTest, ThrowsOnInvalidLowerBoundSize) {
   std::vector<double> x0 = {1.0, 2.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.lower_bounds = {0.0};  // wrong size
 
   // Expect an exception due to size mismatch
@@ -143,7 +143,7 @@ TEST(GradientDescentTest, ThrowsOnInvalidUpperBoundSize) {
   std::vector<double> x0 = {1.0, 2.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.upper_bounds = {0.0};  // wrong size
 
   // Expect an exception due to size mismatch
@@ -156,14 +156,14 @@ TEST(GradientDescentTest, StopsOnMaxIterations) {
   std::vector<double> x0 = {100.0, -100.0};
 
   // Optimiser options
-  vanta::optimisers::GDOptions opts;
+  core::optimisers::GDOptions opts;
   opts.learning_rate = 1e-6;  // very slow convergence
   opts.max_iters = 5;
   opts.tolerance = 1e-12;
 
   // Solve
   auto sol =
-      vanta::optimisers::GradientDescent(Quadratic, x0, QuadraticGrad, opts);
+      core::optimisers::GradientDescent(Quadratic, x0, QuadraticGrad, opts);
 
   // Check results
   EXPECT_EQ(sol.iters, 5);

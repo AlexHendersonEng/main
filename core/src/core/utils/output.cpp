@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace vanta::utils {
+namespace core::utils {
 
 int ToCSV(const std::string& filename, const std::vector<double>& t,
           const std::vector<std::vector<double>>& y) {
@@ -31,4 +31,4 @@ int ToCSV(const std::string& filename, const std::vector<double>& t,
   return 0;
 }
 
-}  // namespace vanta::utils
+}  // namespace core::utils

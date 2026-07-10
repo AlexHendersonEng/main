@@ -1,1 +1,1 @@
-# Vanta Learn
+# Learn

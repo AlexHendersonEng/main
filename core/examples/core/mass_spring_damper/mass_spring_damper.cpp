@@ -24,20 +24,20 @@ int main() {
   const double h = 0.1;
 
   // Run simulations
-  vanta::ode::Solution euler_forward_sol =
-      vanta::ode::EulerForward(f, t0, t1, y0, h);
-  vanta::ode::Solution runge_kutta_4_sol =
-      vanta::ode::RungeKutta4(f, t0, t1, y0, h);
-  vanta::ode::Solution euler_backward_sol =
-      vanta::ode::EulerBackward(f, t0, t1, y0, h);
+  core::ode::Solution euler_forward_sol =
+      core::ode::EulerForward(f, t0, t1, y0, h);
+  core::ode::Solution runge_kutta_4_sol =
+      core::ode::RungeKutta4(f, t0, t1, y0, h);
+  core::ode::Solution euler_backward_sol =
+      core::ode::EulerBackward(f, t0, t1, y0, h);
 
   // Write simulation data to csv file
-  vanta::utils::ToCSV("euler_forward.csv", euler_forward_sol.t,
-                      euler_forward_sol.y);
-  vanta::utils::ToCSV("runge_kutta_4.csv", runge_kutta_4_sol.t,
-                      runge_kutta_4_sol.y);
-  vanta::utils::ToCSV("euler_backward.csv", euler_backward_sol.t,
-                      euler_backward_sol.y);
+  core::utils::ToCSV("euler_forward.csv", euler_forward_sol.t,
+                     euler_forward_sol.y);
+  core::utils::ToCSV("runge_kutta_4.csv", runge_kutta_4_sol.t,
+                     runge_kutta_4_sol.y);
+  core::utils::ToCSV("euler_backward.csv", euler_backward_sol.t,
+                     euler_backward_sol.y);
 
   return 0;
 }

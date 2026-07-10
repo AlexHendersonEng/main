@@ -6,13 +6,13 @@
  * @brief Standard optimisation result container.
  *
  * This header defines a lightweight structure used to store the
- * results of optimisation algorithms within the vanta::optimisers
+ * results of optimisation algorithms within the core::optimisers
  * module.
  */
 
 #include <vector>
 
-namespace vanta::optimisers {
+namespace core::optimisers {
 
 /**
  * @brief Represents the result of an optimisation procedure.
@@ -35,6 +35,6 @@ struct Solution {
   int iters;
 };
 
-}  // namespace vanta::optimisers
+}  // namespace core::optimisers
 
 #endif  // CORE_OPTIMISERS_SOLUTION_HPP_

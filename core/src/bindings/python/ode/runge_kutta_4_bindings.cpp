@@ -5,7 +5,7 @@
 
 #include "ode/runge_kutta_4.hpp"
 
-namespace vanta::bindings::python::ode {
+namespace core::bindings::python::ode {
 
 void BindRungeKutta4(pybind11::module_& m) {
   m.def(
@@ -29,7 +29,7 @@ void BindRungeKutta4(pybind11::module_& m) {
         auto* ptr = static_cast<double*>(buf.ptr);
         std::vector<double> y0_vec(ptr, ptr + buf.size);
 
-        return vanta::ode::RungeKutta4(f_wrapped, t0, t1, y0_vec, h);
+        return core::ode::RungeKutta4(f_wrapped, t0, t1, y0_vec, h);
       },
       pybind11::arg("f"), pybind11::arg("t0"), pybind11::arg("t1"),
       pybind11::arg("y0"), pybind11::arg("h"),
@@ -72,7 +72,7 @@ void BindRungeKutta4(pybind11::module_& m) {
             --------
             Solve the scalar decay equation  dy/dt = -y,  y(0) = 1:
 
-            >>> from vanta_core_py import runge_kutta_4
+            >>> from core_py import runge_kutta_4
             >>> sol = runge_kutta_4(
             ...     f=lambda t, y: [-y[0]],
             ...     t0=0.0, t1=5.0,
@@ -85,4 +85,4 @@ void BindRungeKutta4(pybind11::module_& m) {
         )pbdoc");
 }
 
-}  // namespace vanta::bindings::python::ode
+}  // namespace core::bindings::python::ode

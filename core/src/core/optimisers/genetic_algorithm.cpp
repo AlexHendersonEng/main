@@ -11,11 +11,11 @@ struct Individual {
 
 const Individual& TournamentSelect(const std::vector<Individual>& pop, int k) {
   // Select a best individual at random
-  int best_idx = vanta::utils::RandInt(0, pop.size() - 1);
+  int best_idx = core::utils::RandInt(0, pop.size() - 1);
 
   // Select k individuals from the population at random and see which is best
   for (int i = 1; i < k; ++i) {
-    int idx = vanta::utils::RandInt(0, pop.size() - 1);
+    int idx = core::utils::RandInt(0, pop.size() - 1);
     if (pop[idx].fitness < pop[best_idx].fitness) {
       best_idx = idx;
     }
@@ -36,7 +36,7 @@ std::vector<double> Crossover(const std::vector<double>& a,
     double range = maxv - minv;
     double lo = minv - alpha * range;
     double hi = maxv + alpha * range;
-    child[i] = vanta::utils::RandUniform() * (hi - lo) + lo;
+    child[i] = core::utils::RandUniform() * (hi - lo) + lo;
   }
 
   return child;
@@ -46,20 +46,20 @@ void Mutate(std::vector<double>& genes, double rate, double strength,
             const std::vector<double>& lower,
             const std::vector<double>& upper) {
   for (size_t i = 0; i < genes.size(); ++i) {
-    if (vanta::utils::RandUniform() < rate) {
+    if (core::utils::RandUniform() < rate) {
       double range = (upper[i] - lower[i]);
-      genes[i] += (vanta::utils::RandUniform() * 2 * strength * range) -
+      genes[i] += (core::utils::RandUniform() * 2 * strength * range) -
                   strength * range;
-      genes[i] = vanta::utils::Clamp(genes[i], lower[i], upper[i]);
+      genes[i] = core::utils::Clamp(genes[i], lower[i], upper[i]);
     }
   }
 }
 
 }  // namespace
 
-namespace vanta::optimisers {
+namespace core::optimisers {
 
-vanta::optimisers::Solution GeneticAlgorithm(
+core::optimisers::Solution GeneticAlgorithm(
     const std::function<double(const std::vector<double>&)>& f,
     const std::vector<double>& lower_bounds,
     const std::vector<double>& upper_bounds, GAOptions opts) {
@@ -73,7 +73,7 @@ vanta::optimisers::Solution GeneticAlgorithm(
     ind.genes.resize(dim);
     for (int i = 0; i < dim; ++i) {
       ind.genes[i] =
-          vanta::utils::RandUniform() * (upper_bounds[i] - lower_bounds[i]) +
+          core::utils::RandUniform() * (upper_bounds[i] - lower_bounds[i]) +
           lower_bounds[i];
     }
     ind.fitness = f(ind.genes);
@@ -106,7 +106,7 @@ vanta::optimisers::Solution GeneticAlgorithm(
       // Create child
       std::vector<double> child_genes;
 
-      if (vanta::utils::RandUniform() < opts.crossover_rate) {
+      if (core::utils::RandUniform() < opts.crossover_rate) {
         child_genes = Crossover(parent1.genes, parent2.genes);
       } else {
         child_genes = parent1.genes;
@@ -131,12 +131,12 @@ vanta::optimisers::Solution GeneticAlgorithm(
   }
 
   // Create solution structure
-  vanta::optimisers::Solution sol{.f_val = best.fitness,
-                                  .x = best.genes,
-                                  .converged = best.fitness < opts.tolerance,
-                                  .iters = gen};
+  core::optimisers::Solution sol{.f_val = best.fitness,
+                                 .x = best.genes,
+                                 .converged = best.fitness < opts.tolerance,
+                                 .iters = gen};
 
   return sol;
 }
 
-}  // namespace vanta::optimisers
+}  // namespace core::optimisers

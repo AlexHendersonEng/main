@@ -16,7 +16,7 @@
 #include "finite_difference/forward_difference.hpp"
 #include "optimisers/solution.hpp"
 
-namespace vanta::optimisers {
+namespace core::optimisers {
 
 /**
  * @brief Configuration options for gradient descent.
@@ -62,7 +62,7 @@ struct GDOptions {
  *               approximation is used.
  * @param opts Configuration parameters for the algorithm (optional).
  *
- * @return A @ref vanta::optimisers::Solution containing:
+ * @return A @ref core::optimisers::Solution containing:
  *         - Final parameter vector
  *         - Objective function value
  *         - Convergence status
@@ -79,13 +79,13 @@ struct GDOptions {
  *       which may introduce approximation error.
  * @note Bound constraints are enforced via projection after each update.
  */
-vanta::optimisers::Solution GradientDescent(
+core::optimisers::Solution GradientDescent(
     const std::function<double(const std::vector<double>&)>& f,
     std::vector<double> x,
     std::function<std::vector<double>(const std::vector<double>&)> grad_f =
         nullptr,
     GDOptions opts = {});
 
-}  // namespace vanta::optimisers
+}  // namespace core::optimisers
 
 #endif  // CORE_OPTIMISERS_GRADIENT_DESCENT_HPP_

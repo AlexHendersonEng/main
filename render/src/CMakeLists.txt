@@ -1,5 +1,5 @@
 # Variables
-set("target_name" "vanta_render")
+set("target_name" "render")
 
 # Library
 file(GLOB_RECURSE "source_files" CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")

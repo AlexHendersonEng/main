@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace vanta::linear_solvers {
+namespace core::linear_solvers {
 
 std::vector<double> GaussianElimination(std::vector<std::vector<double>> A,
                                         std::vector<double> b) {
@@ -42,4 +42,4 @@ std::vector<double> GaussianElimination(std::vector<std::vector<double>> A,
   return x;
 }
 
-}  // namespace vanta::linear_solvers
+}  // namespace core::linear_solvers

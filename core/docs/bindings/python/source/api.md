@@ -1,6 +1,6 @@
 # API Reference
 
-:::{automodule} vanta_core_py
+:::{automodule} core_py
 :synopsis:
 :members:
 :show-inheritance:

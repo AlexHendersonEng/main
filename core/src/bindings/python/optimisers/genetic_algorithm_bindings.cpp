@@ -6,24 +6,24 @@
 
 #include "optimisers/genetic_algorithm.hpp"
 
-namespace vanta::bindings::python::optimisers {
+namespace core::bindings::python::optimisers {
 
 void BindGAOptions(pybind11::module_& m) {
-  pybind11::class_<vanta::optimisers::GAOptions>(m, "GAOptions")
+  pybind11::class_<core::optimisers::GAOptions>(m, "GAOptions")
       .def(pybind11::init<>())
       .def_readwrite("population_size",
-                     &vanta::optimisers::GAOptions::population_size)
+                     &core::optimisers::GAOptions::population_size)
       .def_readwrite("max_generations",
-                     &vanta::optimisers::GAOptions::max_generations)
+                     &core::optimisers::GAOptions::max_generations)
       .def_readwrite("crossover_rate",
-                     &vanta::optimisers::GAOptions::crossover_rate)
+                     &core::optimisers::GAOptions::crossover_rate)
       .def_readwrite("mutation_rate",
-                     &vanta::optimisers::GAOptions::mutation_rate)
+                     &core::optimisers::GAOptions::mutation_rate)
       .def_readwrite("mutation_strength",
-                     &vanta::optimisers::GAOptions::mutation_strength)
+                     &core::optimisers::GAOptions::mutation_strength)
       .def_readwrite("tournament_size",
-                     &vanta::optimisers::GAOptions::tournament_size)
-      .def_readwrite("tolerance", &vanta::optimisers::GAOptions::tolerance)
+                     &core::optimisers::GAOptions::tournament_size)
+      .def_readwrite("tolerance", &core::optimisers::GAOptions::tolerance)
       .doc() = R"pbdoc(
 Genetic Algorithm configuration options.
 
@@ -54,7 +54,7 @@ void BindGeneticAlgorithm(pybind11::module_& m) {
       [](std::function<double(pybind11::array_t<double>)> f,
          pybind11::array_t<double> lower_bounds,
          pybind11::array_t<double> upper_bounds,
-         vanta::optimisers::GAOptions opts) {
+         core::optimisers::GAOptions opts) {
         // Wrap objective: numpy -> std::vector
         auto f_wrapped = [&f](const std::vector<double>& x_vec) {
           pybind11::array_t<double> x_arr(x_vec.size(), x_vec.data());
@@ -71,11 +71,11 @@ void BindGeneticAlgorithm(pybind11::module_& m) {
         std::vector<double> lb(lb_ptr, lb_ptr + lb_buf.size);
         std::vector<double> ub(ub_ptr, ub_ptr + ub_buf.size);
 
-        return vanta::optimisers::GeneticAlgorithm(f_wrapped, lb, ub, opts);
+        return core::optimisers::GeneticAlgorithm(f_wrapped, lb, ub, opts);
       },
       pybind11::arg("f"), pybind11::arg("lower_bounds"),
       pybind11::arg("upper_bounds"),
-      pybind11::arg("opts") = vanta::optimisers::GAOptions{},
+      pybind11::arg("opts") = core::optimisers::GAOptions{},
       R"pbdoc(
 Minimise a function using a genetic algorithm.
 
@@ -110,4 +110,4 @@ Notes
 )pbdoc");
 }
 
-}  // namespace vanta::bindings::python::optimisers
+}  // namespace core::bindings::python::optimisers

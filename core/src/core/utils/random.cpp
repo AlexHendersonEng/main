@@ -1,6 +1,6 @@
 #include "utils/random.hpp"
 
-namespace vanta::utils {
+namespace core::utils {
 
 namespace {
 std::mt19937& Engine() {
@@ -21,4 +21,4 @@ int RandInt(int min, int max) {
   return dist(Engine());
 }
 
-}  // namespace vanta::utils
+}  // namespace core::utils

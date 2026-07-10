@@ -9,7 +9,7 @@ add_executable(
 )
 target_link_libraries(
   "${target_name}"
-  "vanta_core"
+  "core"
   GTest::gtest
 )
 

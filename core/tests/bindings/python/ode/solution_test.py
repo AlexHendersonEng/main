@@ -1,5 +1,5 @@
 import math
-from vanta_core_py.ode import Solution
+from core_py.ode import Solution
 
 
 class TestSolutionInit:

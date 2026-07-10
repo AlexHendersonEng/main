@@ -1,6 +1,6 @@
 import math
-from vanta_core_py.ode import runge_kutta_4
-from vanta_core_py.ode import Solution
+from core_py.ode import runge_kutta_4
+from core_py.ode import Solution
 
 
 # Helpers

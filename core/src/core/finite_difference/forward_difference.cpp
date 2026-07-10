@@ -1,6 +1,6 @@
 #include "finite_difference/forward_difference.hpp"
 
-namespace vanta::finite_difference {
+namespace core::finite_difference {
 
 std::vector<std::vector<double>> ForwardDifference(
     const std::function<std::vector<double>(const std::vector<double>&)>& f,
@@ -26,4 +26,4 @@ std::vector<std::vector<double>> ForwardDifference(
   return jacobian;
 }
 
-}  // namespace vanta::finite_difference
+}  // namespace core::finite_difference

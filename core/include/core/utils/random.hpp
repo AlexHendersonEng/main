@@ -11,7 +11,7 @@
 
 #include <random>
 
-namespace vanta::utils {
+namespace core::utils {
 
 /**
  * @brief Sets the seed for the global random number generator.
@@ -66,6 +66,6 @@ double RandUniform();
  */
 int RandInt(int min, int max);
 
-}  // namespace vanta::utils
+}  // namespace core::utils
 
 #endif  // CORE_UTILS_RANDOM_HPP_

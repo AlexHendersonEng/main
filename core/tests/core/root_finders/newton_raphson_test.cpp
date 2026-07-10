@@ -20,7 +20,7 @@ TEST(NewtonRaphsonTest, ScalarWithAnalyticJacobian) {
   std::vector<double> x0 = {1.0};
 
   std::vector<double> result =
-      vanta::root_finders::NewtonRaphson(f, x0, J_f, 50, 1e-10);
+      core::root_finders::NewtonRaphson(f, x0, J_f, 50, 1e-10);
 
   EXPECT_NEAR(result[0], std::sqrt(2.0), 1e-6);
 }
@@ -33,7 +33,7 @@ TEST(NewtonRaphsonTest, ScalarWithNumericalJacobian) {
   std::vector<double> x0 = {1.0};
 
   std::vector<double> result =
-      vanta::root_finders::NewtonRaphson(f, x0, nullptr, 50, 1e-10);
+      core::root_finders::NewtonRaphson(f, x0, nullptr, 50, 1e-10);
 
   EXPECT_NEAR(result[0], std::sqrt(2.0), 1e-6);
 }
@@ -51,7 +51,7 @@ TEST(NewtonRaphsonTest, TwoDimensionalSystem) {
   std::vector<double> x0 = {1.0, 1.5};
 
   std::vector<double> result =
-      vanta::root_finders::NewtonRaphson(f, x0, J_f, 50, 1e-10);
+      core::root_finders::NewtonRaphson(f, x0, J_f, 50, 1e-10);
 
   EXPECT_NEAR(result[0], std::sqrt(2.0), 1e-6);
   EXPECT_NEAR(result[1], std::sqrt(2.0), 1e-6);
@@ -69,7 +69,7 @@ TEST(NewtonRaphsonTest, AlreadyAtRoot) {
   std::vector<double> x0 = {3.0};
 
   std::vector<double> result =
-      vanta::root_finders::NewtonRaphson(f, x0, J_f, 10, 1e-12);
+      core::root_finders::NewtonRaphson(f, x0, J_f, 10, 1e-12);
 
   EXPECT_DOUBLE_EQ(result[0], 3.0);
 }
@@ -87,7 +87,7 @@ TEST(NewtonRaphsonTest, MaxIterationsReached) {
 
   // Only 1 iteration allowed — won't converge
   std::vector<double> result =
-      vanta::root_finders::NewtonRaphson(f, x0, J_f, 1, 1e-12);
+      core::root_finders::NewtonRaphson(f, x0, J_f, 1, 1e-12);
 
   EXPECT_FALSE(std::abs(result[0] - std::sqrt(2.0)) < 1e-6);
 }
