@@ -4,5 +4,92 @@
 The potential given by a single source panel is given by
 
 \[
-\phi_p = \int_{a}^{b} \frac{\lambda(s)}{2\pi} \ln(r(s)) \ ds
+\phi_i = \int_{a}^{b} \frac{\lambda(s)}{2\pi} \ln(r(s)) \ ds
 \]
+
+Assuming there are $N$ source panels with constant strength over each panel, the total potential at a given panel
+centroid $i$ due to all other panels is given by,
+
+\[
+\phi_i = \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \int_{j} \ln(r_{ji}(s)) \ ds
+\]
+
+The normal velocity at the panel centroid is given by,
+
+\begin{align*}
+v_{ni} = v_{\infty} \cos(\beta_i) + \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
+& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+\end{align*}
+
+Where,
+
+\begin{align*}
+a_1 &= (x_{j1} - x_i) \sin(\beta_j + \alpha) + (y_i - y_{j1}) \cos(\beta_j + \alpha) \\
+a_2 &= (x_i - x_{j1})^2 + (y_i - y_{j1})^2 \\
+a_3 &= \sin(\beta_i - \beta_j) \\
+a_4 &= (x_i - x_{j1}) \cos(\beta_i) + (y_i - y_{j1}) \sin(\beta_i) \\
+a_5 &= \sqrt{a_2 - a_1^2}
+\end{align*}
+
+When $i = j$, the normal velocity is given by,
+
+\[
+v_n = \frac{\lambda}{2}
+\]
+
+The tangential velocity at the panel centroid is given by,
+
+\begin{align*}
+v_{ti} = v_{\infty} \sin(\beta_i) + \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
+& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+\end{align*}
+
+Where,
+
+\begin{align*}
+a_1 &= (x_{j1} - x_i) \sin(\beta_j + \alpha) + (y_i - y_{j1}) \cos(\beta_j + \alpha) \\
+a_2 &= (x_i - x_{j1})^2 + (y_i - y_{j1})^2 \\
+a_3 &= -\cos(\beta_j - \beta_i) \\
+a_4 &= (x_i - x_{j1}) \sin(\beta_i) - (y_i - y_{j1}) \cos(\beta_i) \\
+a_5 &= \sqrt{a_2 - a_1^2}
+\end{align*}
+
+When $i = j$, the tangential velocity is given by,
+
+\[
+v_t = 0
+\]
+
+The velocity in the $x$-direction at an arbitrary point $(x, y)$ is given by,
+
+\begin{align*}
+v_x = v_{\infty} \cos(\alpha) +  \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
+& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+\end{align*}
+
+Where,
+
+\begin{align*}
+a_1 &= (x_{j1} - x_p) \sin(\beta_j + \alpha) + (y_p - y_{j1}) \cos(\beta_j + \alpha) \\
+a_2 &= (x_p - x_{j1})^2 + (y_p - y_{j1})^2 \\
+a_3 &= -\sin(\beta_j + \alpha) \\
+a_4 &= x_p - x_{j1} \\
+a_5 &= \sqrt{a_2 - a_1^2}
+\end{align*}
+
+The velocity in the $y$-direction at an arbitrary point $(x, y)$ is given by,
+
+\begin{align*}
+v_y = v_{\infty} \sin(\alpha) +  \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
+& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+\end{align*}
+
+Where,
+
+\begin{align*}
+a_1 &= (x_{j1} - x_p) \sin(\beta_j + \alpha) + (y_p - y_{j1}) \cos(\beta_j + \alpha) \\
+a_2 &= (x_p - x_{j1})^2 + (y_p - y_{j1})^2 \\
+a_3 &= \cos(\beta_j + \alpha) \\
+a_4 &= y_p - y_{j1} \\
+a_5 &= \sqrt{a_2 - a_1^2}
+\end{align*}
