@@ -75,13 +75,13 @@ def naca4(
     x_lower = x_c + y_t * np.sin(theta)
     y_lower = y_c - y_t * np.cos(theta)
 
-    # Assemble as a single closed loop
-    if blunt_te:
-        x = np.concatenate([x_upper, x_lower[::-1][:-1]])
-        y = np.concatenate([y_upper, y_lower[::-1][:-1]])
-    else:
-        # Sharp TE upper[-1] = lower[-1] = (1, 0) so drop duplicate
-        x = np.concatenate([x_upper, x_lower[::-1][1:-1]])
-        y = np.concatenate([y_upper, y_lower[::-1][1:-1]])
+    # Assemble as a single loop: start at trailing edge, go along lower surface to
+    # leading edge, then along upper surface back to trailing edge.
+    lower_rev = x_lower[::-1]
+    lower_rev_y = y_lower[::-1]
+
+    # Drop the leading-edge duplicate when concatenating the two halves.
+    x = np.concatenate([lower_rev, x_upper[1:]])
+    y = np.concatenate([lower_rev_y, y_upper[1:]])
 
     return x, y
