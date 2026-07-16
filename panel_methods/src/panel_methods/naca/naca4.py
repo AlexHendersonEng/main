@@ -3,7 +3,7 @@ import numpy as np
 
 def naca4(
     designation: str, n_points: int = 100, blunt_te: bool = False
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Generate the coordinates of a NACA 4-digit aerofoil.
 
@@ -13,19 +13,21 @@ def naca4(
         4-digit NACA designation, e.g. '2412', '0012', '4415'.
     n_points : int, optional
         Number of points along each surface (upper and lower).
-        Total points returned = 2 * n_points - 1 (or 2 * n_points for blunt TE).
-        Default is 100.
     blunt_te : bool, optional
         If True, the trailing edge is left open (blunt/finite thickness).
         If False, the trailing edge is forced closed (sharp). Default is False.
 
     Returns
     -------
-    x : np.ndarray
-        x-coordinates running from TE -> upper surface -> LE -> lower surface -> TE,
+    x_upper : np.ndarray
+        x-coordinates running from leading edge to trailing edge for the upper surface,
         normalised to chord length (0 to 1).
-    y : np.ndarray
-        Corresponding y-coordinates, normalised to chord length.
+    y_upper : np.ndarray
+        Corresponding y-coordinates for the upper surface, normalised to chord length.
+    x_lower : np.ndarray
+        x-coordinates for the lower surface, normalised to chord length (0 to 1).
+    y_lower : np.ndarray
+        Corresponding y-coordinates for the lower surface, normalised to chord length.
     """
     if len(designation) != 4 or not designation.isdigit():
         raise ValueError(f"designation must be a 4-digit string, got '{designation}'.")
@@ -75,13 +77,4 @@ def naca4(
     x_lower = x_c + y_t * np.sin(theta)
     y_lower = y_c - y_t * np.cos(theta)
 
-    # Assemble as a single loop: start at trailing edge, go along lower surface to
-    # leading edge, then along upper surface back to trailing edge.
-    lower_rev = x_lower[::-1]
-    lower_rev_y = y_lower[::-1]
-
-    # Drop the leading-edge duplicate when concatenating the two halves.
-    x = np.concatenate([lower_rev, x_upper[1:]])
-    y = np.concatenate([lower_rev_y, y_upper[1:]])
-
-    return x, y
+    return x_upper, y_upper, x_lower, y_lower
