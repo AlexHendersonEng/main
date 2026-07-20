@@ -1,0 +1,156 @@
+\section{Governing Equations}
+\label{sec:governing_equations}
+
+In the source-vortex panel formulation, each panel $j$ carries an unknown source strength $\lambda_j$, and all panels
+share a single unknown vortex strength $\gamma$, giving $N+1$ unknowns in total.
+
+\subsection{Source Influence Coefficients}
+\label{subsec:source-influence-coefficients}
+
+For panel $i$ evaluated due to panel $j$ ($i \neq j$), define the geometric terms
+\begin{align*}
+    a_{1,\text{source}} &= -(x_{ic} - x_{j1})\cos(\phi_j) - (y_{ic} - y_{j1})\sin(\phi_j) \\
+    a_{2,\text{source}} &= (x_{ic} - x_{j1})^2 + (y_{ic} - y_{j1})^2 \\
+    a_{5,\text{source}} &= \sqrt{a_{2,\text{source}} - a_{1,\text{source}}^2}
+\end{align*}
+
+The normal source influence coefficient uses
+\begin{align*}
+    a_{3n,\text{source}} &= \sin(\phi_i - \phi_j) \\
+    a_{4n,\text{source}} &= -(x_{ic} - x_{j1})\sin(\phi_i) + (y_{ic} - y_{j1})\cos(\phi_i)
+\end{align*}
+so that
+\[
+    a_{n_{ij}} = \frac{a_{3n,\text{source}}}{2} \ln\!\left(\frac{s_j^2 + 2 a_{1,\text{source}} s_j + a_{2,\text{source}}}{a_{2,\text{source}}}\right) + \frac{a_{4n,\text{source}} - a_{1,\text{source}} a_{3n,\text{source}}}{a_{5,\text{source}}}\left[\arctan\!\left(\frac{s_j + a_{1,\text{source}}}{a_{5,\text{source}}}\right) - \arctan\!\left(\frac{a_{1,\text{source}}}{a_{5,\text{source}}}\right)\right]
+\]
+
+The tangential source influence coefficient uses
+\begin{align*}
+    a_{3t,\text{source}} &= -\cos(\phi_i - \phi_j) \\
+    a_{4t,\text{source}} &= (x_{ic} - x_{j1})\cos(\phi_i) + (y_{ic} - y_{j1})\sin(\phi_i)
+\end{align*}
+so that
+\[
+    a_{t_{ij}} = \frac{a_{3t,\text{source}}}{2} \ln\!\left(\frac{s_j^2 + 2 a_{1,\text{source}} s_j + a_{2,\text{source}}}{a_{2,\text{source}}}\right) + \frac{a_{4t,\text{source}} - a_{1,\text{source}} a_{3t,\text{source}}}{a_{5,\text{source}}}\left[\arctan\!\left(\frac{s_j + a_{1,\text{source}}}{a_{5,\text{source}}}\right) - \arctan\!\left(\frac{a_{1,\text{source}}}{a_{5,\text{source}}}\right)\right]
+\]
+
+For the diagonal source terms ($i = j$): $a_{n_{ii}} = \tfrac{1}{2}$.
+
+\subsection{Vortex Influence Coefficients}
+\label{subsec:vortex-influence-coefficients}
+
+Using the same geometric terms as above (since $\phi_j$, $x_{j1}$, $y_{j1}$ are shared),
+\begin{align*}
+    a_{1,\text{vortex}} &= -(x_{ic} - x_{j1})\cos(\phi_j) - (y_{ic} - y_{j1})\sin(\phi_j) \\
+    a_{2,\text{vortex}} &= (x_{ic} - x_{j1})^2 + (y_{ic} - y_{j1})^2 \\
+    a_{5,\text{vortex}} &= \sqrt{a_{2,\text{vortex}} - a_{1,\text{vortex}}^2}
+\end{align*}
+
+The normal vortex influence coefficient uses
+\begin{align*}
+    a_{3n,\text{vortex}} &= -\cos(\phi_i - \phi_j) \\
+    a_{4n,\text{vortex}} &= (x_{ic} - x_{j1})\cos(\phi_i) + (y_{ic} - y_{j1})\sin(\phi_i)
+\end{align*}
+so that
+\[
+    a_{n,\text{vortex}_{ij}} = -\left\{\frac{a_{3n,\text{vortex}}}{2} \ln\!\left(\frac{s_j^2 + 2 a_{1,\text{vortex}} s_j + a_{2,\text{vortex}}}{a_{2,\text{vortex}}}\right) + \frac{a_{4n,\text{vortex}} - a_{1,\text{vortex}} a_{3n,\text{vortex}}}{a_{5,\text{vortex}}}\left[\arctan\!\left(\frac{s_j + a_{1,\text{vortex}}}{a_{5,\text{vortex}}}\right) - \arctan\!\left(\frac{a_{1,\text{vortex}}}{a_{5,\text{vortex}}}\right)\right]\right\}
+\]
+
+The tangential vortex influence coefficient uses
+\begin{align*}
+    a_{3t,\text{vortex}} &= \sin(\phi_j - \phi_i) \\
+    a_{4t,\text{vortex}} &= (x_{ic} - x_{j1})\sin(\phi_i) - (y_{ic} - y_{j1})\cos(\phi_i)
+\end{align*}
+so that
+\[
+    a_{t,\text{vortex}_{ij}} = -\left\{\frac{a_{3t,\text{vortex}}}{2} \ln\!\left(\frac{s_j^2 + 2 a_{1,\text{vortex}} s_j + a_{2,\text{vortex}}}{a_{2,\text{vortex}}}\right) + \frac{a_{4t,\text{vortex}} - a_{1,\text{vortex}} a_{3t,\text{vortex}}}{a_{5,\text{vortex}}}\left[\arctan\!\left(\frac{s_j + a_{1,\text{vortex}}}{a_{5,\text{vortex}}}\right) - \arctan\!\left(\frac{a_{1,\text{vortex}}}{a_{5,\text{vortex}}}\right)\right]\right\}
+\]
+
+For the diagonal vortex terms ($i = j$): $a_{t,\text{vortex}_{ii}} = \tfrac{1}{2}$. \newline
+
+Since a single vortex strength $\gamma$ is shared across all panels, the individual vortex contributions are summed
+into a single extra column of the system matrix,
+\[
+    a_{n_{i,N+1}} = \sum_{j=1}^{N} a_{n,\text{vortex}_{ij}}, \qquad
+    a_{t_{i,N+1}} = \sum_{j=1}^{N} a_{t,\text{vortex}_{ij}}
+\]
+
+\subsection{Right Hand Side}
+\label{subsec:right-hand-side}
+
+\[
+    b_{n_i} = -v_\infty \cos(\beta_i), \qquad b_{t_i} = -v_\infty \sin(\beta_i)
+\]
+where
+\[
+    \beta_i = \delta_i - \alpha
+\]
+
+\subsection{Kutta Condition}
+\label{subsec:kutta-condition}
+
+Equal tangential velocity is enforced at the first and last panels ($i = 1$ and $i = N$), replacing the final row of
+the system:
+\begin{gather*}
+    a_{n_{N+1,j}} = a_{t_{1,j}} + a_{t_{N,j}}, \qquad j = 1, \dots, N\\
+    a_{n_{N+1,N+1}} = \sum_{j=1}^{N} \left(a_{n,\text{vortex}_{1j}} + a_{n,\text{vortex}_{Nj}}\right)\\
+    b_{n_{N+1}} = -v_\infty \left[\sin(\beta_1) + \sin(\beta_N)\right]\\
+\end{gather*}
+
+\subsection{Solving for Source and Vortex Strengths}
+\label{subsec:solving-for-source-and-vortex-strengths}
+
+The unknown source strengths $\lambda_j$ ($j = 1, \dots, N$) and the shared vortex strength $\gamma$ are obtained by
+solving the $(N+1) \times (N+1)$ linear system
+\[
+    \sum_{j=1}^{N} a_{n_{ij}} \lambda_j + a_{n_{i,N+1}} \gamma = b_{n_i}, \qquad i = 1, \dots, N+1
+\]
+where the final row enforces the Kutta condition above.
+
+\subsection{Surface Velocities and Pressure Coefficient}
+\label{subsec:surface-velocities-and-pressure-coefficient}
+
+\begin{align*}
+    v_{n_i} &= \sum_{j=1}^{N} a_{n_{ij}} \lambda_j + a_{n_{i,N+1}} \gamma - b_{n_i}, \qquad i = 1, \dots, N \\
+    v_{t_i} &= \sum_{j=1}^{N} a_{t_{ij}} \lambda_j + a_{t_{i,N+1}} \gamma - b_{t_i}
+\end{align*}
+
+\[
+    C_{p_i} = 1 - \left(\frac{v_{t_i}}{v_\infty}\right)^2
+\]
+
+\subsection{Velocity at Arbitrary Field Points}
+\label{subsec:velocity-at-arbitrary-field-points}
+
+For a field point $(x_p, y_p)$, the source and vortex geometric terms with respect to panel $j$ are computed
+identically to Sections~\ref{sec:governing_equations} of the source and vortex panel methods, i.e.
+\begin{align*}
+    a_{1} &= -(x_p - x_{j1})\cos(\phi_j) - (y_p - y_{j1})\sin(\phi_j) \\
+    a_{2} &= (x_p - x_{j1})^2 + (y_p - y_{j1})^2 \\
+    a_{5} &= \sqrt{a_2 - a_1^2}
+\end{align*}
+
+The source contributions to the $x$- and $y$-direction influence coefficients use
+\begin{align*}
+    a_{3x,\text{source}} &= -\cos(\phi_j), & a_{4x,\text{source}} &= x_p - x_{j1} \\
+    a_{3y,\text{source}} &= -\sin(\phi_j), & a_{4y,\text{source}} &= y_p - y_{j1}
+\end{align*}
+giving $a_{x_j}$ and $a_{y_j}$ via the same integrated log/arctan expression as the source panel method.
+
+The vortex contributions use
+\begin{align*}
+    a_{3x,\text{vortex}} &= \sin(\phi_j), & a_{4x,\text{vortex}} &= -(y_p - y_{j1}) \\
+    a_{3y,\text{vortex}} &= -\cos(\phi_j), & a_{4y,\text{vortex}} &= x_p - x_{j1}
+\end{align*}
+giving $a_{x,\text{vortex}_j}$ and $a_{y,\text{vortex}_j}$ via the same expression, negated, as the vortex panel
+method.
+These are summed to form the extra column
+\[
+    a_{x_{N+1}} = \sum_{j=1}^{N} a_{x,\text{vortex}_j}, \qquad a_{y_{N+1}} = \sum_{j=1}^{N} a_{y,\text{vortex}_j}
+\]
+
+The velocity components at $(x_p, y_p)$ are then
+\begin{align*}
+    u(x_p, y_p) &= \sum_{j=1}^{N} a_{x_j} \lambda_j + a_{x_{N+1}} \gamma - \left[-v_\infty \cos(\alpha)\right] \\
+    v(x_p, y_p) &= \sum_{j=1}^{N} a_{y_j} \lambda_j + a_{y_{N+1}} \gamma - \left[-v_\infty \sin(\alpha)\right]
+\end{align*}

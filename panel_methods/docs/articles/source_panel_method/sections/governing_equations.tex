@@ -14,82 +14,104 @@ centroid $i$ due to all other panels is given by,
 \phi_i = \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \int_{j} \ln(r_{ji}(s)) \ ds
 \]
 
-The normal velocity at the panel centroid is given by,
+\subsection{Normal and Tangential Influence Coefficients}
+\label{subsec:normal_and_tangential_influence_coefficients}
 
+For panel $i$ evaluated due to panel $j$ ($i \neq j$), define the geometric terms
 \begin{align*}
-v_{ni} = v_{\infty} \cos(\beta_i) + \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
-& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+    a_1 &= -(x_{ic} - x_{j1})\cos(\phi_j) - (y_{ic} - y_{j1})\sin(\phi_j) \\
+    a_2 &= (x_{ic} - x_{j1})^2 + (y_{ic} - y_{j1})^2 \\
+    a_5 &= \sqrt{a_2 - a_1^2}
 \end{align*}
 
-Where,
-
+The normal influence coefficient uses
 \begin{align*}
-a_1 &= (x_{j1} - x_i) \sin(\beta_j + \alpha) + (y_i - y_{j1}) \cos(\beta_j + \alpha) \\
-a_2 &= (x_i - x_{j1})^2 + (y_i - y_{j1})^2 \\
-a_3 &= \sin(\beta_i - \beta_j) \\
-a_4 &= (x_i - x_{j1}) \cos(\beta_i) + (y_i - y_{j1}) \sin(\beta_i) \\
-a_5 &= \sqrt{a_2 - a_1^2}
+    a_{3n} &= \sin(\phi_i - \phi_j) \\
+    a_{4n} &= -(x_{ic} - x_{j1})\sin(\phi_i) + (y_{ic} - y_{j1})\cos(\phi_i)
 \end{align*}
-
-When $i = j$, the normal velocity is given by,
-
+so that
 \[
-v_n = \frac{\lambda}{2}
+    a_{n_{ij}} = \frac{a_{3n}}{2} \ln\!\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) + \frac{a_{4n} - a_1 a_{3n}}{a_5}\left[\arctan\!\left(\frac{s_j + a_1}{a_5}\right) - \arctan\!\left(\frac{a_1}{a_5}\right)\right]
 \]
 
-The tangential velocity at the panel centroid is given by,
-
+The tangential influence coefficient uses
 \begin{align*}
-v_{ti} = v_{\infty} \sin(\beta_i) + \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
-& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+    a_{3t} &= -\cos(\phi_i - \phi_j) \\
+    a_{4t} &= (x_{ic} - x_{j1})\cos(\phi_i) + (y_{ic} - y_{j1})\sin(\phi_i)
 \end{align*}
-
-Where,
-
-\begin{align*}
-a_1 &= (x_{j1} - x_i) \sin(\beta_j + \alpha) + (y_i - y_{j1}) \cos(\beta_j + \alpha) \\
-a_2 &= (x_i - x_{j1})^2 + (y_i - y_{j1})^2 \\
-a_3 &= -\cos(\beta_j - \beta_i) \\
-a_4 &= (x_i - x_{j1}) \sin(\beta_i) - (y_i - y_{j1}) \cos(\beta_i) \\
-a_5 &= \sqrt{a_2 - a_1^2}
-\end{align*}
-
-When $i = j$, the tangential velocity is given by,
-
+so that
 \[
-v_t = 0
+    a_{t_{ij}} = \frac{a_{3t}}{2} \ln\!\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) + \frac{a_{4t} - a_1 a_{3t}}{a_5}\left[\arctan\!\left(\frac{s_j + a_1}{a_5}\right) - \arctan\!\left(\frac{a_1}{a_5}\right)\right]
 \]
 
-The velocity in the $x$-direction at an arbitrary point $(x, y)$ is given by,
+For the diagonal terms ($i = j$):
+\[
+    a_{n_{ii}} = \frac{1}{2}, \qquad a_{t_{ii}} = 0
+\]
+
+\subsection{Right Hand Side}
+\label{subsec:right_hand_side}
+
+\[
+    b_{n_i} = -v_\infty \cos(\beta_i), \qquad b_{t_i} = -v_\infty \sin(\beta_i)
+\]
+where
+\[
+    \beta_i = \delta_i - \alpha
+\]
+
+\subsection{Solving for Source Strengths}
+\label{subsec:solving_for_source_strengths}
+
+The panel source strengths $\lambda_j$ are obtained by solving the linear system
+\[
+    \sum_{j=1}^{N} a_{n_{ij}} \lambda_j = b_{n_i}
+\]
+
+\subsection{Surface Velocities and Pressure Coefficient}
+\label{subsec:surface_velocities_and_pressure_coefficient}
 
 \begin{align*}
-v_x = v_{\infty} \cos(\alpha) +  \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
-& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+    v_{n_i} &= \sum_{j=1}^{N} a_{n_{ij}} \lambda_j - b_{n_i} \\
+    v_{t_i} &= \sum_{j=1}^{N} a_{t_{ij}} \lambda_j - b_{t_i}
 \end{align*}
 
-Where,
+\[
+    c_{p_i} = 1 - \left(\frac{v_{t_i}}{v_\infty}\right)^2
+\]
 
+\subsection{Velocity at Arbitrary Field Points}
+\label{subsec:velocity_at_arbitrary_field_points}
+
+For a field point $(x_p, y_p)$, the geometric terms with respect to panel $j$ are
 \begin{align*}
-a_1 &= (x_{j1} - x_p) \sin(\beta_j + \alpha) + (y_p - y_{j1}) \cos(\beta_j + \alpha) \\
-a_2 &= (x_p - x_{j1})^2 + (y_p - y_{j1})^2 \\
-a_3 &= -\sin(\beta_j + \alpha) \\
-a_4 &= x_p - x_{j1} \\
-a_5 &= \sqrt{a_2 - a_1^2}
+    a_1 &= -(x_p - x_{j1})\cos(\phi_j) - (y_p - y_{j1})\sin(\phi_j) \\
+    a_2 &= (x_p - x_{j1})^2 + (y_p - y_{j1})^2 \\
+    a_5 &= \sqrt{a_2 - a_1^2}
 \end{align*}
 
-The velocity in the $y$-direction at an arbitrary point $(x, y)$ is given by,
-
+The $x$-direction influence coefficient uses
 \begin{align*}
-v_y = v_{\infty} \sin(\alpha) +  \sum_{j=1}^{N} \frac{\lambda_j}{2\pi} \bigg[& \frac{a_3}{2} \ln\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) \\
-& + \frac{a_4 - a_1 a_3}{a_5}\left(\arctan\left(\frac{s_j + a_1}{a_5}\right) - \arctan\left(\frac{a_1}{a_5}\right)\right)\bigg]
+    a_{3x} &= -\cos(\phi_j) \\
+    a_{4x} &= x_p - x_{j1}
 \end{align*}
+so that
+\[
+    a_{x_{j}} = \frac{a_{3x}}{2} \ln\!\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) + \frac{a_{4x} - a_1 a_{3x}}{a_5}\left[\arctan\!\left(\frac{s_j + a_1}{a_5}\right) - \arctan\!\left(\frac{a_1}{a_5}\right)\right]
+\]
 
-Where,
-
+The $y$-direction influence coefficient uses
 \begin{align*}
-a_1 &= (x_{j1} - x_p) \sin(\beta_j + \alpha) + (y_p - y_{j1}) \cos(\beta_j + \alpha) \\
-a_2 &= (x_p - x_{j1})^2 + (y_p - y_{j1})^2 \\
-a_3 &= \cos(\beta_j + \alpha) \\
-a_4 &= y_p - y_{j1} \\
-a_5 &= \sqrt{a_2 - a_1^2}
+    a_{3y} &= -\sin(\phi_j) \\
+    a_{4y} &= y_p - y_{j1}
+\end{align*}
+so that
+\[
+    a_{y_{j}} = \frac{a_{3y}}{2} \ln\!\left(\frac{s_j^2 + 2 a_1 s_j + a_2}{a_2}\right) + \frac{a_{4y} - a_1 a_{3y}}{a_5}\left[\arctan\!\left(\frac{s_j + a_1}{a_5}\right) - \arctan\!\left(\frac{a_1}{a_5}\right)\right]
+\]
+
+The velocity components at $(x_p, y_p)$ are then
+\begin{align*}
+    u(x_p, y_p) &= \sum_{j=1}^{N} a_{x_{j}} \lambda_j - \left[-v_\infty \cos(\alpha)\right] \\
+    v(x_p, y_p) &= \sum_{j=1}^{N} a_{y_{j}} \lambda_j - \left[-v_\infty \sin(\alpha)\right]
 \end{align*}

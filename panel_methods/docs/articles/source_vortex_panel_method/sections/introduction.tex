@@ -1,0 +1,23 @@
+\section{Introduction}
+\label{sec:introduction}
+
+The source-vortex panel method is a numerical technique used in aerodynamics to approximate the potential flow around
+bodies of arbitrary shape, including those that generate lift.
+It belongs to the family of boundary element methods, where the surface of a body is discretized into a finite number
+of panels.
+Unlike the source panel method, which can only represent non-lifting flows, or the vortex panel method alone, the
+source-vortex panel method assigns each panel both a source distribution and a vortex distribution.
+The source strengths are typically permitted to vary from panel to panel in order to enforce the impermeability boundary
+condition on the body surface, while a single vortex strength is often shared across all panels to represent the
+overall circulation required to generate lift.
+The method is based on the assumptions of incompressible, irrotational and inviscid flow, allowing the velocity field
+to be represented by a scalar potential that satisfies Laplace's equation.
+By superimposing the effects of the source panels, the vortex panels, and the free-stream flow, the velocity
+potential around the body can be computed.
+As with the vortex panel method, the circulation is not arbitrary but is instead constrained by the Kutta condition,
+which enforces smooth flow leaving the trailing edge and ensures a unique, physically realistic solution.
+Once the velocity distribution is known, aerodynamic quantities such as the pressure coefficient and lift can be
+obtained using Bernoulli's equation and the Kutta-Joukowski theorem, respectively.
+By combining the thickness representing capability of source panels with the lift generating capability of vortex
+panels, the source-vortex panel method is capable of predicting both the pressure distribution and the lift of
+practical lifting bodies, such as airfoils, and represents a natural synthesis of the two simpler panel formulations.

@@ -1,17 +1,24 @@
 \section{Introduction}
 \label{sec:introduction}
 
-The source panel method is a numerical technique used in aerodynamics to approximate the potential flow around bodies of
-arbitrary shape.
-It belongs to the family of boundary element methods, where the surface of a body is discretized into a finite number of
-panels.
-Each panel is assigned a source distribution whose strength is determined such that the flow satisfies the
-impermeability boundary condition on the body surface.
+The vortex panel method is a numerical technique used in aerodynamics to approximate the potential flow around lifting
+bodies of arbitrary shape.
+Like the source panel method, it belongs to the family of boundary element methods, where the surface of a body is
+discretized into a finite number of panels.
+However, each panel is instead assigned a vortex distribution, whose strength is determined such that the flow satisfies
+the impermeability boundary condition on the body surface.
 The method is based on the assumptions of incompressible, irrotational and inviscid flow, allowing the velocity field to
 be represented by a scalar potential that satisfies Laplace's equation.
-By superimposing the effects of the source panels and the free-stream flow, the velocity potential around the body can
+By superimposing the effects of the vortex panels and the free-stream flow, the velocity potential around the body can
 be computed.
-Once the velocity distribution is known, aerodynamic quantities such as the pressure coefficient can be obtained using
-Bernoulli's equation.
-The source panel method is particularly useful for predicting pressure distributions on non-lifting bodies and serves as
-a foundation for more advanced panel methods that incorporate vortices to model lifting flows.
+Because vortex distributions induce circulation about the body, the vortex panel method is capable of representing
+lifting flows, unlike the purely non-lifting source panel formulation.
+To yield a physically realistic solution, the panel strengths are further constrained by the Kutta condition, which
+enforces smooth flow leaving the trailing edge and ensures a unique circulation is selected.
+Once the velocity distribution is known, aerodynamic quantities such as the pressure coefficient and lift can be
+obtained using Bernoulli's equation and the Kutta-Joukowski theorem, respectively.
+The vortex panel method is particularly useful for predicting pressure distributions and lift on airfoils and other
+lifting bodies, and forms the basis for more advanced panel methods that combine sources and vortices to model both
+thickness and lifting effects simultaneously.
+However, the vortex panel method is very senisitive to the placmenet and
+number of panels and can produce incorrect oscillatory results.
