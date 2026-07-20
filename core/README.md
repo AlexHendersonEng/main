@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![uv](https://img.shields.io/badge/uv-%23DE5FE9.svg?style=for-the-badge&logo=uv&logoColor=white)
 
-Core is a developer friendly toolkit for designing, running, and analysing numerical simulations.
+Core is a developer friendly toolkit for designing, running and analysing numerical simulations.
 
 ## Prerequisites
 
@@ -141,4 +141,4 @@ pre-commit run --all-files
 
 ## License
 
-This project is released under the terms in the [LICENSE](https://github.com/AlexHendersonEng/simulation-foundry-core/blob/main/LICENSE) file.
+This project is released under the terms in the [LICENSE](../LICENSE)

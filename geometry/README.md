@@ -3,7 +3,7 @@
 ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white)
 
-Geometry is a developer friendly repository for creating parametric computational geometry.
+Geometry is a project for exploring computational geometry.
 
 ## Prerequisites
 
@@ -60,4 +60,4 @@ pre-commit run --all-files
 
 ## License
 
-This project is released under the terms in the `LICENSE` file: [LICENSE](LICENSE)
+This project is released under the terms in the `LICENSE` file: [LICENSE](../LICENSE)
