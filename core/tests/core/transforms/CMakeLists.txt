@@ -6,6 +6,7 @@ add_executable(
         "${target_name}"
         transforms_test.cpp
         euler_test.cpp
+        quaternion_test.cpp
 )
 target_link_libraries("${target_name}" "core" GTest::gtest)
 
