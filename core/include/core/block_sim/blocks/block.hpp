@@ -12,8 +12,11 @@ class Block {
   virtual ~Block() = default;
 
   virtual void compute() = 0;
+
   [[nodiscard]] double get_output(int index) const;
   void set_input(int index, double input);
+
+  [[nodiscard]] virtual bool breaks_execution_loop() const;
 
  protected:
   std::vector<double> inputs_;

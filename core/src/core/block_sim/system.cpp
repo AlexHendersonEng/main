@@ -29,8 +29,10 @@ void core::block_sim::System::build_execution_graph() {
     const auto& connection = connections_[i];
 
     // Add to graph and increment in degree
-    graph[connection.from_block].emplace_back(connection.to_block);
-    indegree[connection.to_block]++;
+    if (!blocks_[connection.from_block]->breaks_execution_loop()) {
+      graph[connection.from_block].emplace_back(connection.to_block);
+      indegree[connection.to_block]++;
+    }
 
     // Add to outgoing connections
     outgoing_connections_[connection.from_block].emplace_back(i);
@@ -66,6 +68,7 @@ void core::block_sim::System::build_execution_graph() {
     throw std::runtime_error("Cycle detected in block connections");
   }
 }
+
 void core::block_sim::System::propagate(const Connection& connection) const {
   // Get source and destination blocks
   const Block& from_block = *blocks_[connection.from_block];

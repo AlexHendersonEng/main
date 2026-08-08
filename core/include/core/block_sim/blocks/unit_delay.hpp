@@ -13,6 +13,8 @@ class UnitDelay : public Block {
 
   void compute() override;
 
+  [[nodiscard]] bool breaks_execution_loop() const override;
+
  private:
   double prev_value_;
 };
