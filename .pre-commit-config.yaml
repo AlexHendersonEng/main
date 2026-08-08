@@ -39,3 +39,4 @@ repos:
     hooks:
       - id: clang-format
         args: [-i]
+        files: \.(c|cc|cpp|cxx|h|hh|hpp|hxx)$
