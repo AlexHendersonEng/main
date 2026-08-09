@@ -12,7 +12,7 @@ class Gain : public Block {
   explicit Gain(const double value) : Block(1, 1), value_(value) {}
   ~Gain() override = default;
 
-  void compute() override;
+  void step(double t) override;
 
  private:
   double value_;

@@ -10,10 +10,7 @@ class Modulus : public Block {
   explicit Modulus() : Block(2, 1) {}
   ~Modulus() override = default;
 
-  void compute() override;
-
- private:
-  double value_;
+  void step(double t) override;
 };
 
 }  // namespace core::block_sim

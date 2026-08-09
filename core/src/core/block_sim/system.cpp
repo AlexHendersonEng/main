@@ -3,16 +3,68 @@
 #include <queue>
 #include <stdexcept>
 
-void core::block_sim::System::step() const {
-  // Execute block and update downstream connections
-  for (const int block_idx : execution_order_) {
-    // Execute block
-    blocks_[block_idx]->compute();
+void core::block_sim::System::step() {
+  // If no states just update graph
+  if (n_states_ == 0) {
+    execute_graph(t_, ExecutionMode::Commit);
+    t_ += dt_;
+    return;
+  }
 
-    // Update downstream connections
+  // Get graph state
+  save_blocks();
+  get_states();
+
+  // Define function for computing the derivatives in the graph
+  auto compute_derivatives = [this](const std::vector<double>& states,
+                                    const double t) -> std::vector<double>& {
+    load_blocks();
+    set_states(states);
+    execute_graph(t, ExecutionMode::Evaluation);
+    get_derivatives();
+    return derivatives_;
+  };
+
+  // Integrate
+  dt_ = integration_method_->integrate(states_, compute_derivatives, t_, dt_);
+
+  // Update graph
+  load_blocks();
+  set_states(states_);
+  execute_graph(t_, ExecutionMode::Commit);
+
+  // Update time
+  t_ += dt_;
+}
+
+void core::block_sim::System::execute_graph(const double t,
+                                            const ExecutionMode mode) const {
+  // Set execution mode for all blocks
+  for (const auto& block_ptr : blocks_) {
+    block_ptr->set_execution_mode(mode);
+  }
+
+  for (const int block_idx : execution_order_) {
+    blocks_[block_idx]->step(t);
+
     for (const int connection_idx : outgoing_connections_[block_idx]) {
       propagate(connections_[connection_idx]);
     }
+  }
+}
+
+void core::block_sim::System::save_blocks() const {
+  std::vector<std::vector<double>> state;
+  state.reserve(blocks_.size());
+
+  for (const auto& block_ptr : blocks_) {
+    block_ptr->save_block();
+  }
+}
+
+void core::block_sim::System::load_blocks() {
+  for (const auto& block_ptr : blocks_) {
+    block_ptr->load_block();
   }
 }
 
@@ -79,4 +131,42 @@ void core::block_sim::System::propagate(const Connection& connection) const {
 
   // Set input for destination block
   to_block.set_input(connection.to_port, output);
+}
+
+int core::block_sim::System::num_states() const {
+  int result = 0;
+  for (const auto& block_ptr : blocks_) {
+    result += block_ptr->num_states();
+  }
+  return result;
+}
+
+void core::block_sim::System::set_states(
+    const std::vector<double>& states) const {
+  int index = 0;
+  for (const auto& block_ptr : blocks_) {
+    index += block_ptr->set_state(index, states);
+  }
+}
+
+void core::block_sim::System::get_states() {
+  int index = 0;
+  for (const auto& block_ptr : blocks_) {
+    const int n = block_ptr->num_states();
+    for (int i = 0; i < n; i++) {
+      states_[index] = block_ptr->get_state(i);
+      index++;
+    }
+  }
+}
+
+void core::block_sim::System::get_derivatives() {
+  int index = 0;
+  for (const auto& block_ptr : blocks_) {
+    const int n = block_ptr->num_states();
+    for (int i = 0; i < n; i++) {
+      derivatives_[index] = block_ptr->get_derivative(i);
+      index++;
+    }
+  }
 }

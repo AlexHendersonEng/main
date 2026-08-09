@@ -10,10 +10,7 @@ class Subtract : public Block {
   explicit Subtract() : Block(2, 1) {}
   ~Subtract() override = default;
 
-  void compute() override;
-
- private:
-  double value_;
+  void step(double t) override;
 };
 
 }  // namespace core::block_sim

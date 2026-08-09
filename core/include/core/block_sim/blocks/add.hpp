@@ -10,10 +10,7 @@ class Add : public Block {
   explicit Add() : Block(2, 1) {}
   ~Add() override = default;
 
-  void compute() override;
-
- private:
-  double value_;
+  void step(double t) override;
 };
 
 }  // namespace core::block_sim

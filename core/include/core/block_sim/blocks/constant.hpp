@@ -12,7 +12,7 @@ class Constant : public Block {
   explicit Constant(const double value) : Block(0, 1), value_(value) {}
   ~Constant() override = default;
 
-  void compute() override;
+  void step(double t) override;
 
  private:
   double value_;

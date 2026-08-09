@@ -10,10 +10,7 @@ class Multiply : public Block {
   explicit Multiply() : Block(2, 1) {}
   ~Multiply() override = default;
 
-  void compute() override;
-
- private:
-  double value_;
+  void step(double t) override;
 };
 
 }  // namespace core::block_sim

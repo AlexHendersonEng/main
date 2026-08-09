@@ -2,6 +2,6 @@
 
 #include <cmath>
 
-void core::block_sim::Modulus::compute() {
+void core::block_sim::Modulus::step(const double t) {
   outputs_[0] = std::fmod(inputs_[0], inputs_[1]);
 }

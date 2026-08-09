@@ -10,10 +10,7 @@ class Divide : public Block {
   explicit Divide() : Block(2, 1) {}
   ~Divide() override = default;
 
-  void compute() override;
-
- private:
-  double value_;
+  void step(double t) override;
 };
 
 }  // namespace core::block_sim

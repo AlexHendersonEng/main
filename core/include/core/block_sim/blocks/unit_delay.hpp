@@ -11,12 +11,16 @@ class UnitDelay : public Block {
       : Block(1, 1), prev_value_(initial_value) {}
   ~UnitDelay() override = default;
 
-  void compute() override;
+  void step(double t) override;
 
   [[nodiscard]] bool breaks_execution_loop() const override;
 
+  void save_block() override;
+  void load_block() override;
+
  private:
   double prev_value_;
+  double prev_value_store_;
 };
 
 }  // namespace core::block_sim

@@ -1,56 +1,80 @@
+#include <matplot/matplot.h>
+
 #include <iostream>
-#include <memory>
 #include <vector>
 
-#include "block_sim/blocks/add.hpp"
+#include "block_sim/blocks/block.hpp"
+#include "block_sim/blocks/clock.hpp"
 #include "block_sim/blocks/constant.hpp"
-#include "block_sim/blocks/gain.hpp"
-#include "block_sim/blocks/unit_delay.hpp"
+#include "block_sim/blocks/integrator.hpp"
+#include "block_sim/blocks/logger.hpp"
+#include "block_sim/blocks/subtract.hpp"
+#include "block_sim/connection.hpp"
+#include "block_sim/integration_methods/euler_forward.hpp"
 #include "block_sim/system.hpp"
 
 int main() {
-  // Recurrence implemented by the loop with this scheduler:
-  // y[k] = 5 + 0.5 * y[k-2], with y[-1] = y[-2] = 0 via UnitDelay initial
-  // value.
-  auto constant_block = std::make_unique<core::block_sim::Constant>(5.0);
-  auto add_block = std::make_unique<core::block_sim::Add>();
-  auto gain_block = std::make_unique<core::block_sim::Gain>(0.5);
-  auto delay_block = std::make_unique<core::block_sim::UnitDelay>(0.0);
+  // Create blocks
+  std::unique_ptr<core::block_sim::Constant> constant_block =
+      std::make_unique<core::block_sim::Constant>(1.0);  // Block 0
+  std::unique_ptr<core::block_sim::Subtract> subtract_block =
+      std::make_unique<core::block_sim::Subtract>();  // Block 1
+  std::unique_ptr<core::block_sim::Integrator> integrator_block =
+      std::make_unique<core::block_sim::Integrator>(0.0);  // Block 2
+  std::unique_ptr<core::block_sim::Clock> clock_block =
+      std::make_unique<core::block_sim::Clock>();  // Block 3
+  std::unique_ptr<core::block_sim::Logger> time_logger_block =
+      std::make_unique<core::block_sim::Logger>(false);  // Block 4
+  std::unique_ptr<core::block_sim::Logger> value_logger_block =
+      std::make_unique<core::block_sim::Logger>(false);  // Block 5
 
-  const auto* add_block_ptr = add_block.get();
+  // Create weak pointer to access block while used by system
+  const core::block_sim::Logger* time_logger_block_ptr =
+      time_logger_block.get();
+  const core::block_sim::Logger* value_logger_block_ptr =
+      value_logger_block.get();
 
+  // Add blocks to array
   std::vector<std::unique_ptr<core::block_sim::Block>> blocks;
-  blocks.emplace_back(std::move(constant_block));  // block 0
-  blocks.emplace_back(std::move(add_block));       // block 1
-  blocks.emplace_back(std::move(gain_block));      // block 2
-  blocks.emplace_back(std::move(delay_block));     // block 3
+  blocks.emplace_back(std::move(constant_block));
+  blocks.emplace_back(std::move(subtract_block));
+  blocks.emplace_back(std::move(integrator_block));
+  blocks.emplace_back(std::move(clock_block));
+  blocks.emplace_back(std::move(time_logger_block));
+  blocks.emplace_back(std::move(value_logger_block));
 
-  const std::vector<core::block_sim::Connection> connections = {
-      {0, 0, 1, 0},  // constant -> add input 0
-      {3, 0, 1, 1},  // unit_delay -> add input 1 (feedback)
-      {1, 0, 2, 0},  // add -> gain
-      {2, 0, 3, 0},  // gain -> unit_delay
+  // Create connections
+  std::vector<core::block_sim::Connection> connections = {
+      {0, 0, 1, 0},  // constant_block:outport0 -> subtract_block:inport0
+      {1, 0, 2, 0},  // subtract_block:outport0 -> integrator_block:inport0
+      {2, 0, 1, 1},  // integrator:outport0 -> subtract_block:inport1
+      {3, 0, 4, 0},  // clock_block:outport0 -> time_logger_block:inport0
+      {2, 0, 5, 0}   // integrator_block:outport0 -> value_logger_block:inport0
   };
 
-  const core::block_sim::System system(std::move(blocks), connections);
+  // Create integration method
+  auto integration_method = std::make_unique<core::block_sim::EulerForward>();
 
-  const std::vector<double> expected_outputs = {5.0, 5.0, 7.5, 7.5, 8.75, 8.75};
-  bool passed = true;
-  const double tolerance = 1e-12;
+  // Create system
+  core::block_sim::System system(std::move(blocks), connections, 0.1,
+                                 std::move(integration_method));
 
-  for (size_t step = 0; step < expected_outputs.size(); ++step) {
+  // Step system
+  for (int i = 0; i < 100; i++) {
     system.step();
-
-    const double actual = add_block_ptr->get_output(0);
-    const double expected = expected_outputs[step];
-    const double error = actual - expected;
-    const bool step_pass = (error < tolerance) && (error > -tolerance);
-    passed = passed && step_pass;
-
-    std::cout << "step " << (step + 1) << ": y = " << actual << " (expected "
-              << expected << ")" << (step_pass ? "" : "  <-- mismatch")
-              << std::endl;
   }
 
-  std::cout << (passed ? "PASS" : "FAIL") << std::endl;
+  for (size_t i = 0; i < time_logger_block_ptr->log.size(); ++i) {
+    std::cout << "Time: " << time_logger_block_ptr->log[i]
+              << ", Value: " << value_logger_block_ptr->log[i] << std::endl;
+  }
+
+  // Plotting
+  matplot::figure();
+  matplot::plot(time_logger_block_ptr->log, value_logger_block_ptr->log);
+  matplot::xlabel("Time (s)");
+  matplot::ylabel("Value");
+  matplot::show();
+
+  return 0;
 }
