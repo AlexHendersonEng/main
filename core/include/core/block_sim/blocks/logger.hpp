@@ -7,7 +7,7 @@ namespace core::block_sim {
 
 class Logger : public Block {
  public:
-  explicit Logger(const bool pass_through) : Block(1, pass_through ? 1 : 0) {}
+  explicit Logger() : Block(1, 0) {}
   ~Logger() override = default;
 
   void step(double t) override;
