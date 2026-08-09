@@ -10,7 +10,7 @@
 #include "block_sim/blocks/logger.hpp"
 #include "block_sim/blocks/subtract.hpp"
 #include "block_sim/connection.hpp"
-#include "block_sim/integration_methods/euler_forward.hpp"
+#include "block_sim/integration_methods/runge_kutta_4.hpp"
 #include "block_sim/system.hpp"
 
 int main() {
@@ -53,7 +53,7 @@ int main() {
   };
 
   // Create integration method
-  auto integration_method = std::make_unique<core::block_sim::EulerForward>();
+  auto integration_method = std::make_unique<core::block_sim::RungeKutta4>();
 
   // Create system
   core::block_sim::System system(std::move(blocks), connections, 0.1,
