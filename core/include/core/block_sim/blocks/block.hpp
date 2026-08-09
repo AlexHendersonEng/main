@@ -27,9 +27,6 @@ class Block {
   [[nodiscard]] double get_state(int index) const;
   [[nodiscard]] double get_derivative(int index) const;
 
-  virtual void save_block();
-  virtual void load_block();
-
   [[nodiscard]] virtual bool breaks_execution_loop() const;
 
   void set_execution_mode(ExecutionMode mode);

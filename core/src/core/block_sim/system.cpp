@@ -12,13 +12,11 @@ void core::block_sim::System::step() {
   }
 
   // Get graph state
-  save_blocks();
   get_states();
 
   // Define function for computing the derivatives in the graph
   auto compute_derivatives = [this](const std::vector<double>& states,
                                     const double t) -> std::vector<double>& {
-    load_blocks();
     set_states(states);
     execute_graph(t, ExecutionMode::Evaluation);
     get_derivatives();
@@ -29,7 +27,6 @@ void core::block_sim::System::step() {
   dt_ = integration_method_->integrate(states_, compute_derivatives, t_, dt_);
 
   // Update graph
-  load_blocks();
   set_states(states_);
   execute_graph(t_, ExecutionMode::Commit);
 
@@ -50,21 +47,6 @@ void core::block_sim::System::execute_graph(const double t,
     for (const int connection_idx : outgoing_connections_[block_idx]) {
       propagate(connections_[connection_idx]);
     }
-  }
-}
-
-void core::block_sim::System::save_blocks() const {
-  std::vector<std::vector<double>> state;
-  state.reserve(blocks_.size());
-
-  for (const auto& block_ptr : blocks_) {
-    block_ptr->save_block();
-  }
-}
-
-void core::block_sim::System::load_blocks() {
-  for (const auto& block_ptr : blocks_) {
-    block_ptr->load_block();
   }
 }
 

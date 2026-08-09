@@ -52,9 +52,6 @@ class System {
   void execute_graph(double t, ExecutionMode mode) const;
   void propagate(const Connection& connection) const;
 
-  void save_blocks() const;
-  void load_blocks();
-
   [[nodiscard]] int num_states() const;
   void set_states(const std::vector<double>& states) const;
   void get_states();

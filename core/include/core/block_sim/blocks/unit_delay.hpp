@@ -15,12 +15,8 @@ class UnitDelay : public Block {
 
   [[nodiscard]] bool breaks_execution_loop() const override;
 
-  void save_block() override;
-  void load_block() override;
-
  private:
   double prev_value_;
-  double prev_value_store_;
 };
 
 }  // namespace core::block_sim

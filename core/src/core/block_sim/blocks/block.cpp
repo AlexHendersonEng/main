@@ -39,7 +39,3 @@ double core::block_sim::Block::get_state(const int index) const {
 double core::block_sim::Block::get_derivative(const int index) const {
   return inputs_[index];
 }
-
-void core::block_sim::Block::save_block() {}
-
-void core::block_sim::Block::load_block() {}
