@@ -25,7 +25,8 @@ class Graph {
   std::vector<int> execution_order;
   std::vector<std::vector<int>> outgoing_connections;
 
-  void execute(double t, ExecutionMode mode) const;
+  void execute(double t) const;
+  void set_execution_mode(ExecutionMode mode) const;
   void propagate(const Connection& connection) const;
 
  private:

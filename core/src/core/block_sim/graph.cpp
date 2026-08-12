@@ -56,19 +56,22 @@ void core::block_sim::Graph::build_execution_graph() {
   }
 }
 
-void core::block_sim::Graph::execute(const double t,
-                                     const ExecutionMode mode) const {
-  // Set execution mode for all blocks
-  for (const auto& block_ptr : blocks_) {
-    block_ptr->set_execution_mode(mode);
-  }
-
+void core::block_sim::Graph::execute(const double t) const {
+  // Execute graph
   for (const int block_idx : execution_order) {
     blocks_[block_idx]->step(t);
 
     for (const int connection_idx : outgoing_connections[block_idx]) {
       propagate(connections_[connection_idx]);
     }
+  }
+}
+
+void core::block_sim::Graph::set_execution_mode(
+    const ExecutionMode mode) const {
+  // Set execution mode for all blocks
+  for (const auto& block_ptr : blocks_) {
+    block_ptr->set_execution_mode(mode);
   }
 }
 

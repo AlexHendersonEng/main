@@ -5,7 +5,8 @@
 void core::block_sim::System::step() {
   // If no states just update graph
   if (n_states_ == 0) {
-    graph_.execute(t_, ExecutionMode::Commit);
+    graph_.set_execution_mode(ExecutionMode::Commit);
+    graph_.execute(t_);
     t_ += dt_;
     return;
   }
@@ -17,7 +18,8 @@ void core::block_sim::System::step() {
   auto compute_derivatives = [this](const std::vector<double>& states,
                                     const double t) -> std::vector<double>& {
     set_states(states);
-    graph_.execute(t, ExecutionMode::Evaluation);
+    graph_.set_execution_mode(ExecutionMode::Evaluation);
+    graph_.execute(t);
     get_derivatives();
     return derivatives_;
   };
@@ -27,7 +29,8 @@ void core::block_sim::System::step() {
 
   // Update graph
   set_states(states_);
-  graph_.execute(t_, ExecutionMode::Commit);
+  graph_.set_execution_mode(ExecutionMode::Commit);
+  graph_.execute(t_);
 
   // Update time
   t_ += dt_;
