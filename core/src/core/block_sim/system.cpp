@@ -1,7 +1,6 @@
 #include "block_sim/system.hpp"
 
 #include <queue>
-#include <stdexcept>
 
 void core::block_sim::System::step() {
   // If no states just update graph
@@ -41,65 +40,12 @@ void core::block_sim::System::execute_graph(const double t,
     block_ptr->set_execution_mode(mode);
   }
 
-  for (const int block_idx : execution_order_) {
+  for (const int block_idx : graph_.execution_order) {
     blocks_[block_idx]->step(t);
 
-    for (const int connection_idx : outgoing_connections_[block_idx]) {
+    for (const int connection_idx : graph_.outgoing_connections[block_idx]) {
       propagate(connections_[connection_idx]);
     }
-  }
-}
-
-void core::block_sim::System::build_execution_graph() {
-  // Initialise
-  execution_order_.clear();
-  outgoing_connections_.assign(n_blocks_, {});
-  std::vector<std::vector<int>> graph(n_blocks_);
-  std::vector<int> indegree(n_blocks_, 0);
-
-  // Construct graph
-  for (int i = 0; i < connections_.size(); i++) {
-    // Get connection
-    const auto& connection = connections_[i];
-
-    // Add to graph and increment in degree
-    if (!blocks_[connection.from_block]->breaks_execution_loop()) {
-      graph[connection.from_block].emplace_back(connection.to_block);
-      indegree[connection.to_block]++;
-    }
-
-    // Add to outgoing connections
-    outgoing_connections_[connection.from_block].emplace_back(i);
-  }
-
-  // Determine source nodes
-  std::queue<int> queue;
-  for (int i = 0; i < n_blocks_; i++) {
-    if (indegree[i] == 0) {
-      queue.push(i);
-    }
-  }
-
-  // Determine execution order
-  while (!queue.empty()) {
-    // Get block from queue and add to execution order
-    int block_idx = queue.front();
-    queue.pop();
-    execution_order_.emplace_back(block_idx);
-
-    // Add downstream blocks to queue
-    for (int downstream : graph[block_idx]) {
-      indegree[downstream]--;
-
-      if (indegree[downstream] == 0) {
-        queue.push(downstream);
-      }
-    }
-  }
-
-  // If not all blocks were added to the execution order there is a cycle
-  if (execution_order_.size() != n_blocks_) {
-    throw std::runtime_error("Cycle detected in block connections");
   }
 }
 
