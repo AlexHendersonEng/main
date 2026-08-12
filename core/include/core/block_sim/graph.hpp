@@ -24,6 +24,8 @@ class Graph {
 
   std::vector<int> execution_order;
   std::vector<std::vector<int>> outgoing_connections;
+  std::vector<int> source_blocks;
+  std::vector<int> sink_blocks;
 
   void execute(double t) const;
   void set_execution_mode(ExecutionMode mode) const;

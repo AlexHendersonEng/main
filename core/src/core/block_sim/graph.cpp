@@ -8,7 +8,8 @@ void core::block_sim::Graph::build_execution_graph() {
   execution_order.clear();
   outgoing_connections.assign(n_blocks_, {});
   std::vector<std::vector<int>> graph(n_blocks_);
-  std::vector<int> indegree(n_blocks_, 0);
+  std::vector<int> indegree;
+  std::vector<int> outdegree;
 
   // Construct graph
   for (int i = 0; i < connections_.size(); i++) {
@@ -19,18 +20,22 @@ void core::block_sim::Graph::build_execution_graph() {
     if (!blocks_[connection.from_block]->breaks_execution_loop()) {
       graph[connection.from_block].emplace_back(connection.to_block);
       indegree[connection.to_block]++;
+      outdegree[connection.from_block]++;
     }
 
     // Add to outgoing connections
     outgoing_connections[connection.from_block].emplace_back(i);
   }
 
-  // Determine source nodes
+  // Determine source and sink nodes
   std::queue<int> queue;
   for (int i = 0; i < n_blocks_; i++) {
     if (indegree[i] == 0) {
       queue.push(i);
+      source_blocks.emplace_back(i);
     }
+
+    if (outdegree[i] == 0) sink_blocks.emplace_back(i);
   }
 
   // Determine execution order
