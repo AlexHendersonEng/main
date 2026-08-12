@@ -13,13 +13,18 @@ class Block {
       : inputs_(n_inputs),
         outputs_(n_outputs),
         n_states_(n_states),
+        n_inputs_(n_inputs),
+        n_outputs_(n_outputs),
         states_(n_states),
         execution_mode_(ExecutionMode::Commit) {}
   virtual ~Block() = default;
 
   virtual void step(double t) = 0;
 
+  [[nodiscard]] int num_outputs() const;
   [[nodiscard]] double get_output(int index) const;
+
+  [[nodiscard]] int num_inputs() const;
   void set_input(int index, double input);
 
   [[nodiscard]] int num_states() const;
@@ -36,6 +41,8 @@ class Block {
   std::vector<double> inputs_;
   std::vector<double> outputs_;
   int n_states_;
+  int n_inputs_;
+  int n_outputs_;
   std::vector<double> states_;
   ExecutionMode execution_mode_;
 };

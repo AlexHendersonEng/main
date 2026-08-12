@@ -1,8 +1,12 @@
 #include "block_sim/blocks/block.hpp"
 
+int core::block_sim::Block::num_outputs() const { return n_outputs_; }
+
 double core::block_sim::Block::get_output(const int index) const {
   return outputs_[index];
 }
+
+int core::block_sim::Block::num_inputs() const { return n_inputs_; }
 
 void core::block_sim::Block::set_input(const int index, const double input) {
   inputs_[index] = input;
