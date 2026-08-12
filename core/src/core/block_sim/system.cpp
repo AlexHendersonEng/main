@@ -5,7 +5,7 @@
 void core::block_sim::System::step() {
   // If no states just update graph
   if (n_states_ == 0) {
-    execute_graph(t_, ExecutionMode::Commit);
+    graph_.execute(t_, ExecutionMode::Commit);
     t_ += dt_;
     return;
   }
@@ -17,7 +17,7 @@ void core::block_sim::System::step() {
   auto compute_derivatives = [this](const std::vector<double>& states,
                                     const double t) -> std::vector<double>& {
     set_states(states);
-    execute_graph(t, ExecutionMode::Evaluation);
+    graph_.execute(t, ExecutionMode::Evaluation);
     get_derivatives();
     return derivatives_;
   };
@@ -27,38 +27,10 @@ void core::block_sim::System::step() {
 
   // Update graph
   set_states(states_);
-  execute_graph(t_, ExecutionMode::Commit);
+  graph_.execute(t_, ExecutionMode::Commit);
 
   // Update time
   t_ += dt_;
-}
-
-void core::block_sim::System::execute_graph(const double t,
-                                            const ExecutionMode mode) const {
-  // Set execution mode for all blocks
-  for (const auto& block_ptr : blocks_) {
-    block_ptr->set_execution_mode(mode);
-  }
-
-  for (const int block_idx : graph_.execution_order) {
-    blocks_[block_idx]->step(t);
-
-    for (const int connection_idx : graph_.outgoing_connections[block_idx]) {
-      propagate(connections_[connection_idx]);
-    }
-  }
-}
-
-void core::block_sim::System::propagate(const Connection& connection) const {
-  // Get source and destination blocks
-  const Block& from_block = *blocks_[connection.from_block];
-  Block& to_block = *blocks_[connection.to_block];
-
-  // Get output from source block
-  const auto& output = from_block.get_output(connection.from_port);
-
-  // Set input for destination block
-  to_block.set_input(connection.to_port, output);
 }
 
 int core::block_sim::System::num_states() const {

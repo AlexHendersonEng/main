@@ -25,6 +25,9 @@ class Graph {
   std::vector<int> execution_order;
   std::vector<std::vector<int>> outgoing_connections;
 
+  void execute(double t, ExecutionMode mode) const;
+  void propagate(const Connection& connection) const;
+
  private:
   size_t n_blocks_;
   const std::vector<std::unique_ptr<Block>>& blocks_;

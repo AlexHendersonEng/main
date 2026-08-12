@@ -43,9 +43,6 @@ class System {
   std::vector<double> states_;
   std::vector<double> derivatives_;
 
-  void execute_graph(double t, ExecutionMode mode) const;
-  void propagate(const Connection& connection) const;
-
   [[nodiscard]] int num_states() const;
   void set_states(const std::vector<double>& states) const;
   void get_states();

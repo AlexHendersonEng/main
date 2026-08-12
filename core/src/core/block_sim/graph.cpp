@@ -55,3 +55,31 @@ void core::block_sim::Graph::build_execution_graph() {
     throw std::runtime_error("Cycle detected in block connections");
   }
 }
+
+void core::block_sim::Graph::execute(const double t,
+                                     const ExecutionMode mode) const {
+  // Set execution mode for all blocks
+  for (const auto& block_ptr : blocks_) {
+    block_ptr->set_execution_mode(mode);
+  }
+
+  for (const int block_idx : execution_order) {
+    blocks_[block_idx]->step(t);
+
+    for (const int connection_idx : outgoing_connections[block_idx]) {
+      propagate(connections_[connection_idx]);
+    }
+  }
+}
+
+void core::block_sim::Graph::propagate(const Connection& connection) const {
+  // Get source and destination blocks
+  const Block& from_block = *blocks_[connection.from_block];
+  Block& to_block = *blocks_[connection.to_block];
+
+  // Get output from source block
+  const auto& output = from_block.get_output(connection.from_port);
+
+  // Set input for destination block
+  to_block.set_input(connection.to_port, output);
+}
