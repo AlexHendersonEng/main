@@ -39,11 +39,11 @@ class System {
   double dt_;
   std::unique_ptr<IntegrationMethod> integration_method_;
   double t_;
-  int n_states_;
+  size_t n_states_;
   std::vector<double> states_;
   std::vector<double> derivatives_;
 
-  [[nodiscard]] int num_states() const;
+  [[nodiscard]] size_t num_states() const;
   void set_states(const std::vector<double>& states) const;
   void get_states();
   void get_derivatives();

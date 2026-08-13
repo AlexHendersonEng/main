@@ -36,8 +36,8 @@ void core::block_sim::System::step() {
   t_ += dt_;
 }
 
-int core::block_sim::System::num_states() const {
-  int result = 0;
+size_t core::block_sim::System::num_states() const {
+  size_t result = 0;
   for (const auto& block_ptr : blocks_) {
     result += block_ptr->num_states();
   }
@@ -46,17 +46,17 @@ int core::block_sim::System::num_states() const {
 
 void core::block_sim::System::set_states(
     const std::vector<double>& states) const {
-  int index = 0;
+  size_t index = 0;
   for (const auto& block_ptr : blocks_) {
     index += block_ptr->set_state(index, states);
   }
 }
 
 void core::block_sim::System::get_states() {
-  int index = 0;
+  size_t index = 0;
   for (const auto& block_ptr : blocks_) {
-    const int n = block_ptr->num_states();
-    for (int i = 0; i < n; i++) {
+    const size_t n = block_ptr->num_states();
+    for (size_t i = 0; i < n; i++) {
       states_[index] = block_ptr->get_state(i);
       index++;
     }
@@ -64,10 +64,10 @@ void core::block_sim::System::get_states() {
 }
 
 void core::block_sim::System::get_derivatives() {
-  int index = 0;
+  size_t index = 0;
   for (const auto& block_ptr : blocks_) {
-    const int n = block_ptr->num_states();
-    for (int i = 0; i < n; i++) {
+    const size_t n = block_ptr->num_states();
+    for (size_t i = 0; i < n; i++) {
       derivatives_[index] = block_ptr->get_derivative(i);
       index++;
     }

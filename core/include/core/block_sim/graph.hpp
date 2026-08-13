@@ -22,10 +22,10 @@ class Graph {
     build_execution_graph();
   }
 
-  std::vector<int> execution_order;
-  std::vector<std::vector<int>> outgoing_connections;
-  std::vector<int> source_blocks;
-  std::vector<int> sink_blocks;
+  std::vector<size_t> execution_order;
+  std::vector<std::vector<size_t>> outgoing_connections;
+  std::vector<size_t> source_blocks;
+  std::vector<size_t> sink_blocks;
 
   void execute(double t) const;
   void set_execution_mode(ExecutionMode mode) const;

@@ -9,28 +9,21 @@ namespace core::block_sim {
 
 class Block {
  public:
-  Block(const int n_inputs, const int n_outputs, const int n_states = 0)
-      : inputs_(n_inputs),
-        outputs_(n_outputs),
-        n_states_(n_states),
-        n_inputs_(n_inputs),
-        n_outputs_(n_outputs),
-        states_(n_states),
-        execution_mode_(ExecutionMode::Commit) {}
+  Block(size_t n_inputs, size_t n_outputs, size_t n_states = 0);
   virtual ~Block() = default;
 
   virtual void step(double t) = 0;
 
-  [[nodiscard]] int num_outputs() const;
-  [[nodiscard]] double get_output(int index) const;
+  [[nodiscard]] size_t num_outputs() const;
+  [[nodiscard]] double get_output(size_t index) const;
 
-  [[nodiscard]] int num_inputs() const;
-  void set_input(int index, double input);
+  [[nodiscard]] size_t num_inputs() const;
+  void set_input(size_t index, double input);
 
-  [[nodiscard]] int num_states() const;
-  int set_state(int index, const std::vector<double> &states);
-  [[nodiscard]] double get_state(int index) const;
-  [[nodiscard]] double get_derivative(int index) const;
+  [[nodiscard]] size_t num_states() const;
+  size_t set_state(size_t index, const std::vector<double> &states);
+  [[nodiscard]] double get_state(size_t index) const;
+  [[nodiscard]] double get_derivative(size_t index) const;
 
   [[nodiscard]] virtual bool breaks_execution_loop() const;
 
@@ -40,9 +33,6 @@ class Block {
  protected:
   std::vector<double> inputs_;
   std::vector<double> outputs_;
-  int n_states_;
-  int n_inputs_;
-  int n_outputs_;
   std::vector<double> states_;
   ExecutionMode execution_mode_;
 };

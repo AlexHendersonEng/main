@@ -7,12 +7,12 @@ void core::block_sim::Graph::build_execution_graph() {
   // Initialise
   execution_order.clear();
   outgoing_connections.assign(n_blocks_, {});
-  std::vector<std::vector<int>> graph(n_blocks_);
-  std::vector<int> indegree;
-  std::vector<int> outdegree;
+  std::vector<std::vector<size_t>> graph(n_blocks_);
+  std::vector<size_t> indegree(n_blocks_, 0);
+  std::vector<size_t> outdegree(n_blocks_, 0);
 
   // Construct graph
-  for (int i = 0; i < connections_.size(); i++) {
+  for (size_t i = 0; i < connections_.size(); i++) {
     // Get connection
     const auto& connection = connections_[i];
 
@@ -28,8 +28,8 @@ void core::block_sim::Graph::build_execution_graph() {
   }
 
   // Determine source and sink nodes
-  std::queue<int> queue;
-  for (int i = 0; i < n_blocks_; i++) {
+  std::queue<size_t> queue;
+  for (size_t i = 0; i < n_blocks_; i++) {
     if (indegree[i] == 0) {
       queue.push(i);
       source_blocks.emplace_back(i);
@@ -41,12 +41,12 @@ void core::block_sim::Graph::build_execution_graph() {
   // Determine execution order
   while (!queue.empty()) {
     // Get block from queue and add to execution order
-    int block_idx = queue.front();
+    size_t block_idx = queue.front();
     queue.pop();
     execution_order.emplace_back(block_idx);
 
     // Add downstream blocks to queue
-    for (int downstream : graph[block_idx]) {
+    for (size_t downstream : graph[block_idx]) {
       indegree[downstream]--;
 
       if (indegree[downstream] == 0) {
@@ -63,10 +63,10 @@ void core::block_sim::Graph::build_execution_graph() {
 
 void core::block_sim::Graph::execute(const double t) const {
   // Execute graph
-  for (const int block_idx : execution_order) {
+  for (const size_t block_idx : execution_order) {
     blocks_[block_idx]->step(t);
 
-    for (const int connection_idx : outgoing_connections[block_idx]) {
+    for (const size_t connection_idx : outgoing_connections[block_idx]) {
       propagate(connections_[connection_idx]);
     }
   }
