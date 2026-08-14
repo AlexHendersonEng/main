@@ -14,8 +14,6 @@ void core::block_sim::Graph::build_execution_graph() {
   // Initialise
   const size_t n_blocks = blocks_.size();
   execution_order.clear();
-  source_blocks.clear();
-  sink_blocks.clear();
   outgoing_connections.assign(n_blocks, {});
   std::vector<std::vector<size_t>> graph(n_blocks);
   std::vector<size_t> indegree(n_blocks, 0);
@@ -42,10 +40,7 @@ void core::block_sim::Graph::build_execution_graph() {
   for (size_t i = 0; i < n_blocks; i++) {
     if (indegree[i] == 0) {
       queue.push(i);
-      source_blocks.emplace_back(i);
     }
-
-    if (outdegree[i] == 0) sink_blocks.emplace_back(i);
   }
 
   // Determine execution order
@@ -69,9 +64,15 @@ void core::block_sim::Graph::build_execution_graph() {
   if (execution_order.size() != n_blocks) {
     throw std::runtime_error("Cycle detected in block connections");
   }
+
+  // Set graph built flag
+  graph_built_ = true;
 }
 
 void core::block_sim::Graph::execute(const double t) const {
+  // Check graph has been built
+  if (!graph_built_) throw std::runtime_error("Graph not built");
+
   // Execute graph
   for (const size_t block_idx : execution_order) {
     blocks_[block_idx]->step(t);

@@ -16,8 +16,6 @@ class Graph {
 
   std::vector<size_t> execution_order;
   std::vector<std::vector<size_t>> outgoing_connections;
-  std::vector<size_t> source_blocks;
-  std::vector<size_t> sink_blocks;
 
   void build_execution_graph();
   void execute(double t) const;
@@ -25,6 +23,7 @@ class Graph {
   void propagate(const Connection& connection) const;
 
  private:
+  bool graph_built_ = false;
   const std::vector<std::unique_ptr<Block>>& blocks_;
   const std::vector<Connection>& connections_;
 };
