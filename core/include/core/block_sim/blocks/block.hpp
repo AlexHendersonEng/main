@@ -14,16 +14,17 @@ class Block {
 
   virtual void step(double t) = 0;
 
-  [[nodiscard]] size_t num_outputs() const;
-  [[nodiscard]] double get_output(size_t index) const;
+  [[nodiscard]] virtual size_t num_outputs() const = 0;
+  [[nodiscard]] virtual double get_output(size_t index) const = 0;
 
-  [[nodiscard]] size_t num_inputs() const;
-  void set_input(size_t index, double input);
+  [[nodiscard]] virtual size_t num_inputs() const = 0;
+  virtual void set_input(size_t index, double input) = 0;
 
-  [[nodiscard]] size_t num_states() const;
-  size_t set_state(size_t index, const std::vector<double> &states);
-  [[nodiscard]] double get_state(size_t index) const;
-  [[nodiscard]] double get_derivative(size_t index) const;
+  [[nodiscard]] virtual size_t num_states() const = 0;
+  virtual size_t set_state(size_t& index,
+                           const std::vector<double>& states) = 0;
+  [[nodiscard]] virtual double get_state(size_t index) const = 0;
+  [[nodiscard]] virtual double get_derivative(size_t index) const = 0;
 
   [[nodiscard]] virtual bool breaks_execution_loop() const;
 
@@ -31,9 +32,6 @@ class Block {
   [[nodiscard]] ExecutionMode get_execution_mode() const;
 
  protected:
-  std::vector<double> inputs_;
-  std::vector<double> outputs_;
-  std::vector<double> states_;
   ExecutionMode execution_mode_;
 };
 

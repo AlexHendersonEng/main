@@ -9,13 +9,26 @@ namespace core::block_sim {
 
 class Gain : public Block {
  public:
-  explicit Gain(const double value) : Block(1, 1), value_(value) {}
+  explicit Gain(double value);
   ~Gain() override = default;
 
   void step(double t) override;
 
+  [[nodiscard]] size_t num_outputs() const override;
+  [[nodiscard]] double get_output(size_t index) const override;
+
+  [[nodiscard]] size_t num_inputs() const override;
+  void set_input(size_t index, double input) override;
+
+  [[nodiscard]] size_t num_states() const override;
+  size_t set_state(size_t& index, const std::vector<double>& states) override;
+  [[nodiscard]] double get_state(size_t index) const override;
+  [[nodiscard]] double get_derivative(size_t index) const override;
+
  private:
   double value_;
+  double input_;
+  double output_;
 };
 
 }  // namespace core::block_sim

@@ -2,6 +2,26 @@
 
 #include <queue>
 
+core::block_sim::System::System(
+    std::vector<std::unique_ptr<Block>> blocks,
+    std::vector<Connection> connections, const double dt,
+    std::unique_ptr<IntegrationMethod> integration_method)
+    : n_blocks_(blocks.size()),
+      blocks_(std::move(blocks)),
+      connections_(std::move(connections)),
+      graph_(blocks_, connections_),
+      dt_(dt),
+      integration_method_(std::move(integration_method)),
+      t_(0.0) {
+  // Get number of states
+  n_states_ = num_states();
+  states_ = std::vector<double>(n_states_, 0.0);
+  derivatives_ = std::vector<double>(n_states_, 0.0);
+
+  // Construct execution graph
+  graph_.build_execution_graph();
+}
+
 void core::block_sim::System::step() {
   // If no states just update graph
   if (n_states_ == 0) {
@@ -72,4 +92,9 @@ void core::block_sim::System::get_derivatives() {
       index++;
     }
   }
+}
+
+std::unique_ptr<core::block_sim::Block>& core::block_sim::System::get_block(
+    const size_t index) {
+  return blocks_.at(index);
 }

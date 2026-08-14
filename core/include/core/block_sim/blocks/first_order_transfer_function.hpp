@@ -1,14 +1,15 @@
-#ifndef CORE_BLOCK_SIM_BLOCKS_LOGGER_HPP_
-#define CORE_BLOCK_SIM_BLOCKS_LOGGER_HPP_
+#ifndef CORE_BLOCK_SIM_BLOCKS_FIRST_ORDER_TRANSFER_FUNCTION_HPP_
+#define CORE_BLOCK_SIM_BLOCKS_FIRST_ORDER_TRANSFER_FUNCTION_HPP_
 
 #include "block_sim/blocks/block.hpp"
+#include "block_sim/graph.hpp"
 
 namespace core::block_sim {
 
-class Logger : public Block {
+class FirstOrderTransferFunction : public Block {
  public:
-  Logger();
-  ~Logger() override = default;
+  explicit FirstOrderTransferFunction(double gain, double time_constant);
+  ~FirstOrderTransferFunction() override = default;
 
   void step(double t) override;
 
@@ -23,12 +24,14 @@ class Logger : public Block {
   [[nodiscard]] double get_state(size_t index) const override;
   [[nodiscard]] double get_derivative(size_t index) const override;
 
-  std::vector<double> log;
-
  private:
-  double input_;
+  double gain_;
+  double time_constant_;
+  std::vector<std::unique_ptr<Block>> blocks_;
+  std::vector<Connection> connections_;
+  Graph graph_;
 };
 
 }  // namespace core::block_sim
 
-#endif  // CORE_BLOCK_SIM_BLOCKS_LOGGER_HPP_
+#endif  // CORE_BLOCK_SIM_BLOCKS_FIRST_ORDER_TRANSFER_FUNCTION_HPP_

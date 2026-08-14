@@ -2,6 +2,7 @@
 #define CORE_BLOCK_SIM_SYSTEM_HPP_
 
 #include <memory>
+#include <typeinfo>
 #include <vector>
 
 #include "block_sim/blocks/block.hpp"
@@ -14,22 +15,28 @@ namespace core::block_sim {
 class System {
  public:
   System(std::vector<std::unique_ptr<Block>> blocks,
-         std::vector<Connection> connections, const double dt,
-         std::unique_ptr<IntegrationMethod> integration_method)
-      : n_blocks_(blocks.size()),
-        blocks_(std::move(blocks)),
-        connections_(std::move(connections)),
-        graph_(blocks_, connections_),
-        dt_(dt),
-        integration_method_(std::move(integration_method)),
-        t_(0.0) {
-    // Get number of states
-    n_states_ = num_states();
-    states_ = std::vector<double>(n_states_, 0.0);
-    derivatives_ = std::vector<double>(n_states_, 0.0);
-  }
+         std::vector<Connection> connections, double dt,
+         std::unique_ptr<IntegrationMethod> integration_method);
 
   void step();
+
+  std::unique_ptr<Block>& get_block(size_t index);
+
+  template <typename T>
+  T* get_block(const size_t index) {
+    if (auto* block = dynamic_cast<T*>(blocks_.at(index).get())) {
+      return block;
+    }
+    throw std::bad_cast();
+  }
+
+  template <typename T>
+  const T* get_block(const size_t index) const {
+    if (const auto* block = dynamic_cast<const T*>(blocks_.at(index).get())) {
+      return block;
+    }
+    throw std::bad_cast();
+  }
 
  private:
   size_t n_blocks_;

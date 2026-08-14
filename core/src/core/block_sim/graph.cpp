@@ -3,13 +3,23 @@
 #include <queue>
 #include <stdexcept>
 
+core::block_sim::Graph::Graph(const std::vector<std::unique_ptr<Block>>& blocks,
+                              const std::vector<Connection>& connections)
+    : execution_order(blocks.size()),
+      outgoing_connections(blocks.size()),
+      blocks_(blocks),
+      connections_(connections) {}
+
 void core::block_sim::Graph::build_execution_graph() {
   // Initialise
+  const size_t n_blocks = blocks_.size();
   execution_order.clear();
-  outgoing_connections.assign(n_blocks_, {});
-  std::vector<std::vector<size_t>> graph(n_blocks_);
-  std::vector<size_t> indegree(n_blocks_, 0);
-  std::vector<size_t> outdegree(n_blocks_, 0);
+  source_blocks.clear();
+  sink_blocks.clear();
+  outgoing_connections.assign(n_blocks, {});
+  std::vector<std::vector<size_t>> graph(n_blocks);
+  std::vector<size_t> indegree(n_blocks, 0);
+  std::vector<size_t> outdegree(n_blocks, 0);
 
   // Construct graph
   for (size_t i = 0; i < connections_.size(); i++) {
@@ -29,7 +39,7 @@ void core::block_sim::Graph::build_execution_graph() {
 
   // Determine source and sink nodes
   std::queue<size_t> queue;
-  for (size_t i = 0; i < n_blocks_; i++) {
+  for (size_t i = 0; i < n_blocks; i++) {
     if (indegree[i] == 0) {
       queue.push(i);
       source_blocks.emplace_back(i);
@@ -56,7 +66,7 @@ void core::block_sim::Graph::build_execution_graph() {
   }
 
   // If not all blocks were added to the execution order there is a cycle
-  if (execution_order.size() != n_blocks_) {
+  if (execution_order.size() != n_blocks) {
     throw std::runtime_error("Cycle detected in block connections");
   }
 }

@@ -10,20 +10,28 @@ namespace core::block_sim {
 
 class Interp1 : public Block {
  public:
-  explicit Interp1(const std::vector<double>& x, const std::vector<double>& y)
-      : Block(1, 1), x_(x), y_(y) {
-    if (x_.size() != y_.size()) {
-      throw std::invalid_argument("x and y vectors must have the same size.");
-    }
-  }
+  explicit Interp1(const std::vector<double>& x, const std::vector<double>& y);
 
   ~Interp1() override = default;
 
   void step(double t) override;
 
+  [[nodiscard]] size_t num_outputs() const override;
+  [[nodiscard]] double get_output(size_t index) const override;
+
+  [[nodiscard]] size_t num_inputs() const override;
+  void set_input(size_t index, double input) override;
+
+  [[nodiscard]] size_t num_states() const override;
+  size_t set_state(size_t& index, const std::vector<double>& states) override;
+  [[nodiscard]] double get_state(size_t index) const override;
+  [[nodiscard]] double get_derivative(size_t index) const override;
+
  private:
   std::vector<double> x_;
   std::vector<double> y_;
+  double input_;
+  double output_;
 };
 
 }  // namespace core::block_sim
