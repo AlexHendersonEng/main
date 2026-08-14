@@ -73,43 +73,11 @@ int main() {
        0}  // integrator_block1:outport0 -> output_logger_block:inport0
   };
 
-  // // Variables
-  // constexpr double time_constant = 1.0;
-  // constexpr double gain = 1.0;
-  // const std::vector<double> times = {0, 1, 1, 10};
-  // const std::vector<double> values = {0, 0, 1, 1};
-  //
-  // // Create blocks
-  // auto clock_block = std::make_unique<core::block_sim::Clock>();
-  // auto interp1_block =
-  //     std::make_unique<core::block_sim::Interp1>(times, values);
-  // auto first_order_transfer_function =
-  //     std::make_unique<core::block_sim::FirstOrderTransferFunction>(
-  //         gain, time_constant);
-  // auto time_logger_block = std::make_unique<core::block_sim::Logger>();
-  // auto input_logger_block = std::make_unique<core::block_sim::Logger>();
-  // auto output_logger_block = std::make_unique<core::block_sim::Logger>();
-  //
-  // // Add blocks to array
-  // std::vector<std::unique_ptr<core::block_sim::Block>> blocks;
-  // blocks.emplace_back(std::move(clock_block));                    // Block 0
-  // blocks.emplace_back(std::move(interp1_block));                  // Block 1
-  // blocks.emplace_back(std::move(first_order_transfer_function));  // Block 2
-  // blocks.emplace_back(std::move(time_logger_block));              // Block 3
-  // blocks.emplace_back(std::move(input_logger_block));             // Block 4
-  // blocks.emplace_back(std::move(output_logger_block));            // Block 5
-  //
-  // // Create connections
-  // const std::vector<core::block_sim::Connection> connections = {
-  //     {0, 0, 1, 0},  // clock_block:outport0 -> interp1_block:inport0
-  //     {1, 0, 2,
-  //      0},  // interp1_block:outport0 ->
-  //      first_order_transfer_function:inport0
-  //     {2, 0, 5, 0},  // first_order_transfer_function:outport0 ->
-  //                    // output_logger_block:inport0
-  //     {0, 0, 3, 0},  // clock_block:outport0 -> time_logger_block:inport0
-  //     {1, 0, 4, 0}   // interp1_block:outport0 -> input_logger_block:inport0
-  // };
+  // Get edges for graph plot
+  std::vector<std::pair<size_t, size_t>> edges;
+  for (auto& connection : connections) {
+    edges.emplace_back(connection.from_block, connection.to_block);
+  }
 
   // Create integration method
   auto integration_method = std::make_unique<core::block_sim::EulerForward>();
@@ -131,7 +99,10 @@ int main() {
     system.step();
   }
 
-  // Plotting
+  // Plot graph
+  matplot::digraph(edges);
+
+  // Plotting results
   matplot::figure();
   matplot::plot(time_logger_block_ptr->log, input_logger_block_ptr->log, "k")
       ->line_width(2)
@@ -145,6 +116,7 @@ int main() {
   matplot::ylabel("Value");
   matplot::grid("on");
   matplot::legend();
+
   matplot::show();
 
   return 0;
