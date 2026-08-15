@@ -17,10 +17,8 @@ void core::block_sim::Gain::set_input(size_t index, const double input) {
 
 size_t core::block_sim::Gain::num_states() const { return 0; }
 
-size_t core::block_sim::Gain::set_state(size_t& index,
-                                        const std::vector<double>& states) {
-  return 0;
-}
+void core::block_sim::Gain::set_state(size_t& index,
+                                      const std::vector<double>& states) {}
 
 double core::block_sim::Gain::get_state(size_t index) const { return 0; }
 

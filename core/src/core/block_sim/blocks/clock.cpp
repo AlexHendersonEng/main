@@ -16,10 +16,8 @@ void core::block_sim::Clock::set_input(size_t index, double input) {}
 
 size_t core::block_sim::Clock::num_states() const { return 0; }
 
-size_t core::block_sim::Clock::set_state(size_t& index,
-                                         const std::vector<double>& states) {
-  return index;
-}
+void core::block_sim::Clock::set_state(size_t& index,
+                                       const std::vector<double>& states) {}
 
 double core::block_sim::Clock::get_state(size_t index) const { return 0; }
 

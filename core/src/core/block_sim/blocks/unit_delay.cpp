@@ -27,10 +27,8 @@ void core::block_sim::UnitDelay::set_input(size_t index, const double input) {
 
 size_t core::block_sim::UnitDelay::num_states() const { return 0; }
 
-size_t core::block_sim::UnitDelay::set_state(
-    size_t& index, const std::vector<double>& states) {
-  return index;
-}
+void core::block_sim::UnitDelay::set_state(size_t& index,
+                                           const std::vector<double>& states) {}
 
 double core::block_sim::UnitDelay::get_state(size_t index) const { return 0; }
 

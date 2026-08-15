@@ -61,10 +61,9 @@ size_t core::block_sim::FirstOrderTransferFunction::num_states() const {
   return 1;
 }
 
-size_t core::block_sim::FirstOrderTransferFunction::set_state(
+void core::block_sim::FirstOrderTransferFunction::set_state(
     size_t& index, const std::vector<double>& states) {
   blocks_[3]->set_state(index, states);
-  return index;
 }
 
 double core::block_sim::FirstOrderTransferFunction::get_state(

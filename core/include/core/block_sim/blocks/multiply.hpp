@@ -19,7 +19,7 @@ class Multiply : public Block {
   void set_input(size_t index, double input) override;
 
   [[nodiscard]] size_t num_states() const override;
-  size_t set_state(size_t& index, const std::vector<double>& states) override;
+  void set_state(size_t& index, const std::vector<double>& states) override;
   [[nodiscard]] double get_state(size_t index) const override;
   [[nodiscard]] double get_derivative(size_t index) const override;
 

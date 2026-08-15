@@ -1,15 +1,16 @@
-#ifndef CORE_BLOCK_SIM_BLOCKS_FIRST_ORDER_TRANSFER_FUNCTION_HPP_
-#define CORE_BLOCK_SIM_BLOCKS_FIRST_ORDER_TRANSFER_FUNCTION_HPP_
+#ifndef CORE_BLOCK_SIM_BLOCKS_SECOND_ORDER_TRANSFER_FUNCTION_HPP_
+#define CORE_BLOCK_SIM_BLOCKS_SECOND_ORDER_TRANSFER_FUNCTION_HPP_
 
 #include "block_sim/blocks/block.hpp"
 #include "block_sim/graph.hpp"
 
 namespace core::block_sim {
 
-class FirstOrderTransferFunction : public Block {
+class SecondOrderTransferFunction : public Block {
  public:
-  explicit FirstOrderTransferFunction(double gain, double time_constant);
-  ~FirstOrderTransferFunction() override = default;
+  explicit SecondOrderTransferFunction(double gain, double natural_frequency,
+                                       double damping_ratio);
+  ~SecondOrderTransferFunction() override = default;
 
   void step(double t) override;
 
@@ -26,7 +27,8 @@ class FirstOrderTransferFunction : public Block {
 
  private:
   double gain_;
-  double time_constant_;
+  double natural_frequency_;
+  double damping_ratio_;
   std::vector<std::unique_ptr<Block>> blocks_;
   std::vector<Connection> connections_;
   Graph graph_;
@@ -34,4 +36,4 @@ class FirstOrderTransferFunction : public Block {
 
 }  // namespace core::block_sim
 
-#endif  // CORE_BLOCK_SIM_BLOCKS_FIRST_ORDER_TRANSFER_FUNCTION_HPP_
+#endif  // CORE_BLOCK_SIM_BLOCKS_SECOND_ORDER_TRANSFER_FUNCTION_HPP_

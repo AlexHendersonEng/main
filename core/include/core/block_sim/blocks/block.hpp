@@ -21,8 +21,7 @@ class Block {
   virtual void set_input(size_t index, double input) = 0;
 
   [[nodiscard]] virtual size_t num_states() const = 0;
-  virtual size_t set_state(size_t& index,
-                           const std::vector<double>& states) = 0;
+  virtual void set_state(size_t& index, const std::vector<double>& states) = 0;
   [[nodiscard]] virtual double get_state(size_t index) const = 0;
   [[nodiscard]] virtual double get_derivative(size_t index) const = 0;
 

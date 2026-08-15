@@ -23,10 +23,8 @@ void core::block_sim::Modulus::set_input(const size_t index,
 
 size_t core::block_sim::Modulus::num_states() const { return 0; }
 
-size_t core::block_sim::Modulus::set_state(size_t& index,
-                                           const std::vector<double>& states) {
-  return index;
-}
+void core::block_sim::Modulus::set_state(size_t& index,
+                                         const std::vector<double>& states) {}
 
 double core::block_sim::Modulus::get_state(const size_t index) const {
   return 0;

@@ -68,7 +68,7 @@ void core::block_sim::System::set_states(
     const std::vector<double>& states) const {
   size_t index = 0;
   for (const auto& block_ptr : blocks_) {
-    index += block_ptr->set_state(index, states);
+    block_ptr->set_state(index, states);
   }
 }
 
