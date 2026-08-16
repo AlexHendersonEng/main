@@ -2,21 +2,22 @@
 
 #include <queue>
 
-core::block_sim::System::System(
-    std::vector<std::unique_ptr<Block>> blocks,
-    std::vector<Connection> connections, const double dt,
-    std::unique_ptr<IntegrationMethod> integration_method)
-    : n_blocks_(blocks.size()),
-      blocks_(std::move(blocks)),
-      connections_(std::move(connections)),
-      graph_(blocks_, connections_),
-      dt_(dt),
-      integration_method_(std::move(integration_method)),
-      t_(0.0) {
+core::block_sim::System::System()
+    : graph_(blocks_, edges_),
+      dt_(0.0),
+      integration_method_(nullptr),
+      t_(0.0),
+      n_states_(0) {}
+
+void core::block_sim::System::init(const double t0, const double dt) {
+  // Set time parameters
+  t_ = t0;
+  dt_ = dt;
+
   // Get number of states
-  n_states_ = num_states();
-  states_ = std::vector<double>(n_states_, 0.0);
-  derivatives_ = std::vector<double>(n_states_, 0.0);
+  const size_t n_states = num_states();
+  states_.assign(n_states, 0.0);
+  derivatives_.assign(n_states, 0.0);
 
   // Construct execution graph
   graph_.build_execution_graph();
@@ -24,7 +25,7 @@ core::block_sim::System::System(
 
 void core::block_sim::System::step() {
   // If no states just update graph
-  if (n_states_ == 0) {
+  if (states_.empty()) {
     graph_.set_execution_mode(ExecutionMode::Commit);
     graph_.execute(t_);
     t_ += dt_;
@@ -97,4 +98,15 @@ void core::block_sim::System::get_derivatives() {
 std::unique_ptr<core::block_sim::Block>& core::block_sim::System::get_block(
     const size_t index) {
   return blocks_.at(index);
+}
+
+void core::block_sim::System::add_connection(size_t from_block,
+                                             size_t from_port, size_t to_block,
+                                             size_t to_port) {
+  edges_.emplace_back(from_block, from_port, to_block, to_port);
+}
+
+std::vector<core::block_sim::Edge> core::block_sim::System::get_connections()
+    const {
+  return edges_;
 }

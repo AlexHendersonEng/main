@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "block_sim/blocks/block.hpp"
-#include "block_sim/connection.hpp"
+#include "block_sim/edge.hpp"
 #include "block_sim/graph.hpp"
 #include "block_sim/integration_methods/integration_method.hpp"
 
@@ -14,11 +14,16 @@ namespace core::block_sim {
 
 class System {
  public:
-  System(std::vector<std::unique_ptr<Block>> blocks,
-         std::vector<Connection> connections, double dt,
-         std::unique_ptr<IntegrationMethod> integration_method);
+  System();
 
+  void init(double t0, double dt);
   void step();
+
+  template <typename T, typename... Args>
+  size_t add_block(Args&&... args) {
+    blocks_.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
+    return blocks_.size() - 1;
+  }
 
   std::unique_ptr<Block>& get_block(size_t index);
 
@@ -38,10 +43,18 @@ class System {
     throw std::bad_cast();
   }
 
+  void add_connection(size_t from_block, size_t from_port, size_t to_block,
+                      size_t to_port);
+  [[nodiscard]] std::vector<Edge> get_connections() const;
+
+  template <typename T, typename... Args>
+  void set_integration_method(Args&&... args) {
+    integration_method_ = std::make_unique<T>(std::forward<Args>(args)...);
+  }
+
  private:
-  size_t n_blocks_;
   std::vector<std::unique_ptr<Block>> blocks_;
-  std::vector<Connection> connections_;
+  std::vector<Edge> edges_;
   Graph graph_;
   double dt_;
   std::unique_ptr<IntegrationMethod> integration_method_;

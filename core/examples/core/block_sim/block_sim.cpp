@@ -9,7 +9,7 @@
 #include "block_sim/blocks/interp1.hpp"
 #include "block_sim/blocks/logger.hpp"
 #include "block_sim/blocks/second_order_transfer_function.hpp"
-#include "block_sim/connection.hpp"
+#include "block_sim/edge.hpp"
 #include "block_sim/integration_methods/euler_forward.hpp"
 #include "block_sim/system.hpp"
 
@@ -23,57 +23,55 @@ int main() {
   const std::vector<double> times = {0, 1, 1, 10};
   const std::vector<double> values = {0, 0, 1, 1};
 
-  // Create blocks
-  auto clock_block = std::make_unique<core::block_sim::Clock>();
-  auto interp1_block =
-      std::make_unique<core::block_sim::Interp1>(times, values);
-  auto first_order_tf_block =
-      std::make_unique<core::block_sim::FirstOrderTransferFunction>(
-          gain0, time_constant);
-  auto second_order_tf_block =
-      std::make_unique<core::block_sim::SecondOrderTransferFunction>(
-          gain1, natural_frequency, damping_ratio);
-  auto time_logger_block = std::make_unique<core::block_sim::Logger>();
-  auto input_logger_block = std::make_unique<core::block_sim::Logger>();
-  auto output_logger_block0 = std::make_unique<core::block_sim::Logger>();
-  auto output_logger_block1 = std::make_unique<core::block_sim::Logger>();
+  // Create system
+  core::block_sim::System system;
 
-  // Add blocks to array
-  std::vector<std::unique_ptr<core::block_sim::Block>> blocks;
-  blocks.emplace_back(std::move(clock_block));            // Block 0
-  blocks.emplace_back(std::move(interp1_block));          // Block 1
-  blocks.emplace_back(std::move(first_order_tf_block));   // Block 2
-  blocks.emplace_back(std::move(second_order_tf_block));  // Block 3
-  blocks.emplace_back(std::move(time_logger_block));      // Block 4
-  blocks.emplace_back(std::move(input_logger_block));     // Block 5
-  blocks.emplace_back(std::move(output_logger_block0));   // Block 6
-  blocks.emplace_back(std::move(output_logger_block1));   // Block 7
+  // Add blocks to system
+  const size_t clock_idx =
+      system.add_block<core::block_sim::Clock>();  // Block 0
+  const size_t interp1_idx =
+      system.add_block<core::block_sim::Interp1>(times, values);  // Block 1
+  const size_t first_order_tf_idx =
+      system.add_block<core::block_sim::FirstOrderTransferFunction>(
+          gain0, time_constant);  // Block 2
+  const size_t second_order_tf_idx =
+      system.add_block<core::block_sim::SecondOrderTransferFunction>(
+          gain1, natural_frequency, damping_ratio);  // Block 3
+  const size_t time_logger_idx =
+      system.add_block<core::block_sim::Logger>();  // Block 4
+  const size_t input_logger_idx =
+      system.add_block<core::block_sim::Logger>();  // Block 5
+  const size_t output_logger_idx0 =
+      system.add_block<core::block_sim::Logger>();  // Block 6
+  const size_t output_logger_idx1 =
+      system.add_block<core::block_sim::Logger>();  // Block 7
 
   // Create connections
-  std::vector<core::block_sim::Connection> connections = {
-      {0, 0, 1, 0},  // clock_block:outport0 -> interp1_block:inport0
-      {1, 0, 2, 0},  // interp1_block:outport0 -> first_order_tf_block:inport0
-      {1, 0, 3, 0},  // interp1_block:outport0 -> second_order_tf_block:inport0
-      {0, 0, 4, 0},  // clock_block:outport0 -> time_logger_block:inport0
-      {1, 0, 5, 0},  // interp1_block:outport0 -> input_logger_block:inport0
-      {2, 0, 6,
-       0},  // first_order_tf_block:outport0 -> output_logger_block0:inport0
-      {3, 0, 7, 0}
-      // second_order_tf_block:outport0 -> output_logger_block1:inport0
-  };
+  system.add_connection(clock_idx, 0, interp1_idx,
+                        0);  // clock:outport0 -> interp1:inport0
+  system.add_connection(interp1_idx, 0, first_order_tf_idx,
+                        0);  // interp1:outport0 -> first_order_tf:inport0
+  system.add_connection(interp1_idx, 0, second_order_tf_idx,
+                        0);  // interp1:outport0 -> second_order_tf:inport0
+  system.add_connection(clock_idx, 0, time_logger_idx,
+                        0);  // clock:outport0 -> time_logger:inport0
+  system.add_connection(interp1_idx, 0, input_logger_idx,
+                        0);  // interp1:outport0 -> input_logger:inport0
+  system.add_connection(
+      first_order_tf_idx, 0, output_logger_idx0,
+      0);  // first_order_tf:outport0 -> output_logger0:inport0
+  system.add_connection(
+      second_order_tf_idx, 0, output_logger_idx1,
+      0);  // second_order_tf:outport0 -> output_logger1:inport0
 
   // Get edges for graph plot
   std::vector<std::pair<size_t, size_t>> edges;
-  for (auto& connection : connections) {
+  for (auto& connection : system.get_connections()) {
     edges.emplace_back(connection.from_block, connection.to_block);
   }
 
-  // Create integration method
-  auto integration_method = std::make_unique<core::block_sim::EulerForward>();
-
-  // Create system
-  core::block_sim::System system(std::move(blocks), connections, 0.1,
-                                 std::move(integration_method));
+  // Set integration method
+  system.set_integration_method<core::block_sim::EulerForward>();
 
   // Get logger pointers directly from the system
   const auto* time_logger_block_ptr =
@@ -84,6 +82,9 @@ int main() {
       system.get_block<core::block_sim::Logger>(6);
   const auto* output_logger_block1_ptr =
       system.get_block<core::block_sim::Logger>(7);
+
+  // Initialize system
+  system.init(0.0, 0.1);
 
   // Step system
   for (int i = 0; i < 200; i++) {

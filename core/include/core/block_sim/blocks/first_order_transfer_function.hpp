@@ -28,7 +28,7 @@ class FirstOrderTransferFunction : public Block {
   double gain_;
   double time_constant_;
   std::vector<std::unique_ptr<Block>> blocks_;
-  std::vector<Connection> connections_;
+  std::vector<Edge> connections_;
   Graph graph_;
 };
 

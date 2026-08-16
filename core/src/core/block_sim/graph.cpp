@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 core::block_sim::Graph::Graph(const std::vector<std::unique_ptr<Block>>& blocks,
-                              const std::vector<Connection>& connections)
+                              const std::vector<Edge>& connections)
     : execution_order(blocks.size()),
       outgoing_connections(blocks.size()),
       blocks_(blocks),
@@ -91,7 +91,7 @@ void core::block_sim::Graph::set_execution_mode(
   }
 }
 
-void core::block_sim::Graph::propagate(const Connection& connection) const {
+void core::block_sim::Graph::propagate(const Edge& connection) const {
   // Get source and destination blocks
   const Block& from_block = *blocks_[connection.from_block];
   Block& to_block = *blocks_[connection.to_block];
