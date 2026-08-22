@@ -11,7 +11,10 @@ namespace core::block_sim {
 template <typename T>
 class Gain : public Block {
  public:
-  explicit Gain(T value) : Block(1, 1, 0), value_(value) {}
+  explicit Gain(T value) : Block(1, 1), value_(value) {
+    inports_[0] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
+  }
   ~Gain() override = default;
 
   void step(double t) override {

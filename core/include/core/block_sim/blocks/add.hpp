@@ -9,7 +9,11 @@ namespace core::block_sim {
 template <typename T>
 class Add : public Block {
  public:
-  Add() : Block(2, 1), input_(2, 0.0), output_(0) {}
+  Add() : Block(2, 1), input_(2, 0.0), output_(0) {
+    inports_[0] = std::make_unique<Port<T>>();
+    inports_[1] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
+  }
   ~Add() override = default;
 
   void step(double t) override {

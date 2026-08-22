@@ -12,6 +12,10 @@ core::block_sim::SecondOrderTransferFunction::SecondOrderTransferFunction(
       natural_frequency_(natural_frequency),
       damping_ratio_(damping_ratio),
       graph_(blocks_, edges_, connections_) {
+  // Initialise ports
+  inports_[0] = std::make_unique<Port<double>>();
+  outports_[0] = std::make_unique<Port<double>>();
+
   // Define blocks
   auto gain_block0 = std::make_unique<Gain<double>>(gain_ * natural_frequency_ *
                                                     natural_frequency_);

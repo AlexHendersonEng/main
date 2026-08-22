@@ -1,6 +1,7 @@
 #ifndef CORE_BLOCK_SIM_BLOCKS_BLOCK_HPP_
 #define CORE_BLOCK_SIM_BLOCKS_BLOCK_HPP_
 
+#include <memory>
 #include <vector>
 
 #include "block_sim/execution_modes.hpp"
@@ -10,7 +11,7 @@ namespace core::block_sim {
 
 class Block {
  public:
-  Block(size_t n_inputs, size_t n_outputs, size_t n_states = 0);
+  Block(size_t n_inputs, size_t n_outputs);
   virtual ~Block() = default;
 
   virtual void step(double t) = 0;
@@ -19,24 +20,24 @@ class Block {
 
   template <typename T>
   Port<T>& get_outport(const size_t index) {
-    return get_port<T>(output_ports_, index);
+    return get_port<T>(outports_, index);
   }
 
   template <typename T>
   [[nodiscard]] const Port<T>& get_outport(const size_t index) const {
-    return get_port<T>(output_ports_, index);
+    return get_port<T>(outports_, index);
   }
 
   [[nodiscard]] virtual size_t num_inputs() const = 0;
 
   template <typename T>
   Port<T>& get_inport(const size_t index) {
-    return get_port<T>(input_ports_, index);
+    return get_port<T>(inports_, index);
   }
 
   template <typename T>
   [[nodiscard]] const Port<T>& get_inport(const size_t index) const {
-    return get_port<T>(input_ports_, index);
+    return get_port<T>(inports_, index);
   }
 
   [[nodiscard]] virtual size_t num_states() const = 0;
@@ -51,18 +52,19 @@ class Block {
 
  protected:
   template <typename T>
-  static Port<T>& get_port(std::vector<PortBase>& ports, const size_t index) {
-    return static_cast<Port<T>&>(ports[index]);
+  static Port<T>& get_port(std::vector<std::unique_ptr<PortBase>>& ports,
+                           const size_t index) {
+    return static_cast<Port<T>&>(*ports[index]);
   }
 
   template <typename T>
-  static const Port<T>& get_port(const std::vector<PortBase>& ports,
-                                 const size_t index) {
-    return static_cast<const Port<T>&>(ports[index]);
+  static const Port<T>& get_port(
+      const std::vector<std::unique_ptr<PortBase>>& ports, const size_t index) {
+    return static_cast<const Port<T>&>(*ports[index]);
   }
 
-  std::vector<PortBase> input_ports_;
-  std::vector<PortBase> output_ports_;
+  std::vector<std::unique_ptr<PortBase>> inports_;
+  std::vector<std::unique_ptr<PortBase>> outports_;
   ExecutionMode execution_mode_;
 };
 

@@ -21,7 +21,7 @@ class Connection : public ConnectionBase {
   Connection(Port<T>& outport, Port<T>& inport)
       : outport_(outport), inport_(inport) {}
 
-  void propagate() override { outport_.set(inport_.get()); }
+  void propagate() override { inport_.set(outport_.get()); }
 
  private:
   Port<T>& outport_;
@@ -31,7 +31,7 @@ class Connection : public ConnectionBase {
 template <typename T>
 std::unique_ptr<ConnectionBase> make_connection(Port<T>& outport,
                                                 Port<T>& inport) {
-  return std::make_unique<Connection<T>>(inport, outport);
+  return std::make_unique<Connection<T>>(outport, inport);
 }
 
 }  // namespace core::block_sim

@@ -9,7 +9,10 @@ template <typename T>
 class UnitDelay : public Block {
  public:
   explicit UnitDelay(T initial_value = 0.0)
-      : Block(1, 1, 0), prev_value_(initial_value) {};
+      : Block(1, 1), prev_value_(initial_value) {
+    inports_[0] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
+  };
   ~UnitDelay() override = default;
 
   void step(double t) override {

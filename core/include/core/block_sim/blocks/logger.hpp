@@ -8,7 +8,7 @@ namespace core::block_sim {
 template <typename T>
 class Logger : public Block {
  public:
-  Logger() : Block(1, 0, 0) {};
+  Logger() : Block(1, 0) { outports_[0] = std::make_unique<Port<T>>(); };
   ~Logger() override = default;
 
   void step(double t) override {

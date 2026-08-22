@@ -9,7 +9,11 @@ namespace core::block_sim {
 template <typename T>
 class Multiply : public Block {
  public:
-  explicit Multiply() : Block(2, 1) {};
+  explicit Multiply() : Block(2, 1) {
+    inports_[0] = std::make_unique<Port<T>>();
+    inports_[1] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
+  };
   ~Multiply() override = default;
 
   void step(double t) override {

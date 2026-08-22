@@ -10,7 +10,9 @@ namespace core::block_sim {
 template <typename T>
 class Constant : public Block {
  public:
-  explicit Constant(T value) : Block(0, 1, 0), value_(value) {}
+  explicit Constant(T value) : Block(0, 1), value_(value) {
+    outports_[0] = std::make_unique<Port<T>>();
+  }
   ~Constant() override = default;
 
   void step(double t) override { get_outport<T>(0).set(value_); }

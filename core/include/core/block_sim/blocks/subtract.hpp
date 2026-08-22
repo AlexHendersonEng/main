@@ -8,7 +8,11 @@ namespace core::block_sim {
 template <typename T>
 class Subtract : public Block {
  public:
-  explicit Subtract() : Block(2, 1, 0) {};
+  explicit Subtract() : Block(2, 1) {
+    inports_[0] = std::make_unique<Port<T>>();
+    inports_[1] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
+  };
   ~Subtract() override = default;
 
   void step(double t) override {

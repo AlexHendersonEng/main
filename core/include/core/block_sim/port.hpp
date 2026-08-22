@@ -12,7 +12,7 @@ class PortBase {
 template <typename T>
 class Port : public PortBase {
  public:
-  Port() : value_{} {}
+  Port() : value_(T()) {}
 
   T get() const { return value_; }
   void set(const T value) { value_ = value; }

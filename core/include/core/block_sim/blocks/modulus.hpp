@@ -11,7 +11,11 @@ namespace core::block_sim {
 template <typename T>
 class Modulus : public Block {
  public:
-  explicit Modulus() : Block(2, 1) {};
+  explicit Modulus() : Block(2, 1) {
+    inports_[0] = std::make_unique<Port<T>>();
+    inports_[1] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
+  };
   ~Modulus() override = default;
 
   void step(double t) override {

@@ -10,6 +10,10 @@ core::block_sim::FirstOrderTransferFunction::FirstOrderTransferFunction(
       gain_(gain),
       time_constant_(time_constant),
       graph_(blocks_, edges_, connections_) {
+  // Initialise ports
+  inports_[0] = std::make_unique<Port<double>>();
+  outports_[0] = std::make_unique<Port<double>>();
+
   // Define blocks
   auto gain_block0 = std::make_unique<Gain<double>>(gain_);
   auto subtract_block = std::make_unique<Subtract<double>>();

@@ -12,10 +12,15 @@ template <typename T>
 class Interp1 : public Block {
  public:
   explicit Interp1(const std::vector<T>& x, const std::vector<T>& y)
-      : Block(1, 1, 0), x_(x), y_(y) {
+      : Block(1, 1), x_(x), y_(y) {
+    // Check that x and y have the same size
     if (x_.size() != y_.size()) {
       throw std::invalid_argument("x and y vectors must have the same size.");
     }
+
+    // Initialise ports
+    inports_[0] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
   }
 
   ~Interp1() override = default;

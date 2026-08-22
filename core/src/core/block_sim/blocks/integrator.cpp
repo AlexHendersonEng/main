@@ -1,7 +1,10 @@
 #include "block_sim/blocks/integrator.hpp"
 
 core::block_sim::Integrator::Integrator(const double initial_condition)
-    : Block(1, 1, 1), state_(initial_condition) {}
+    : Block(1, 1), state_(initial_condition) {
+  inports_[0] = std::make_unique<Port<double>>();
+  outports_[0] = std::make_unique<Port<double>>();
+}
 
 bool core::block_sim::Integrator::breaks_execution_loop() const { return true; }
 

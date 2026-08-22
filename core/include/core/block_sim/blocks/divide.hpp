@@ -9,7 +9,11 @@ namespace core::block_sim {
 template <typename T>
 class Divide : public Block {
  public:
-  Divide() : Block(2, 1, 0) {};
+  Divide() : Block(2, 1) {
+    inports_[0] = std::make_unique<Port<T>>();
+    inports_[1] = std::make_unique<Port<T>>();
+    outports_[0] = std::make_unique<Port<T>>();
+  };
   ~Divide() override = default;
 
   void step(double t) override {

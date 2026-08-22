@@ -1,8 +1,14 @@
 #include "block_sim/blocks/clock.hpp"
 
-core::block_sim::Clock::Clock() : Block(0, 1) {}
+#include "block_sim/port.hpp"
 
-void core::block_sim::Clock::step(double t) { get_outport<double>(0).set(t); }
+core::block_sim::Clock::Clock() : Block(0, 1) {
+  outports_[0] = std::make_unique<Port<double>>();
+}
+
+void core::block_sim::Clock::step(const double t) {
+  get_outport<double>(0).set(t);
+}
 
 size_t core::block_sim::Clock::num_outputs() const { return 1; }
 
