@@ -11,18 +11,18 @@ core::block_sim::SecondOrderTransferFunction::SecondOrderTransferFunction(
       gain_(gain),
       natural_frequency_(natural_frequency),
       damping_ratio_(damping_ratio),
-      graph_(blocks_, connections_) {
+      graph_(blocks_, edges_, connections_) {
   // Define blocks
-  auto gain_block0 = std::make_unique<core::block_sim::Gain>(
-      gain_ * natural_frequency_ * natural_frequency_);
-  auto subtract_block0 = std::make_unique<core::block_sim::Subtract>();
-  auto subtract_block1 = std::make_unique<core::block_sim::Subtract>();
-  auto integrator_block0 = std::make_unique<core::block_sim::Integrator>(0.0);
-  auto integrator_block1 = std::make_unique<core::block_sim::Integrator>(0.0);
-  auto gain_block1 = std::make_unique<core::block_sim::Gain>(
-      2.0 * damping_ratio_ * natural_frequency_);
-  auto gain_block2 = std::make_unique<core::block_sim::Gain>(
-      natural_frequency_ * natural_frequency_);
+  auto gain_block0 = std::make_unique<Gain<double>>(gain_ * natural_frequency_ *
+                                                    natural_frequency_);
+  auto subtract_block0 = std::make_unique<Subtract<double>>();
+  auto subtract_block1 = std::make_unique<Subtract<double>>();
+  auto integrator_block0 = std::make_unique<Integrator>(0.0);
+  auto integrator_block1 = std::make_unique<Integrator>(0.0);
+  auto gain_block1 =
+      std::make_unique<Gain<double>>(2.0 * damping_ratio_ * natural_frequency_);
+  auto gain_block2 =
+      std::make_unique<Gain<double>>(natural_frequency_ * natural_frequency_);
 
   blocks_.emplace_back(std::move(gain_block0));        // Block 0
   blocks_.emplace_back(std::move(subtract_block0));    // Block 1
@@ -32,8 +32,8 @@ core::block_sim::SecondOrderTransferFunction::SecondOrderTransferFunction(
   blocks_.emplace_back(std::move(gain_block1));        // Block 5
   blocks_.emplace_back(std::move(gain_block2));        // Block 6
 
-  // Define connection graph
-  connections_ = {
+  // Define graph edges
+  edges_ = {
       {0, 0, 1, 0},  // gain_block0:port0 -> subtract_block0:port0
       {1, 0, 2, 0},  // subtract_block0:port0 -> subtract_block1:port0
       {2, 0, 3, 0},  // subtract_block1:port0 -> integrator_block0:port0
@@ -44,31 +44,38 @@ core::block_sim::SecondOrderTransferFunction::SecondOrderTransferFunction(
       {6, 0, 1, 1}   // gain_block2:port0 -> subtract_block0:port1
   };
 
+  // Define connections
+  for (const auto& [from_block, from_port, to_block, to_port] : edges_) {
+    connections_.emplace_back(make_connection<double>(
+        blocks_.at(from_block)->get_outport<double>(from_port),
+        blocks_.at(to_block)->get_inport<double>(to_port)));
+  }
+
   // Build graph
   graph_.build_execution_graph();
 };
 
 void core::block_sim::SecondOrderTransferFunction::step(const double t) {
+  // Feed external input into the internal graph input
+  const Port<double>& inport = get_inport<double>(0);
+  Port<double>& block0_inport = blocks_[0]->get_inport<double>(0);
+  block0_inport.set(inport.get());
+
   // Execute graph
   graph_.execute(t);
+
+  // Expose internal graph output to external output
+  Port<double>& outport = get_outport<double>(0);
+  const Port<double>& block4_outport = blocks_[4]->get_outport<double>(0);
+  outport.set(block4_outport.get());
 }
 
 size_t core::block_sim::SecondOrderTransferFunction::num_outputs() const {
   return 1;
 }
 
-double core::block_sim::SecondOrderTransferFunction::get_output(
-    size_t index) const {
-  return blocks_[4]->get_output(0);
-}
-
 size_t core::block_sim::SecondOrderTransferFunction::num_inputs() const {
   return 1;
-}
-
-void core::block_sim::SecondOrderTransferFunction::set_input(
-    size_t index, const double input) {
-  blocks_[0]->set_input(0, input);
 }
 
 size_t core::block_sim::SecondOrderTransferFunction::num_states() const {

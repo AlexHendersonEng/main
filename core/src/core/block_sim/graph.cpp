@@ -3,11 +3,16 @@
 #include <queue>
 #include <stdexcept>
 
-core::block_sim::Graph::Graph(const std::vector<std::unique_ptr<Block>>& blocks,
-                              const std::vector<Edge>& connections)
+#include "block_sim/connection.hpp"
+
+core::block_sim::Graph::Graph(
+    const std::vector<std::unique_ptr<Block>>& blocks,
+    const std::vector<Edge>& edges,
+    const std::vector<std::unique_ptr<ConnectionBase>>& connections)
     : execution_order(blocks.size()),
       outgoing_connections(blocks.size()),
       blocks_(blocks),
+      edges_(edges),
       connections_(connections) {}
 
 void core::block_sim::Graph::build_execution_graph() {
@@ -20,19 +25,19 @@ void core::block_sim::Graph::build_execution_graph() {
   std::vector<size_t> outdegree(n_blocks, 0);
 
   // Construct graph
-  for (size_t i = 0; i < connections_.size(); i++) {
+  for (size_t i = 0; i < edges_.size(); i++) {
     // Get connection
-    const auto& connection = connections_[i];
+    const auto& edge = edges_[i];
 
-    // Add to graph and increment in degree
-    if (!blocks_[connection.from_block]->breaks_execution_loop()) {
-      graph[connection.from_block].emplace_back(connection.to_block);
-      indegree[connection.to_block]++;
-      outdegree[connection.from_block]++;
+    // Add to graph and increment indegree and outdegree
+    if (!blocks_[edge.to_block]->breaks_execution_loop()) {
+      graph[edge.from_block].emplace_back(edge.to_block);
+      indegree[edge.to_block]++;
+      outdegree[edge.from_block]++;
     }
 
     // Add to outgoing connections
-    outgoing_connections[connection.from_block].emplace_back(i);
+    outgoing_connections[edge.from_block].emplace_back(i);
   }
 
   // Determine source and sink nodes
@@ -78,7 +83,7 @@ void core::block_sim::Graph::execute(const double t) const {
     blocks_[block_idx]->step(t);
 
     for (const size_t connection_idx : outgoing_connections[block_idx]) {
-      propagate(connections_[connection_idx]);
+      connections_[connection_idx]->propagate();
     }
   }
 }
@@ -89,16 +94,4 @@ void core::block_sim::Graph::set_execution_mode(
   for (const auto& block_ptr : blocks_) {
     block_ptr->set_execution_mode(mode);
   }
-}
-
-void core::block_sim::Graph::propagate(const Edge& connection) const {
-  // Get source and destination blocks
-  const Block& from_block = *blocks_[connection.from_block];
-  Block& to_block = *blocks_[connection.to_block];
-
-  // Get output from source block
-  const auto& output = from_block.get_output(connection.from_port);
-
-  // Set input for destination block
-  to_block.set_input(connection.to_port, output);
 }

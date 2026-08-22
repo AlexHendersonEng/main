@@ -2,30 +2,32 @@
 #define CORE_BLOCK_SIM_BLOCKS_DIVIDE_HPP_
 
 #include "block_sim/blocks/block.hpp"
+#include "block_sim/port.hpp"
 
 namespace core::block_sim {
 
+template <typename T>
 class Divide : public Block {
  public:
-  Divide();
+  Divide() : Block(2, 1, 0) {};
   ~Divide() override = default;
 
-  void step(double t) override;
+  void step(double t) override {
+    Port<T>& inport1 = get_inport<T>(0);
+    Port<T>& inport2 = get_inport<T>(1);
+    get_outport<T>(0).set(inport1.get() / inport2.get());
+  }
 
-  [[nodiscard]] size_t num_outputs() const override;
-  [[nodiscard]] double get_output(size_t index) const override;
+  [[nodiscard]] size_t num_outputs() const override { return 1; }
 
-  [[nodiscard]] size_t num_inputs() const override;
-  void set_input(size_t index, double input) override;
+  [[nodiscard]] size_t num_inputs() const override { return 2; }
 
-  [[nodiscard]] size_t num_states() const override;
-  void set_state(size_t& index, const std::vector<double>& states) override;
-  [[nodiscard]] double get_state(size_t index) const override;
-  [[nodiscard]] double get_derivative(size_t index) const override;
-
- private:
-  std::vector<double> inputs_;
-  double output_;
+  [[nodiscard]] size_t num_states() const override { return 0; }
+  void set_state(size_t& index, const std::vector<double>& states) override {}
+  [[nodiscard]] double get_state(size_t index) const override { return 0.0; }
+  [[nodiscard]] double get_derivative(size_t index) const override {
+    return 0.0;
+  }
 };
 
 }  // namespace core::block_sim

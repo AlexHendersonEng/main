@@ -5,28 +5,31 @@
 
 namespace core::block_sim {
 
+template <typename T>
 class Logger : public Block {
  public:
-  Logger();
+  Logger() : Block(1, 0, 0) {};
   ~Logger() override = default;
 
-  void step(double t) override;
+  void step(double t) override {
+    if (get_execution_mode() == ExecutionMode::Commit) {
+      Port<T>& inport = get_inport<T>(0);
+      log.emplace_back(inport.get());
+    }
+  }
 
-  [[nodiscard]] size_t num_outputs() const override;
-  [[nodiscard]] double get_output(size_t index) const override;
+  [[nodiscard]] size_t num_outputs() const override { return 0; }
 
-  [[nodiscard]] size_t num_inputs() const override;
-  void set_input(size_t index, double input) override;
+  [[nodiscard]] size_t num_inputs() const override { return 1; }
 
-  [[nodiscard]] size_t num_states() const override;
-  void set_state(size_t& index, const std::vector<double>& states) override;
-  [[nodiscard]] double get_state(size_t index) const override;
-  [[nodiscard]] double get_derivative(size_t index) const override;
+  [[nodiscard]] size_t num_states() const override { return 0; }
+  void set_state(size_t& index, const std::vector<double>& states) override {}
+  [[nodiscard]] double get_state(size_t index) const override { return 0.0; }
+  [[nodiscard]] double get_derivative(size_t index) const override {
+    return 0.0;
+  }
 
-  std::vector<double> log;
-
- private:
-  double input_;
+  std::vector<T> log;
 };
 
 }  // namespace core::block_sim

@@ -15,10 +15,8 @@ class Integrator : public Block {
   void step(double t) override;
 
   [[nodiscard]] size_t num_outputs() const override;
-  [[nodiscard]] double get_output(size_t index) const override;
 
   [[nodiscard]] size_t num_inputs() const override;
-  void set_input(size_t index, double input) override;
 
   [[nodiscard]] size_t num_states() const override;
   void set_state(size_t& index, const std::vector<double>& states) override;
@@ -27,8 +25,6 @@ class Integrator : public Block {
 
  private:
   double state_;
-  double input_;
-  double output_;
 };
 
 }  // namespace core::block_sim

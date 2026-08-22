@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "block_sim/blocks/block.hpp"
+#include "block_sim/connection.hpp"
 #include "block_sim/edge.hpp"
 #include "block_sim/graph.hpp"
 #include "block_sim/integration_methods/integration_method.hpp"
@@ -29,7 +30,7 @@ class System {
 
   template <typename T>
   T* get_block(const size_t index) {
-    if (auto* block = dynamic_cast<T*>(blocks_.at(index).get())) {
+    if (auto* block = static_cast<T*>(blocks_.at(index).get())) {
       return block;
     }
     throw std::bad_cast();
@@ -37,14 +38,24 @@ class System {
 
   template <typename T>
   const T* get_block(const size_t index) const {
-    if (const auto* block = dynamic_cast<const T*>(blocks_.at(index).get())) {
+    if (const auto* block = static_cast<const T*>(blocks_.at(index).get())) {
       return block;
     }
     throw std::bad_cast();
   }
 
+  template <typename T>
   void add_connection(size_t from_block, size_t from_port, size_t to_block,
-                      size_t to_port);
+                      size_t to_port) {
+    // Create edge
+    edges_.emplace_back(from_block, from_port, to_block, to_port);
+
+    // Create port connection
+    connections_.emplace_back(
+        make_connection<T>(blocks_.at(from_block)->get_outport<T>(from_port),
+                           blocks_.at(to_block)->get_inport<T>(to_port)));
+  }
+
   [[nodiscard]] std::vector<Edge> get_connections() const;
 
   template <typename T, typename... Args>
@@ -55,6 +66,7 @@ class System {
  private:
   std::vector<std::unique_ptr<Block>> blocks_;
   std::vector<Edge> edges_;
+  std::vector<std::unique_ptr<ConnectionBase>> connections_;
   Graph graph_;
   double dt_;
   std::unique_ptr<IntegrationMethod> integration_method_;

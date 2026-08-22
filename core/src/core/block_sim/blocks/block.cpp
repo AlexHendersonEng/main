@@ -2,7 +2,9 @@
 
 core::block_sim::Block::Block(const size_t n_inputs, const size_t n_outputs,
                               const size_t n_states)
-    : execution_mode_(ExecutionMode::Commit) {}
+    : input_ports_(n_inputs),
+      output_ports_(n_outputs),
+      execution_mode_(ExecutionMode::Commit) {}
 
 bool core::block_sim::Block::breaks_execution_loop() const { return false; }
 

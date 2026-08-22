@@ -29,8 +29,8 @@ int main() {
   // Add blocks to system
   const size_t clock_idx =
       system.add_block<core::block_sim::Clock>();  // Block 0
-  const size_t interp1_idx =
-      system.add_block<core::block_sim::Interp1>(times, values);  // Block 1
+  const size_t interp1_idx = system.add_block<core::block_sim::Interp1<double>>(
+      times, values);  // Block 1
   const size_t first_order_tf_idx =
       system.add_block<core::block_sim::FirstOrderTransferFunction>(
           gain0, time_constant);  // Block 2
@@ -38,30 +38,32 @@ int main() {
       system.add_block<core::block_sim::SecondOrderTransferFunction>(
           gain1, natural_frequency, damping_ratio);  // Block 3
   const size_t time_logger_idx =
-      system.add_block<core::block_sim::Logger>();  // Block 4
+      system.add_block<core::block_sim::Logger<double>>();  // Block 4
   const size_t input_logger_idx =
-      system.add_block<core::block_sim::Logger>();  // Block 5
-  const size_t output_logger_idx0 =
-      system.add_block<core::block_sim::Logger>();  // Block 6
-  const size_t output_logger_idx1 =
-      system.add_block<core::block_sim::Logger>();  // Block 7
+      system.add_block<core::block_sim::Logger<double>>();  // Block 5
+  const size_t output_logger0_idx =
+      system.add_block<core::block_sim::Logger<double>>();  // Block 6
+  const size_t output_logger1_idx =
+      system.add_block<core::block_sim::Logger<double>>();  // Block 7
 
   // Create connections
-  system.add_connection(clock_idx, 0, interp1_idx,
-                        0);  // clock:outport0 -> interp1:inport0
-  system.add_connection(interp1_idx, 0, first_order_tf_idx,
-                        0);  // interp1:outport0 -> first_order_tf:inport0
-  system.add_connection(interp1_idx, 0, second_order_tf_idx,
-                        0);  // interp1:outport0 -> second_order_tf:inport0
-  system.add_connection(clock_idx, 0, time_logger_idx,
-                        0);  // clock:outport0 -> time_logger:inport0
-  system.add_connection(interp1_idx, 0, input_logger_idx,
-                        0);  // interp1:outport0 -> input_logger:inport0
-  system.add_connection(
-      first_order_tf_idx, 0, output_logger_idx0,
+  system.add_connection<double>(clock_idx, 0, interp1_idx,
+                                0);  // clock:outport0 -> interp1:inport0
+  system.add_connection<double>(
+      interp1_idx, 0, first_order_tf_idx,
+      0);  // interp1:outport0 -> first_order_tf:inport0
+  system.add_connection<double>(
+      interp1_idx, 0, second_order_tf_idx,
+      0);  // interp1:outport0 -> second_order_tf:inport0
+  system.add_connection<double>(clock_idx, 0, time_logger_idx,
+                                0);  // clock:outport0 -> time_logger:inport0
+  system.add_connection<double>(interp1_idx, 0, input_logger_idx,
+                                0);  // interp1:outport0 -> input_logger:inport0
+  system.add_connection<double>(
+      first_order_tf_idx, 0, output_logger0_idx,
       0);  // first_order_tf:outport0 -> output_logger0:inport0
-  system.add_connection(
-      second_order_tf_idx, 0, output_logger_idx1,
+  system.add_connection<double>(
+      second_order_tf_idx, 0, output_logger1_idx,
       0);  // second_order_tf:outport0 -> output_logger1:inport0
 
   // Get edges for graph plot
@@ -75,13 +77,13 @@ int main() {
 
   // Get logger pointers directly from the system
   const auto* time_logger_block_ptr =
-      system.get_block<core::block_sim::Logger>(4);
+      system.get_block<core::block_sim::Logger<double>>(time_logger_idx);
   const auto* input_logger_block_ptr =
-      system.get_block<core::block_sim::Logger>(5);
+      system.get_block<core::block_sim::Logger<double>>(input_logger_idx);
   const auto* output_logger_block0_ptr =
-      system.get_block<core::block_sim::Logger>(6);
+      system.get_block<core::block_sim::Logger<double>>(output_logger0_idx);
   const auto* output_logger_block1_ptr =
-      system.get_block<core::block_sim::Logger>(7);
+      system.get_block<core::block_sim::Logger<double>>(output_logger1_idx);
 
   // Initialize system
   system.init(0.0, 0.1);

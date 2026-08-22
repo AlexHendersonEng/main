@@ -4,10 +4,10 @@
 namespace core::block_sim {
 
 struct Edge {
-  int from_block;
-  int from_port;
-  int to_block;
-  int to_port;
+  size_t from_block;
+  size_t from_port;
+  size_t to_block;
+  size_t to_port;
 };
 
 }  // namespace core::block_sim

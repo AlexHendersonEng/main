@@ -5,30 +5,38 @@
 
 namespace core::block_sim {
 
+template <typename T>
 class UnitDelay : public Block {
  public:
-  explicit UnitDelay(double initial_value = 0.0);
+  explicit UnitDelay(T initial_value = 0.0)
+      : Block(1, 1, 0), prev_value_(initial_value) {};
   ~UnitDelay() override = default;
 
-  void step(double t) override;
+  void step(double t) override {
+    // Set output
+    Port<T>& outport = get_outport<T>(0);
+    outport.set(prev_value_);
 
-  [[nodiscard]] size_t num_outputs() const override;
-  [[nodiscard]] double get_output(size_t index) const override;
+    // Only update the previous value when in commit mode
+    if (get_execution_mode() == ExecutionMode::Commit)
+      prev_value_ = get_inport<T>(0).get();
+  };
 
-  [[nodiscard]] size_t num_inputs() const override;
-  void set_input(size_t index, double input) override;
+  [[nodiscard]] size_t num_outputs() const override { return 1; }
 
-  [[nodiscard]] size_t num_states() const override;
-  void set_state(size_t& index, const std::vector<double>& states) override;
-  [[nodiscard]] double get_state(size_t index) const override;
-  [[nodiscard]] double get_derivative(size_t index) const override;
+  [[nodiscard]] size_t num_inputs() const override { return 1; }
 
-  [[nodiscard]] bool breaks_execution_loop() const override;
+  [[nodiscard]] size_t num_states() const override { return 0; }
+  void set_state(size_t& index, const std::vector<double>& states) override {};
+  [[nodiscard]] double get_state(size_t index) const override { return 0.0; }
+  [[nodiscard]] double get_derivative(size_t index) const override {
+    return 0.0;
+  }
+
+  [[nodiscard]] bool breaks_execution_loop() const override { return true; }
 
  private:
-  double prev_value_;
-  double input_;
-  double output_;
+  T prev_value_;
 };
 
 }  // namespace core::block_sim
