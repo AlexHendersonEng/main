@@ -61,7 +61,7 @@ class AutoGrad : public std::enable_shared_from_this<AutoGrad> {
    * Adds two scalar nodes and returns the resulting node.
    *
    * @param other right-hand operand
-   * @return node representing {@code this + other}
+   * @return node representing the sum of this node and other
    */
   AutoGrad operator+(const AutoGrad& other) const;
 
@@ -69,7 +69,7 @@ class AutoGrad : public std::enable_shared_from_this<AutoGrad> {
    * Subtracts one scalar node from another and returns the resulting node.
    *
    * @param other right-hand operand
-   * @return node representing {@code this - other}
+   * @return node representing this node minus other
    */
   AutoGrad operator-(const AutoGrad& other) const;
 
@@ -77,9 +77,44 @@ class AutoGrad : public std::enable_shared_from_this<AutoGrad> {
    * Multiplies two scalar nodes and returns the resulting node.
    *
    * @param other right-hand operand
-   * @return node representing {@code this * other}
+   * @return node representing the product of this node and other
    */
   AutoGrad operator*(const AutoGrad& other) const;
+
+  /**
+   * Divides one scalar node by another and returns the resulting node.
+   *
+   * @param other right-hand operand
+   * @return node representing this node divided by other
+   */
+  AutoGrad operator/(const AutoGrad& other) const;
+
+  /**
+   * Negates this scalar node and returns the resulting node.
+   *
+   * @return node representing the negation of this node
+   */
+  AutoGrad operator-() const;
+
+  /**
+   * Adds a scalar constant to this node.
+   */
+  AutoGrad operator+(double scalar) const;
+
+  /**
+   * Subtracts a scalar constant from this node.
+   */
+  AutoGrad operator-(double scalar) const;
+
+  /**
+   * Multiplies this node by a scalar constant.
+   */
+  AutoGrad operator*(double scalar) const;
+
+  /**
+   * Divides this node by a scalar constant.
+   */
+  AutoGrad operator/(double scalar) const;
 
   /**
    * Provides mutable access to the gradient accumulator.
@@ -98,6 +133,26 @@ class AutoGrad : public std::enable_shared_from_this<AutoGrad> {
    * @return the output stream
    */
   friend std::ostream& operator<<(std::ostream& os, const AutoGrad& auto_grad);
+
+  /**
+   * Adds a scalar constant to a node.
+   */
+  friend AutoGrad operator+(double scalar, const AutoGrad& auto_grad);
+
+  /**
+   * Subtracts a node from a scalar constant.
+   */
+  friend AutoGrad operator-(double scalar, const AutoGrad& auto_grad);
+
+  /**
+   * Multiplies a scalar constant and a node.
+   */
+  friend AutoGrad operator*(double scalar, const AutoGrad& auto_grad);
+
+  /**
+   * Divides a scalar constant by a node.
+   */
+  friend AutoGrad operator/(double scalar, const AutoGrad& auto_grad);
 
  private:
   // Value and gradient

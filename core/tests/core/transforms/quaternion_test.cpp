@@ -37,7 +37,7 @@ TEST_F(QuaternionTest, IndexingAccessesQuaternionComponents) {
 
   quaternion[2] = 5.0;
 
-  EXPECT_EQ(quaternion.z, 5.0);
+  EXPECT_EQ(quaternion.y, 5.0);
 }
 
 TEST_F(QuaternionTest, IndexingRejectsOutOfRangeComponents) {

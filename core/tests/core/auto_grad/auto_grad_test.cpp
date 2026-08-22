@@ -103,10 +103,47 @@ TEST_F(AutoGradTest, MultiplicationOperatorWithZero) {
   EXPECT_DOUBLE_EQ(result.Value(), 0.0);
 }
 
+// Test division operator
+TEST_F(AutoGradTest, DivisionOperatorComputesCorrectValue) {
+  const AutoGrad a(6.0);
+  const AutoGrad b(3.0);
+  const AutoGrad result = a / b;
+  EXPECT_DOUBLE_EQ(result.Value(), 2.0);
+}
+
+TEST_F(AutoGradTest, DivisionOperatorWithNegativeNumbers) {
+  const AutoGrad a(-8.0);
+  const AutoGrad b(2.0);
+  const AutoGrad result = a / b;
+  EXPECT_DOUBLE_EQ(result.Value(), -4.0);
+}
+
+// Test unary negation operator
+TEST_F(AutoGradTest, UnaryNegationOperatorComputesCorrectValue) {
+  const AutoGrad a(5.0);
+  const AutoGrad result = -a;
+  EXPECT_DOUBLE_EQ(result.Value(), -5.0);
+}
+
+// Test scalar operators
+TEST_F(AutoGradTest, ScalarOperatorsComputeCorrectValues) {
+  const AutoGrad a(4.0);
+
+  EXPECT_DOUBLE_EQ((a + 2.0).Value(), 6.0);
+  EXPECT_DOUBLE_EQ((a - 2.0).Value(), 2.0);
+  EXPECT_DOUBLE_EQ((a * 2.0).Value(), 8.0);
+  EXPECT_DOUBLE_EQ((a / 2.0).Value(), 2.0);
+
+  EXPECT_DOUBLE_EQ((2.0 + a).Value(), 6.0);
+  EXPECT_DOUBLE_EQ((10.0 - a).Value(), 6.0);
+  EXPECT_DOUBLE_EQ((2.0 * a).Value(), 8.0);
+  EXPECT_DOUBLE_EQ((20.0 / a).Value(), 5.0);
+}
+
 // Test backward propagation for single addition
 TEST_F(AutoGradTest, BackwardPropagatesGradientsForAddition) {
-  AutoGrad a(2.0);
-  AutoGrad b(3.0);
+  const AutoGrad a(2.0);
+  const AutoGrad b(3.0);
   AutoGrad result = a + b;
   result.Backward();
 
@@ -117,8 +154,8 @@ TEST_F(AutoGradTest, BackwardPropagatesGradientsForAddition) {
 
 // Test backward propagation for single subtraction
 TEST_F(AutoGradTest, BackwardPropagatesGradientsForSubtraction) {
-  AutoGrad a(5.0);
-  AutoGrad b(3.0);
+  const AutoGrad a(5.0);
+  const AutoGrad b(3.0);
   AutoGrad result = a - b;
   result.Backward();
 
@@ -130,14 +167,60 @@ TEST_F(AutoGradTest, BackwardPropagatesGradientsForSubtraction) {
 
 // Test backward propagation for single multiplication
 TEST_F(AutoGradTest, BackwardPropagatesGradientsForMultiplication) {
-  AutoGrad a(2.0);
-  AutoGrad b(3.0);
+  const AutoGrad a(2.0);
+  const AutoGrad b(3.0);
   AutoGrad result = a * b;
   result.Backward();
 
   EXPECT_DOUBLE_EQ(result.Grad(), 1.0);
   EXPECT_DOUBLE_EQ(a.Grad(), 3.0);  // da/dresult * dresult/da = 1 * b
   EXPECT_DOUBLE_EQ(b.Grad(), 2.0);  // db/dresult * dresult/db = 1 * a
+}
+
+// Test backward propagation for single division
+TEST_F(AutoGradTest, BackwardPropagatesGradientsForDivision) {
+  const AutoGrad a(6.0);
+  const AutoGrad b(3.0);
+  AutoGrad result = a / b;
+  result.Backward();
+
+  EXPECT_DOUBLE_EQ(result.Grad(), 1.0);
+  EXPECT_NEAR(a.Grad(), 1.0 / 3.0, kEpsilon);
+  EXPECT_NEAR(b.Grad(), -2.0 / 3.0, kEpsilon);
+}
+
+// Test backward propagation for unary negation
+TEST_F(AutoGradTest, BackwardPropagatesGradientsForUnaryNegation) {
+  const AutoGrad a(6.0);
+  AutoGrad result = -a;
+  result.Backward();
+
+  EXPECT_DOUBLE_EQ(result.Grad(), 1.0);
+  EXPECT_DOUBLE_EQ(a.Grad(), -1.0);
+}
+
+// Test backward for scalar operations
+TEST_F(AutoGradTest, BackwardPropagatesGradientsForScalarOperations) {
+  AutoGrad a(4.0);
+
+  AutoGrad result1 = a + 2.0;
+  result1.Backward();
+  EXPECT_DOUBLE_EQ(a.Grad(), 1.0);
+  result1.ZeroGrad();
+
+  AutoGrad result2 = a * 2.0;
+  result2.Backward();
+  EXPECT_DOUBLE_EQ(a.Grad(), 2.0);
+  result2.ZeroGrad();
+
+  AutoGrad result3 = 10.0 - a;
+  result3.Backward();
+  EXPECT_DOUBLE_EQ(a.Grad(), -1.0);
+  result3.ZeroGrad();
+
+  AutoGrad result4 = 20.0 / a;
+  result4.Backward();
+  EXPECT_DOUBLE_EQ(a.Grad(), -1.25);
 }
 
 // Test backward for chained additions
@@ -343,9 +426,17 @@ TEST_F(AutoGradTest, OperatorsAreConst) {
   AutoGrad result1 = a + b;
   AutoGrad result2 = a - b;
   AutoGrad result3 = a * b;
+  AutoGrad result4 = a / b;
+  AutoGrad result5 = -a;
+  AutoGrad result6 = a + 2.0;
+  AutoGrad result7 = 2.0 + a;
   EXPECT_DOUBLE_EQ(result1.Value(), 5.0);
   EXPECT_DOUBLE_EQ(result2.Value(), -1.0);
   EXPECT_DOUBLE_EQ(result3.Value(), 6.0);
+  EXPECT_DOUBLE_EQ(result4.Value(), 2.0 / 3.0);
+  EXPECT_DOUBLE_EQ(result5.Value(), -2.0);
+  EXPECT_DOUBLE_EQ(result6.Value(), 4.0);
+  EXPECT_DOUBLE_EQ(result7.Value(), 4.0);
 }
 
 int main(int argc, char** argv) {
