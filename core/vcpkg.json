@@ -1,6 +1,7 @@
 {
   "dependencies": [
     "gtest",
-    "matplotplusplus"
+    "matplotplusplus",
+    "boost-odeint"
   ]
 }
