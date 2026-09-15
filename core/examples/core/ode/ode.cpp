@@ -24,7 +24,7 @@ class MassSpringDamper : public Component<state_type> {
  public:
   MassSpringDamper(const double mass, const double damping,
                    const double stiffness)
-      : mass(mass), damping(damping), stiffness(stiffness) {}
+      : mass_(mass), damping_(damping), stiffness_(stiffness) {}
 
   void derivatives(const state_type& states, state_type& derivatives, double t,
                    size_t& index) override {
@@ -33,42 +33,55 @@ class MassSpringDamper : public Component<state_type> {
 
     derivatives[index] = velocity;
     derivatives[index + 1] =
-        -(damping / mass) * velocity - (stiffness / mass) * position;
+        -(damping_ / mass_) * velocity - (stiffness_ / mass_) * position;
 
     index += 2;
   }
 
-  double mass;
-  double damping;
-  double stiffness;
+ protected:
+  double mass_;
+  double damping_;
+  double stiffness_;
+};
+
+class MassSpringDamperWithSensitivity : public MassSpringDamper {
+ public:
+  MassSpringDamperWithSensitivity(const double mass, const double damping,
+                                  const double stiffness)
+      : MassSpringDamper(mass, damping, stiffness) {}
+
+  void derivatives(const state_type& states, state_type& derivatives, double t,
+                   size_t& index) override {
+    MassSpringDamper::derivatives(states, derivatives, t, index);
+
+    const double x = states[index - 2];
+    const double v = states[index - 1];
+    const double dx_dc = states[index];
+    const double dv_dc = states[index + 1];
+    const double dx_dk = states[index + 2];
+    const double dv_dk = states[index + 3];
+
+    // Parameter sensitivity dynamics: s' = (df/dy)s + df/dp
+    derivatives[index] = dv_dc;
+    derivatives[index + 1] =
+        (-1.0 / mass_) * (damping_ * dv_dc + stiffness_ * dx_dc + v);
+
+    derivatives[index + 2] = dv_dk;
+    derivatives[index + 3] =
+        (-1.0 / mass_) * (damping_ * dv_dk + stiffness_ * dx_dk + x);
+
+    index += 4;
+  }
 };
 
 // Mass-spring-damper parameters
-MassSpringDamper mass_spring_damper(1.0, 0.5, 10.0);
+MassSpringDamperWithSensitivity mass_spring_damper(1.0, 0.5, 10.0);
 
 // System equations:
 // m*x'' + c*x' + k*x = 0
 void dynamics(const state_type& states, state_type& derivatives, double t) {
   size_t index = 0;
   mass_spring_damper.derivatives(states, derivatives, t, index);
-
-  const double m = mass_spring_damper.mass;
-  const double c = mass_spring_damper.damping;
-  const double k = mass_spring_damper.stiffness;
-
-  const double x = states[0];
-  const double v = states[1];
-  const double dx_dc = states[2];
-  const double dv_dc = states[3];
-  const double dx_dk = states[4];
-  const double dv_dk = states[5];
-
-  // Parameter sensitivity dynamics: s' = (df/dy)s + df/dp
-  derivatives[2] = dv_dc;
-  derivatives[3] = (-1.0 / m) * (c * dv_dc + k * dx_dc + v);
-
-  derivatives[4] = dv_dk;
-  derivatives[5] = (-1.0 / m) * (c * dv_dk + k * dx_dk + x);
 }
 
 int main() {
