@@ -35,8 +35,9 @@ def main():
 
     # Visualize the solution
     plt.figure(1)
-    plt.clf()
     plt.plot(tgrid, simres["xf"][0, :].T)
+    plt.xlabel("t (s)")
+    plt.ylabel("position (m)")
     plt.grid()
     plt.show()
 
