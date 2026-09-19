@@ -381,6 +381,19 @@ wheels = [
 ]
 
 [[package]]
+name = "rumoca"
+version = "0.9.20"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/70/59/9a831f55d09e14acc5a4a8246f4a7adebac5e940c36c7166d6518e1ce06b/rumoca-0.9.20.tar.gz", hash = "sha256:d5e25f7f84cdb5c3cabcb4dc8217df118bbf02aa13955d420a34914a104fd586", size = 3646214, upload-time = "2026-07-13T05:03:57.996Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/fc/138138b145ae953d729d850974969587fb347470bcae48829451e0169da6/rumoca-0.9.20-cp310-abi3-macosx_14_0_arm64.whl", hash = "sha256:862893329c29f611c81a34a966d64cc331b98d9651fffad3f9c4fa09d37bae1f", size = 19704219, upload-time = "2026-07-13T05:03:45.485Z" },
+    { url = "https://files.pythonhosted.org/packages/be/00/b44155bb01493e20dbde6ce8d0ceee02488e1e9f0b932b2caaf1390b42a2/rumoca-0.9.20-cp310-abi3-macosx_14_0_x86_64.whl", hash = "sha256:8299a34a7610376a77d5b484128fedf7987d2e8b268181e484621cf2d65415d4", size = 20789793, upload-time = "2026-07-13T05:03:47.984Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/3e/ec9cf5629e69c8a9eefaa8755bc5a5b059d226ff8b68d764365878a3a1cc/rumoca-0.9.20-cp310-abi3-manylinux_2_39_aarch64.whl", hash = "sha256:a946c11a22d6943b6dc9849c976a1b2d706be8d26c7551fa610cc51f57e7f633", size = 22116426, upload-time = "2026-07-13T05:03:50.558Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/a3/b4c1b1135b498bf0e9399fb0cad89456568bea4ba0a74c7a0852fba97b25/rumoca-0.9.20-cp310-abi3-manylinux_2_39_x86_64.whl", hash = "sha256:29a8742be819cb35ff5ec58d2e3ac01e0a50f6b265155f0c5d5d3d8a12f9229b", size = 21841955, upload-time = "2026-07-13T05:03:53.305Z" },
+    { url = "https://files.pythonhosted.org/packages/28/c0/9177fd1d43e365ba61af25024015fcfba1433a12ceb9ca242e8c9935d3ac/rumoca-0.9.20-cp310-abi3-win_amd64.whl", hash = "sha256:94c4b1d900295cede050468a75a1429c08418eba8bb31c4a5a7102d19aa52d08", size = 19917008, upload-time = "2026-07-13T05:03:55.788Z" },
+]
+
+[[package]]
 name = "simulation"
 version = "0.1.0"
 source = { virtual = "." }
@@ -388,6 +401,7 @@ dependencies = [
     { name = "casadi" },
     { name = "matplotlib" },
     { name = "numpy" },
+    { name = "rumoca" },
 ]
 
 [package.metadata]
@@ -395,6 +409,7 @@ requires-dist = [
     { name = "casadi", specifier = ">=3.8.1" },
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "numpy", specifier = ">=2.5.3" },
+    { name = "rumoca", specifier = ">=0.9.20" },
 ]
 
 [[package]]
