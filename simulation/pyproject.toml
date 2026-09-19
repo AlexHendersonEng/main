@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "casadi>=3.8.1",
+    "fmpy[complete]>=0.3.32",
     "matplotlib>=3.11.2",
     "numpy>=2.5.3",
     "rumoca>=0.9.20",
