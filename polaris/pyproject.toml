@@ -17,7 +17,12 @@ dependencies = [
 polaris = "polaris.cli:main"
 
 [dependency-groups]
-dev = ["pytest", "ruff", "mypy"]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+    "pandas-stubs>=3.0.5.260914",
+]
 
 [build-system]
 requires = ["hatchling"]
