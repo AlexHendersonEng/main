@@ -12,6 +12,8 @@ from pathlib import Path
 
 from polaris import Model, Result, SimulationOptions
 from polaris.backends import available_backends, get_backend
+from polaris.fmu import validate_fmu
+from polaris.fmu_runtime import run_fmu
 from polaris.plotting import compare, plot
 
 HERE = Path(__file__).parent
@@ -62,14 +64,30 @@ def main() -> None:
     print("reloaded metadata:", reloaded.metadata)
     print(reloaded.to_dataframe().head(3))
 
-    # 6. Export an FMU for distribution.
+    # 6. Export an FMU from each backend, validate it, and run it if it is runnable here.
+    fmu_results: dict[str, Result] = {}
     for name in backends:
         try:
             fmu = model.export_fmu(OUT / f"MassSpringDamper_{name}.fmu", backend=name)
             print(f"FMU ({name}): {fmu} ({fmu.stat().st_size} bytes)")
+            report = validate_fmu(fmu)
+            print(f"  valid: {report.ok}, warnings: {list(report.warnings)}")
+            if report.info.runnable:
+                # substeps=20 reduces the forward-Euler error of OpenModelica's CS FMUs.
+                fmu_results[name] = run_fmu(fmu, options, substeps=20)
         except Exception as exc:  # report and continue so one backend cannot hide the others
-            print(f"FMU export failed on {name}: {exc}")
+            print(f"FMU step failed on {name}: {exc}")
 
+    # 7. Plot the FMU run against the direct simulation of the same backend.
+    for name, fmu_result in fmu_results.items():
+        compare(
+            {f"{name} direct": results[name], f"{name} FMU": fmu_result},
+            "x",
+            title=f"FMU vs direct simulation ({name})",
+            save_to=OUT / f"fmu_vs_direct_{name}.png",
+        )
+        err = abs(fmu_result["x"][-1] - results[name]["x"][-1])
+        print(f"{name}: |x(5) FMU - direct| = {err:.2e}")
     print(f"Outputs written to {OUT}")
 
 
