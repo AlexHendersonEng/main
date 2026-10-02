@@ -92,5 +92,19 @@ class Result(Mapping[str, np.ndarray]):
         data = np.array(rows[1:], dtype=float)
         if header[0] != "time":
             raise ValueError(f"{path}: first column must be 'time', got {header[0]!r}")
+        data = _drop_repeated_rows(data)
         variables = {name: data[:, i] for i, name in enumerate(header) if i > 0}
         return cls(time=data[:, 0], variables=variables, metadata=meta)
+
+
+def _drop_repeated_rows(data: np.ndarray) -> np.ndarray:
+    """Remove rows identical to the row before them.
+
+    OpenModelica writes the final time point twice. Only rows equal in *every* column are
+    dropped, so genuine event discontinuities (same time, different values) are preserved.
+    """
+    if len(data) < 2:
+        return data
+    keep = np.ones(len(data), dtype=bool)
+    keep[1:] = np.any(data[1:] != data[:-1], axis=1)
+    return data[keep]

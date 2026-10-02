@@ -93,3 +93,12 @@ def test_real_backends_agree(backend):
     result = model.simulate(SimulationOptions(stop_time=1.0), backend=backend)
     assert result["x"][-1] == pytest.approx(np.exp(-2), rel=1e-3)
     assert result.metadata["backend"] == backend
+
+
+def test_from_csv_drops_only_exact_duplicate_rows(tmp_path):
+    path = tmp_path / "r.csv"
+    # Row 3 repeats row 2 exactly (dropped); rows 4-5 share a time but differ (an event).
+    path.write_text("time,x\n0,1\n1,2\n1,2\n2,3\n2,0\n")
+    result = Result.from_csv(path)
+    assert result.time.tolist() == [0, 1, 2, 2]
+    assert result["x"].tolist() == [1, 2, 3, 0]
