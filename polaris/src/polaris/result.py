@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
 
 
 @dataclass(frozen=True)
@@ -42,6 +46,13 @@ class Result(Mapping[str, np.ndarray]):
     def to_dataframe(self) -> pd.DataFrame:
         """Variables as columns, indexed by time."""
         return pd.DataFrame(self.variables, index=pd.Index(self.time, name="time"))
+
+    def plot(self, variables: Sequence[str] | None = None, **kwargs: Any) -> Figure:
+        """Shortcut for :func:`polaris.plotting.plot`."""
+        # Imported here to keep matplotlib out of the import path of plain data handling.
+        from polaris.plotting import plot
+
+        return plot(self, variables, **kwargs)
 
     def final(self) -> dict[str, float]:
         """Value of every variable at the last time point."""
