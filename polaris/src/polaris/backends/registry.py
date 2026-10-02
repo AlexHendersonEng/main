@@ -26,7 +26,13 @@ def _openmodelica() -> Backend:
     return OpenModelicaBackend()
 
 
-_registry: dict[str, BackendFactory] = {"openmodelica": _openmodelica}
+def _rumoca() -> Backend:
+    from polaris.backends.rumoca import RumocaBackend
+
+    return RumocaBackend()
+
+
+_registry: dict[str, BackendFactory] = {"openmodelica": _openmodelica, "rumoca": _rumoca}
 # Entry points are loaded lazily, once, so importing polaris stays fast.
 _entry_points_loaded = False
 
