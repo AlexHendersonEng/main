@@ -18,11 +18,21 @@ ENTRY_POINT_GROUP = "polaris.backends"
 
 BackendFactory = Callable[[], Backend]
 
-_registry: dict[str, BackendFactory] = {}
+
+# Built-ins are wrapped in functions so heavy imports happen only when the backend is used.
+def _openmodelica() -> Backend:
+    from polaris.backends.openmodelica import OpenModelicaBackend
+
+    return OpenModelicaBackend()
+
+
+_registry: dict[str, BackendFactory] = {"openmodelica": _openmodelica}
+# Entry points are loaded lazily, once, so importing polaris stays fast.
 _entry_points_loaded = False
 
 
 def register_backend(name: str, factory: BackendFactory, *, replace: bool = False) -> None:
+    """Register a factory (any zero-argument callable returning a Backend) under ``name``."""
     if name in _registry and not replace:
         raise ValueError(f"Backend '{name}' is already registered")
     _registry[name] = factory
@@ -38,6 +48,7 @@ def _load_entry_points() -> None:
         return
     _entry_points_loaded = True
     for ep in entry_points(group=ENTRY_POINT_GROUP):
+        # setdefault: explicit register_backend() calls win over entry points.
         _registry.setdefault(ep.name, ep.load())
 
 
@@ -64,5 +75,6 @@ def available_backends() -> list[str]:
             if get_backend(name).is_available():
                 available.append(name)
         except BackendUnavailableError:
+            # A backend that cannot even be constructed is simply not available.
             continue
     return available

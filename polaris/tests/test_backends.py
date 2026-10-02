@@ -13,7 +13,7 @@ from polaris.backends import (
     select_adapter,
     unregister_backend,
 )
-from polaris.types import ModelSource, SimulationOptions
+from polaris.types import FmuKind, ModelSource, SimulationOptions
 
 
 class FakeBackend(Backend):
@@ -57,7 +57,7 @@ def test_unsupported_capability(fake, tmp_path):
     backend = get_backend("fake")
     assert not backend.supports(Capability.EXPORT_FMU)
     with pytest.raises(UnsupportedCapabilityError):
-        backend.symbolic_jacobian(ModelSource("M"), tmp_path)
+        backend.export_fmu(ModelSource("M"), FmuKind.CO_SIMULATION, "2.0", tmp_path)
     assert backend.simulate.__name__ == "simulate"
     assert SimulationOptions().stop_time == 1.0
 

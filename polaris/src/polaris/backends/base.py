@@ -12,10 +12,13 @@ from polaris.types import FmuKind, ModelSource, SimulationOptions
 
 
 class Capability(Flag):
+    """Operations a backend can implement; combine with ``|``."""
+
     NONE = 0
+    # Build and run a model, producing a CSV result.
     SIMULATE = auto()
+    # Produce a distributable FMU.
     EXPORT_FMU = auto()
-    SYMBOLIC_JACOBIAN = auto()
 
 
 class BackendError(Exception):
@@ -49,6 +52,7 @@ class Backend(ABC):
     def version(self) -> Version:
         """Detected compiler version; raises BackendUnavailableError if unavailable."""
 
+    # Lets callers choose a fallback (e.g. FMU path) instead of catching exceptions.
     def supports(self, capability: Capability) -> bool:
         return capability in self.capabilities
 
@@ -65,10 +69,6 @@ class Backend(ABC):
     ) -> Path:
         """Export an FMU, returning its path."""
         raise self._unsupported(Capability.EXPORT_FMU)
-
-    def symbolic_jacobian(self, source: ModelSource, work_dir: Path) -> dict[str, dict[str, str]]:
-        """Return the symbolic state-space Jacobian blocks (A, B, C, D) as expressions."""
-        raise self._unsupported(Capability.SYMBOLIC_JACOBIAN)
 
     def _unsupported(self, capability: Capability) -> UnsupportedCapabilityError:
         return UnsupportedCapabilityError(
