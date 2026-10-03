@@ -5,6 +5,7 @@
 #include "InterceptTarget.generated.h"
 
 class UStaticMeshComponent;
+class UPointLightComponent;
 class USphereComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInterceptTargetDestroyed,
@@ -64,6 +65,19 @@ class INTERCEPT_API AInterceptTarget : public AActor {
   /** Visual mesh; assign a different mesh in a Blueprint subclass. */
   UPROPERTY(VisibleAnywhere, Category = "Target")
   TObjectPtr<UStaticMeshComponent> Mesh;
+
+  /** Point light that makes the target glow. */
+  UPROPERTY(VisibleAnywhere, Category = "Target")
+  TObjectPtr<UPointLightComponent> GlowLight;
+
+  /** Colour of the target body and its glow. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
+  FLinearColor GlowColor = FLinearColor(1.f, 0.15f, 0.05f);
+
+  /** Brightness of the glow light (candela-style units; 0 turns it off). */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals",
+            meta = (ClampMin = "0"))
+  float GlowIntensity = 20000.f;
 
   /** Hit points; reaches zero => destroyed. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Target",

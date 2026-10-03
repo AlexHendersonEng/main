@@ -18,7 +18,15 @@ class INTERCEPT_API AInterceptHUD : public AHUD {
  public:
   virtual void DrawHUD() override;
 
+  /** Shows or hides the help overlay. */
+  void ToggleHelp() { bShowHelp = !bShowHelp; }
+
  protected:
+  /** Whether the help overlay is visible. Starts visible so new players see
+   * the controls; H hides it. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
+  bool bShowHelp = true;
+
   /** Colour of the reticle and unlocked target markers. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD")
   FLinearColor NormalColor = FLinearColor::White;
@@ -36,4 +44,5 @@ class INTERCEPT_API AInterceptHUD : public AHUD {
   void DrawReticle();
   void DrawTargetMarkers();
   void DrawReadouts();
+  void DrawHelp();
 };

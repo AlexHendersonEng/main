@@ -83,6 +83,12 @@ class INTERCEPT_API AInterceptPlayerPawn : public ACharacter {
   TObjectPtr<UInputAction> LockAction;
   UPROPERTY()
   TObjectPtr<UInputAction> FireAction;
+  /** Switches the lock to the next-best target (Tab). */
+  UPROPERTY()
+  TObjectPtr<UInputAction> CycleAction;
+  /** Shows or hides the help screen (H). */
+  UPROPERTY()
+  TObjectPtr<UInputAction> HelpAction;
 
  private:
   /** Creates the input actions and key mappings in code so no content assets

@@ -16,6 +16,60 @@ void AInterceptHUD::DrawHUD() {
   DrawReticle();
   DrawTargetMarkers();
   DrawReadouts();
+  DrawHelp();
+}
+
+void AInterceptHUD::DrawHelp() {
+  const float Margin = 20.f;
+  const float LineHeight = 24.f * TextScale;
+
+  if (!bShowHelp) {
+    const FString Hint = TEXT("H - Help");
+    float W = 0.f, H = 0.f;
+    GetTextSize(Hint, W, H, nullptr, TextScale);
+    DrawText(Hint, NormalColor, Canvas->ClipX - W - Margin, Margin, nullptr,
+             TextScale);
+    return;
+  }
+
+  static const TCHAR* Lines[] = {
+      TEXT("HOW TO PLAY"),
+      TEXT(""),
+      TEXT("Stop the incoming targets before they reach the base."),
+      TEXT("Lock onto a target, then launch a guided interceptor at it."),
+      TEXT(""),
+      TEXT("W A S D  -  Move"),
+      TEXT("Mouse  -  Look / aim"),
+      TEXT("Space  -  Jump"),
+      TEXT("Right mouse button  -  Lock on / release lock"),
+      TEXT("Tab  -  Switch lock to another target"),
+      TEXT("Left mouse button  -  Launch interceptor (needs a lock)"),
+      TEXT("H  -  Show / hide this help"),
+      TEXT(""),
+      TEXT("Aim at a target (inside the reticle) to lock it."),
+      TEXT("Ammo slowly reloads and is topped up after each wave."),
+      TEXT("Each target that gets through costs a life."),
+  };
+
+  // Size the panel to the widest line so it fits at any TextScale.
+  float PanelW = 0.f;
+  for (const TCHAR* Line : Lines) {
+    float W = 0.f, H = 0.f;
+    GetTextSize(Line, W, H, nullptr, TextScale);
+    PanelW = FMath::Max(PanelW, W);
+  }
+  const float Pad = 24.f;
+  const float PanelH = LineHeight * UE_ARRAY_COUNT(Lines);
+  const float X = (Canvas->ClipX - PanelW) * 0.5f;
+  const float Y = (Canvas->ClipY - PanelH) * 0.5f;
+
+  DrawRect(FLinearColor(0.f, 0.f, 0.f, 0.7f), X - Pad, Y - Pad,
+           PanelW + 2.f * Pad, PanelH + 2.f * Pad);
+
+  for (int32 i = 0; i < UE_ARRAY_COUNT(Lines); ++i) {
+    DrawText(Lines[i], i == 0 ? LockColor : NormalColor, X, Y + i * LineHeight,
+             nullptr, TextScale);
+  }
 }
 
 void AInterceptHUD::DrawReticle() {

@@ -1,10 +1,12 @@
 #include "InterceptTarget.h"
 
+#include "Components/PointLightComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Engine/StaticMesh.h"
 #include "InterceptInterceptor.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
 AInterceptTarget::AInterceptTarget() {
@@ -29,6 +31,15 @@ AInterceptTarget::AInterceptTarget() {
   if (SphereMesh.Succeeded()) {
     Mesh->SetStaticMesh(SphereMesh.Object);
   }
+
+  // A bright point light makes the target glow and read clearly against the
+  // sky and ground.
+  GlowLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("GlowLight"));
+  GlowLight->SetupAttachment(Collision);
+  GlowLight->SetLightColor(GlowColor);
+  GlowLight->SetIntensity(GlowIntensity);
+  GlowLight->SetAttenuationRadius(1500.f);
+  GlowLight->SetCastShadows(false);
 }
 
 void AInterceptTarget::BeginPlay() {
@@ -36,6 +47,15 @@ void AInterceptTarget::BeginPlay() {
   Health = MaxHealth;
   Collision->OnComponentBeginOverlap.AddDynamic(
       this, &AInterceptTarget::HandleOverlap);
+
+  // BasicShapeMaterial exposes a "Color" vector parameter; if a Blueprint swaps
+  // in a material without it, this is a harmless no-op.
+  if (UMaterialInstanceDynamic* Material =
+          Mesh->CreateAndSetMaterialInstanceDynamic(0)) {
+    Material->SetVectorParameterValue(TEXT("Color"), GlowColor);
+  }
+  GlowLight->SetLightColor(GlowColor);
+  GlowLight->SetIntensity(GlowIntensity);
 }
 
 void AInterceptTarget::Tick(float DeltaSeconds) {

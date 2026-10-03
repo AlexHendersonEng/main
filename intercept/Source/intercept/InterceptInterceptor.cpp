@@ -1,12 +1,21 @@
 #include "InterceptInterceptor.h"
 
+#include "Components/PointLightComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMesh.h"
 #include "InterceptTarget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
+
+// Console toggle (intercept.DebugGuidance 1) so guidance can be visualised on
+// every rocket without editing Blueprints.
+static TAutoConsoleVariable<bool> CVarDebugGuidance(
+    TEXT("intercept.DebugGuidance"), false,
+    TEXT("Draw line of sight and commanded acceleration for all interceptors."),
+    ECVF_Cheat);
 
 AInterceptInterceptor::AInterceptInterceptor() {
   PrimaryActorTick.bCanEverTick = true;
@@ -27,17 +36,32 @@ AInterceptInterceptor::AInterceptInterceptor() {
       TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
   if (CylinderMesh.Succeeded()) {
     Mesh->SetStaticMesh(CylinderMesh.Object);
-    Mesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.8f));
+    Mesh->SetRelativeScale3D(FVector(0.3f, 0.3f, 1.6f));
     // Cylinder axis is Z; rotate so the actor's forward (X) is the rocket's
     // nose.
     Mesh->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
   }
+
+  // The glow lets the player follow the rocket against the sky.
+  GlowLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("GlowLight"));
+  GlowLight->SetupAttachment(Collision);
+  GlowLight->SetAttenuationRadius(1200.f);
+  GlowLight->SetCastShadows(false);
 }
 
 void AInterceptInterceptor::BeginPlay() {
   Super::BeginPlay();
   Collision->OnComponentBeginOverlap.AddDynamic(
       this, &AInterceptInterceptor::HandleOverlap);
+
+  // BasicShapeMaterial exposes a "Color" vector parameter; if a Blueprint swaps
+  // in a material without it, this is a harmless no-op.
+  if (UMaterialInstanceDynamic* Material =
+          Mesh->CreateAndSetMaterialInstanceDynamic(0)) {
+    Material->SetVectorParameterValue(TEXT("Color"), GlowColor);
+  }
+  GlowLight->SetLightColor(GlowColor);
+  GlowLight->SetIntensity(GlowIntensity);
 }
 
 void AInterceptInterceptor::Launch(AInterceptTarget* InTarget,
@@ -95,7 +119,7 @@ void AInterceptInterceptor::Tick(float DeltaSeconds) {
 
     Velocity += Command * DeltaSeconds;
 
-    if (bDebugDraw) {
+    if (bDebugDraw || CVarDebugGuidance.GetValueOnGameThread()) {
       DrawDebugLine(GetWorld(), Position, State.TargetPosition, FColor::Yellow,
                     false, -1.f);
       DrawDebugLine(GetWorld(), Position, Position + Command * 0.01f,

@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
+#include "InterceptHUD.h"
 #include "InterceptLauncherComponent.h"
 #include "InterceptLockOnComponent.h"
 
@@ -52,6 +53,8 @@ void AInterceptPlayerPawn::BuildDefaultInput() {
   JumpAction = MakeAction(TEXT("IA_Jump"), EInputActionValueType::Boolean);
   LockAction = MakeAction(TEXT("IA_Lock"), EInputActionValueType::Boolean);
   FireAction = MakeAction(TEXT("IA_Fire"), EInputActionValueType::Boolean);
+  CycleAction = MakeAction(TEXT("IA_Cycle"), EInputActionValueType::Boolean);
+  HelpAction = MakeAction(TEXT("IA_Help"), EInputActionValueType::Boolean);
 
   MappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Default"));
 
@@ -82,6 +85,8 @@ void AInterceptPlayerPawn::BuildDefaultInput() {
   AddKey(JumpAction, EKeys::SpaceBar);
   AddKey(LockAction, EKeys::RightMouseButton);
   AddKey(FireAction, EKeys::LeftMouseButton);
+  AddKey(CycleAction, EKeys::Tab);
+  AddKey(HelpAction, EKeys::H);
 }
 
 void AInterceptPlayerPawn::SetupPlayerInputComponent(
@@ -119,6 +124,19 @@ void AInterceptPlayerPawn::SetupPlayerInputComponent(
                                     Launcher->TryLaunch();
                                     OnFirePressed.Broadcast();
                                   });
+    EIC->BindActionInstanceLambda(
+        CycleAction, ETriggerEvent::Started,
+        [this](const FInputActionInstance&) { LockOn->CycleTarget(); });
+    EIC->BindActionInstanceLambda(
+        HelpAction, ETriggerEvent::Started,
+        [this](const FInputActionInstance&) {
+          if (const APlayerController* PC =
+                  Cast<APlayerController>(GetController())) {
+            if (AInterceptHUD* HUD = Cast<AInterceptHUD>(PC->GetHUD())) {
+              HUD->ToggleHelp();
+            }
+          }
+        });
   }
 }
 
