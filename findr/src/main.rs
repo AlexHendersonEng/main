@@ -1,6 +1,7 @@
 mod cli;
 mod names;
 mod output;
+mod replace;
 mod text;
 mod walk;
 
@@ -13,7 +14,7 @@ fn run(cli: Cli) -> anyhow::Result<usize> {
         Command::Dirs(a) => names::run(&a, names::Kind::Dir),
         Command::Files(a) => names::run(&a, names::Kind::File),
         Command::Text(a) => text::run(&a),
-        Command::Replace(_) => anyhow::bail!("not implemented yet"),
+        Command::Replace(a) => replace::run(&a),
     }
 }
 
