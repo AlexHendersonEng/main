@@ -28,7 +28,7 @@ void AInterceptTargetSpawner::SetSpawningEnabled(bool bEnabled) {
   }
 }
 
-AInterceptTarget* AInterceptTargetSpawner::SpawnTarget() {
+AInterceptTarget* AInterceptTargetSpawner::SpawnTarget(float SpeedMultiplier) {
   if (!TargetClass) {
     return nullptr;
   }
@@ -48,7 +48,7 @@ AInterceptTarget* AInterceptTargetSpawner::SpawnTarget() {
       TargetClass, SpawnLocation, FRotator::ZeroRotator, Params);
   if (Target) {
     Target->SetTargetVelocity((Defended - SpawnLocation).GetSafeNormal() *
-                              TargetSpeed);
+                              TargetSpeed * SpeedMultiplier);
   }
   return Target;
 }

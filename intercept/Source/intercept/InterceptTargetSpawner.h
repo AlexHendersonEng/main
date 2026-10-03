@@ -18,10 +18,11 @@ class INTERCEPT_API AInterceptTargetSpawner : public AActor {
  public:
   AInterceptTargetSpawner();
 
-  /** Spawns one target now. Returns it, or null if the class is unset or
+  /** Spawns one target now. SpeedMultiplier scales TargetSpeed (used for
+   * difficulty ramping). Returns it, or null if the class is unset or
    * spawning failed. */
   UFUNCTION(BlueprintCallable, Category = "Spawner")
-  AInterceptTarget* SpawnTarget();
+  AInterceptTarget* SpawnTarget(float SpeedMultiplier = 1.f);
 
   /** Starts/stops periodic spawning. */
   UFUNCTION(BlueprintCallable, Category = "Spawner")
@@ -60,9 +61,10 @@ class INTERCEPT_API AInterceptTargetSpawner : public AActor {
             meta = (ClampMin = "0.1", Units = "s"))
   float SpawnInterval = 3.f;
 
-  /** Begin spawning automatically on BeginPlay. */
+  /** Begin periodic spawning automatically on BeginPlay. Off by default
+   * because AInterceptGameMode drives spawning in waves. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
-  bool bAutoStart = true;
+  bool bAutoStart = false;
 
  private:
   FTimerHandle SpawnTimer;
