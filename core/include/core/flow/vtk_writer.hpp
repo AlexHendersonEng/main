@@ -3,8 +3,11 @@
 
 /**
  * @file vtk_writer.hpp
- * @brief Writes cell-centred fields as a VTK XML image data file (.vti) using
+ * @brief Writes cell-centred fields as a VTK XML polygon data file (.vtp) using
  * the VTK library, for visualisation in ParaView.
+ *
+ * Each fluid cell is written as a quadrilateral, solid cells are omitted so
+ * obstacles appear as holes in the mesh.
  */
 
 #include <string>
@@ -16,7 +19,8 @@
 
 namespace core::flow {
 
-/// @brief Collects cell-centred fields and writes a VTK image data (.vti) file.
+/// @brief Collects cell-centred fields and writes a VTK polygon data (.vtp)
+/// file.
 class VtkWriter {
  public:
   explicit VtkWriter(const Grid& grid) : grid_(grid) {}
@@ -29,7 +33,7 @@ class VtkWriter {
   /// @throws std::invalid_argument on size mismatch.
   void AddVector(const std::string& name, const Field2D& x, const Field2D& y);
 
-  /// @brief Writes the file (use a .vti extension). @throws std::runtime_error
+  /// @brief Writes the file (use a .vtp extension). @throws std::runtime_error
   /// if it cannot be opened.
   void Write(const std::string& path) const;
 
