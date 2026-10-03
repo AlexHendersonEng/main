@@ -1,5 +1,7 @@
 mod cli;
 mod names;
+mod output;
+mod text;
 mod walk;
 
 use clap::Parser;
@@ -10,7 +12,8 @@ fn run(cli: Cli) -> anyhow::Result<usize> {
     match cli.command {
         Command::Dirs(a) => names::run(&a, names::Kind::Dir),
         Command::Files(a) => names::run(&a, names::Kind::File),
-        Command::Text(_) | Command::Replace(_) => anyhow::bail!("not implemented yet"),
+        Command::Text(a) => text::run(&a),
+        Command::Replace(_) => anyhow::bail!("not implemented yet"),
     }
 }
 
