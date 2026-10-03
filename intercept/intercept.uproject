@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{85DB419C-4C4D-F9C9-C4C1-569A027E042D}",
+	"EngineAssociation": "{6EF36181-40B9-F6CD-9B42-DDBC2D15FDA4}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -17,6 +17,10 @@
 			"TargetAllowList": [
 				"Editor"
 			]
+		},
+		{
+			"Name": "ModelContextProtocol",
+			"Enabled": true
 		}
 	]
 }
