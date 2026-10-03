@@ -35,7 +35,7 @@ float SimulateEngagement(const FInterceptGuidance& Guidance, FVector TargetPos,
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInterceptGuidanceCrossingTest,
                                  "Intercept.Guidance.CrossingTarget",
-                                 EAutomationTestFlags::ApplicationContextMask |
+                                 EAutomationTestFlags_ApplicationContextMask |
                                      EAutomationTestFlags::ProductFilter)
 
 bool FInterceptGuidanceCrossingTest::RunTest(const FString& Parameters) {
@@ -54,7 +54,7 @@ bool FInterceptGuidanceCrossingTest::RunTest(const FString& Parameters) {
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInterceptGuidanceOpeningTest,
                                  "Intercept.Guidance.NoCommandWhenOpening",
-                                 EAutomationTestFlags::ApplicationContextMask |
+                                 EAutomationTestFlags_ApplicationContextMask |
                                      EAutomationTestFlags::ProductFilter)
 
 bool FInterceptGuidanceOpeningTest::RunTest(const FString& Parameters) {

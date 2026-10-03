@@ -8,6 +8,7 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 class UInterceptLockOnComponent;
+class UInterceptLauncherComponent;
 struct FInputActionValue;
 
 /**
@@ -31,6 +32,10 @@ class INTERCEPT_API AInterceptPlayerPawn : public ACharacter {
 
   /** Lock-on component; its lock is toggled by the lock key. */
   UInterceptLockOnComponent* GetLockOn() const { return LockOn; }
+
+  /** Launcher component; fires at the locked target when the fire key is
+   * pressed. */
+  UInterceptLauncherComponent* GetLauncher() const { return Launcher; }
 
   DECLARE_MULTICAST_DELEGATE(FInterceptInputEvent);
 
@@ -58,6 +63,10 @@ class INTERCEPT_API AInterceptPlayerPawn : public ACharacter {
   /** Acquires and tracks the locked target. */
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UInterceptLockOnComponent> LockOn;
+
+  /** Spawns guided interceptors and manages ammo. */
+  UPROPERTY(VisibleAnywhere)
+  TObjectPtr<UInterceptLauncherComponent> Launcher;
 
   /** Maps keys to the actions below. Runtime-created, so UPROPERTY keeps it
    * from being garbage collected. */
