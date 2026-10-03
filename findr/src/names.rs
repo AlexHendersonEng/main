@@ -32,7 +32,9 @@ pub fn search(
         if entry.depth() == 0 && entry.path().as_os_str() == "." {
             continue;
         }
-        let Some(ft) = entry.file_type() else { continue };
+        let Some(ft) = entry.file_type() else {
+            continue;
+        };
         let wanted = match kind {
             Kind::Dir => ft.is_dir(),
             Kind::File => ft.is_file(),

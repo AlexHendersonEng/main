@@ -55,7 +55,12 @@ fn search_file(re: &Regex, path: &Path, out: &mut impl WriteColor) -> Result<usi
         out.reset()?;
         write!(out, ":")?;
         out.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
-        write!(out, "{}:{}", i + 1, line[..first.start()].chars().count() + 1)?;
+        write!(
+            out,
+            "{}:{}",
+            i + 1,
+            line[..first.start()].chars().count() + 1
+        )?;
         out.reset()?;
         write!(out, ": ")?;
         let mut last = 0;

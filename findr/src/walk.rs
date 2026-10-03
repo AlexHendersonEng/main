@@ -5,7 +5,11 @@ use ignore::{DirEntry, WalkBuilder};
 use regex::{Regex, RegexBuilder};
 
 pub fn build_regex(pattern: &str, common: &CommonArgs) -> Result<Regex> {
-    let pat = if common.fixed_strings { regex::escape(pattern) } else { pattern.to_string() };
+    let pat = if common.fixed_strings {
+        regex::escape(pattern)
+    } else {
+        pattern.to_string()
+    };
     RegexBuilder::new(&pat)
         .case_insensitive(common.ignore_case)
         .build()
@@ -20,7 +24,12 @@ pub fn walk(common: &CommonArgs) -> Result<impl Iterator<Item = Result<DirEntry>
     }
     builder.hidden(!common.hidden).max_depth(common.max_depth);
     if common.no_ignore {
-        builder.ignore(false).git_ignore(false).git_global(false).git_exclude(false).parents(false);
+        builder
+            .ignore(false)
+            .git_ignore(false)
+            .git_global(false)
+            .git_exclude(false)
+            .parents(false);
     }
     if !common.globs.is_empty() {
         let mut ov = OverrideBuilder::new(".");

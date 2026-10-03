@@ -31,8 +31,19 @@ pub fn run(args: &ReplaceArgs) -> Result<usize> {
             Err(e) => eprintln!("findr: {}: {e:#}", entry.path().display()),
         }
     }
-    let verb = if args.write { "changed" } else { "would change" };
-    eprintln!("{verb} {changed} file(s){}", if args.write { "" } else { " (use --write to apply)" });
+    let verb = if args.write {
+        "changed"
+    } else {
+        "would change"
+    };
+    eprintln!(
+        "{verb} {changed} file(s){}",
+        if args.write {
+            ""
+        } else {
+            " (use --write to apply)"
+        }
+    );
     Ok(changed)
 }
 
@@ -50,7 +61,12 @@ pub fn replace_text(re: &Regex, text: &str, replacement: &str, literal: bool) ->
     Some(new.into_owned())
 }
 
-fn process_file(re: &Regex, args: &ReplaceArgs, path: &Path, out: &mut impl WriteColor) -> Result<bool> {
+fn process_file(
+    re: &Regex,
+    args: &ReplaceArgs,
+    path: &Path,
+    out: &mut impl WriteColor,
+) -> Result<bool> {
     let bytes = std::fs::read(path)?;
     if is_binary(&bytes) {
         return Ok(false);
@@ -80,8 +96,18 @@ fn print_diff(path: &Path, old: &str, new: &str, out: &mut impl WriteColor) -> R
     out.reset()?;
     for group in diff.grouped_ops(3) {
         let (first, last) = (group.first().unwrap(), group.last().unwrap());
-        let (o, n) = (first.old_range().start..last.old_range().end, first.new_range().start..last.new_range().end);
-        writeln!(out, "@@ -{},{} +{},{} @@", o.start + 1, o.len(), n.start + 1, n.len())?;
+        let (o, n) = (
+            first.old_range().start..last.old_range().end,
+            first.new_range().start..last.new_range().end,
+        );
+        writeln!(
+            out,
+            "@@ -{},{} +{},{} @@",
+            o.start + 1,
+            o.len(),
+            n.start + 1,
+            n.len()
+        )?;
         for op in &group {
             for change in diff.iter_changes(op) {
                 let (sign, color) = match change.tag() {
@@ -103,11 +129,17 @@ fn print_diff(path: &Path, old: &str, new: &str, out: &mut impl WriteColor) -> R
 
 /// Writes to a temp file in the same directory, copies permissions, then renames over the target.
 fn write_atomic(path: &Path, data: &[u8]) -> Result<()> {
-    let dir = path.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
+    let dir = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
     let mut tmp = tempfile::NamedTempFile::new_in(dir).context("creating temp file")?;
     tmp.write_all(data)?;
-    tmp.as_file().set_permissions(std::fs::metadata(path)?.permissions())?;
-    tmp.persist(path).map_err(|e| e.error).context("replacing file")?;
+    tmp.as_file()
+        .set_permissions(std::fs::metadata(path)?.permissions())?;
+    tmp.persist(path)
+        .map_err(|e| e.error)
+        .context("replacing file")?;
     Ok(())
 }
 

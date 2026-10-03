@@ -2,7 +2,11 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
-#[command(name = "findr", version, about = "Find regex matches in directory names, file names or file contents, and replace text")]
+#[command(
+    name = "findr",
+    version,
+    about = "Find regex matches in directory names, file names or file contents, and replace text"
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
