@@ -7,6 +7,7 @@
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
+class UInterceptLockOnComponent;
 struct FInputActionValue;
 
 /**
@@ -27,6 +28,9 @@ class INTERCEPT_API AInterceptPlayerPawn : public ACharacter {
 
   /** Default input mapping context created in code (see BuildDefaultInput). */
   UInputMappingContext* GetMappingContext() const { return MappingContext; }
+
+  /** Lock-on component; its lock is toggled by the lock key. */
+  UInterceptLockOnComponent* GetLockOn() const { return LockOn; }
 
   DECLARE_MULTICAST_DELEGATE(FInterceptInputEvent);
 
@@ -50,6 +54,10 @@ class INTERCEPT_API AInterceptPlayerPawn : public ACharacter {
   /** First-person camera at eye height; follows the controller rotation. */
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<UCameraComponent> Camera;
+
+  /** Acquires and tracks the locked target. */
+  UPROPERTY(VisibleAnywhere)
+  TObjectPtr<UInterceptLockOnComponent> LockOn;
 
   /** Maps keys to the actions below. Runtime-created, so UPROPERTY keeps it
    * from being garbage collected. */

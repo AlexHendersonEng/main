@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
+#include "InterceptLockOnComponent.h"
 
 AInterceptPlayerPawn::AInterceptPlayerPawn() {
   GetCapsuleComponent()->InitCapsuleSize(40.f, 90.f);
@@ -24,6 +25,8 @@ AInterceptPlayerPawn::AInterceptPlayerPawn() {
   Camera->bUsePawnControlRotation = true;
 
   GetCharacterMovement()->MaxWalkSpeed = 600.f;
+
+  LockOn = CreateDefaultSubobject<UInterceptLockOnComponent>(TEXT("LockOn"));
 }
 
 void AInterceptPlayerPawn::PostInitializeComponents() {
@@ -103,8 +106,10 @@ void AInterceptPlayerPawn::SetupPlayerInputComponent(
                     &ACharacter::StopJumping);
     // Lock/fire are forwarded as delegates so gameplay components don't need to
     // know about input.
-    EIC->BindAction(LockAction, ETriggerEvent::Started, this,
-                    [this]() { OnLockPressed.Broadcast(); });
+    EIC->BindAction(LockAction, ETriggerEvent::Started, this, [this]() {
+      LockOn->ToggleLock();
+      OnLockPressed.Broadcast();
+    });
     EIC->BindAction(FireAction, ETriggerEvent::Started, this,
                     [this]() { OnFirePressed.Broadcast(); });
   }
