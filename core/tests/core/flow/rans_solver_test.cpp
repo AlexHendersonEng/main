@@ -128,3 +128,86 @@ TEST_F(RansSolverTest, SolidBlockStaysStationary) {
   EXPECT_NEAR(solver.v_faces()(15, 5), 0.0, kTolerance);
   EXPECT_NEAR(solver.Pressure()(15, 3), 0.0, kTolerance);
 }
+
+TEST_F(RansSolverTest, InvalidKEpsilonOptions) {
+  core::flow::Grid grid(4, 4, 1.0, 1.0);
+  core::flow::RansSolverConfig config;
+  config.turbulence_model = core::flow::TurbulenceModelType::kKEpsilon;
+  config.k_epsilon.relaxation = 2.0;
+
+  EXPECT_THROW(
+      { core::flow::RansSolver solver(grid, config); }, std::invalid_argument);
+}
+
+TEST_F(RansSolverTest, LaminarHasNoEddyViscosity) {
+  core::flow::Grid grid(8, 8, 1.0, 1.0);
+  core::flow::RansSolverConfig config;
+  config.boundaries.north.u = 1.0;
+  config.max_iterations = 10;
+
+  core::flow::RansSolver solver(grid, config);
+  solver.Solve();
+
+  EXPECT_NEAR(solver.EddyViscosity()(4, 4), 0.0, kTolerance);
+  EXPECT_NEAR(solver.TurbulentKineticEnergy()(4, 4), 0.0, kTolerance);
+}
+
+TEST_F(RansSolverTest, TurbulentChannel) {
+  core::flow::Grid grid(50, 20, 10.0, 1.0);
+  core::flow::RansSolverConfig config;
+  config.fluid.kinematic_viscosity = 1e-5;
+  config.turbulence_model = core::flow::TurbulenceModelType::kKEpsilon;
+  config.boundaries.west.type = core::flow::BoundaryType::kInlet;
+  config.boundaries.west.u = 1.0;
+  config.boundaries.west.k = 3.75e-3;
+  config.boundaries.west.epsilon = 1e-3;
+  config.boundaries.east.type = core::flow::BoundaryType::kOutlet;
+  config.max_iterations = 3000;
+
+  core::flow::RansSolver solver(grid, config);
+  const core::flow::SolveResult result = solver.Solve();
+  const core::flow::Field2D k = solver.TurbulentKineticEnergy();
+  const core::flow::Field2D epsilon = solver.Dissipation();
+  const core::flow::Field2D nut = solver.EddyViscosity();
+
+  // Integrate the flow rate through the outlet
+  double outflow = 0.0;
+  for (std::size_t j = 0; j < grid.ny(); ++j) {
+    outflow += solver.u_faces()(grid.nx(), j) * grid.dy();
+  }
+
+  EXPECT_TRUE(result.converged);
+  EXPECT_NEAR(outflow, 1.0, kTolerance);
+
+  // Turbulence quantities stay positive and the eddy viscosity exceeds the
+  // molecular viscosity near the wall
+  for (std::size_t j = 0; j < grid.ny(); ++j) {
+    for (std::size_t i = 0; i < grid.nx(); ++i) {
+      EXPECT_GT(k(i, j), 0.0);
+      EXPECT_GT(epsilon(i, j), 0.0);
+      EXPECT_GT(nut(i, j), 0.0);
+    }
+  }
+  EXPECT_GT(nut(45, 0), config.fluid.kinematic_viscosity);
+
+  // Shear generates more turbulence at the wall than at the centreline
+  EXPECT_GT(k(45, 0), k(45, 10));
+}
+
+TEST_F(RansSolverTest, TurbulentBackwardFacingStepConverges) {
+  core::flow::Grid grid(60, 20, 3.0, 1.0);
+  grid.SetSolidBlock(0, 10, 0, 10);
+  core::flow::RansSolverConfig config;
+  config.fluid.kinematic_viscosity = 1e-5;
+  config.turbulence_model = core::flow::TurbulenceModelType::kKEpsilon;
+  config.boundaries.west.type = core::flow::BoundaryType::kInlet;
+  config.boundaries.west.u = 1.0;
+  config.boundaries.west.k = 3.75e-3;
+  config.boundaries.west.epsilon = 1e-3;
+  config.boundaries.east.type = core::flow::BoundaryType::kOutlet;
+  config.max_iterations = 3000;
+
+  core::flow::RansSolver solver(grid, config);
+
+  EXPECT_TRUE(solver.Solve().converged);
+}

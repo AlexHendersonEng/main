@@ -7,6 +7,7 @@ add_executable(
   flow_test.cpp
   field_test.cpp
   grid_test.cpp
+  k_epsilon_test.cpp
   stencil_solver_test.cpp
   rans_solver_test.cpp
   vtk_writer_test.cpp

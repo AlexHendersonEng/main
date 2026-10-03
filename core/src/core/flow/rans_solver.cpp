@@ -30,11 +30,16 @@ RansSolver::RansSolver(const Grid& grid, const RansSolverConfig& config)
       outlet_v_(grid.nx(), grid.ny() + 1),
       sys_u_(grid.nx() + 1, grid.ny()),
       sys_v_(grid.nx(), grid.ny() + 1),
-      sys_p_(grid.nx(), grid.ny()) {
+      sys_p_(grid.nx(), grid.ny()),
+      nu_eff_(grid.nx(), grid.ny(), config.fluid.kinematic_viscosity) {
   auto in_range = [](double a) { return a > 0.0 && a <= 1.0; };
   if (!in_range(config.velocity_relaxation) ||
       !in_range(config.pressure_relaxation)) {
     throw std::invalid_argument("Relaxation factors must be in (0, 1]");
+  }
+  if (config.turbulence_model == TurbulenceModelType::kKEpsilon) {
+    turbulence_ = std::make_unique<KEpsilon>(
+        grid_, config_.fluid, config_.boundaries, config_.k_epsilon);
   }
 
   const std::size_t nx = grid_.nx();
@@ -95,16 +100,23 @@ RansSolver::RansSolver(const Grid& grid, const RansSolverConfig& config)
   u_ref_ = ref > 0.0 ? ref : 1.0;
 }
 
+double RansSolver::WallViscosity(const std::size_t ia, const std::size_t ja,
+                                 const std::size_t ib, const std::size_t jb,
+                                 const double distance) const {
+  if (!turbulence_) {
+    return config_.fluid.kinematic_viscosity;
+  }
+  return 0.5 * (turbulence_->WallViscosity(ia, ja, distance) +
+                turbulence_->WallViscosity(ib, jb, distance));
+}
+
 void RansSolver::AssembleU() {
   const std::size_t nx = grid_.nx();
   const std::size_t ny = grid_.ny();
   const double dx = grid_.dx();
   const double dy = grid_.dy();
-  const double nu = config_.fluid.kinematic_viscosity;
   const double alpha = config_.velocity_relaxation;
   const auto& bc = config_.boundaries;
-  const double d_ew = nu * dy / dx;
-  const double d_ns = nu * dx / dy;
 
   for (std::size_t j = 0; j < ny; ++j) {
     for (std::size_t i = 0; i <= nx; ++i) {
@@ -118,28 +130,42 @@ void RansSolver::AssembleU() {
       const double fn = 0.5 * dx * (v_(i - 1, j + 1) + v_(i, j + 1));
       const double fs = 0.5 * dx * (v_(i - 1, j) + v_(i, j));
 
-      const double ae = d_ew + Pos(-fe);
-      const double aw = d_ew + Pos(fw);
-      double an = d_ns + Pos(-fn);
-      double as = d_ns + Pos(fs);
+      const double ae = nu_eff_(i, j) * dy / dx + Pos(-fe);
+      const double aw = nu_eff_(i - 1, j) * dy / dx + Pos(fw);
+      double an = 0.0;
+      double as = 0.0;
       double b = 0.0;
 
-      // Wall/inlet boundary lies half a cell away.
+      // Wall/inlet boundaries and solid surfaces lie half a cell away.
       if (j + 1 == ny) {
         if (IsDirichlet(bc.north.type)) {
-          an = 2.0 * d_ns;
+          const double nu_w = bc.north.type == BoundaryType::kWall
+                                  ? WallViscosity(i - 1, j, i, j, 0.5 * dy)
+                                  : 0.5 * (nu_eff_(i - 1, j) + nu_eff_(i, j));
+          an = 2.0 * nu_w * dx / dy;
           b += an * bc.north.u;
-        } else {
-          an = 0.0;
         }
+      } else if (grid_.IsSolid(i - 1, j + 1) && grid_.IsSolid(i, j + 1)) {
+        an = 2.0 * WallViscosity(i - 1, j, i, j, 0.5 * dy) * dx / dy;
+      } else {
+        const double nu_n = 0.25 * (nu_eff_(i - 1, j) + nu_eff_(i, j) +
+                                    nu_eff_(i - 1, j + 1) + nu_eff_(i, j + 1));
+        an = nu_n * dx / dy + Pos(-fn);
       }
       if (j == 0) {
         if (IsDirichlet(bc.south.type)) {
-          as = 2.0 * d_ns;
+          const double nu_w = bc.south.type == BoundaryType::kWall
+                                  ? WallViscosity(i - 1, j, i, j, 0.5 * dy)
+                                  : 0.5 * (nu_eff_(i - 1, j) + nu_eff_(i, j));
+          as = 2.0 * nu_w * dx / dy;
           b += as * bc.south.u;
-        } else {
-          as = 0.0;
         }
+      } else if (grid_.IsSolid(i - 1, j - 1) && grid_.IsSolid(i, j - 1)) {
+        as = 2.0 * WallViscosity(i - 1, j, i, j, 0.5 * dy) * dx / dy;
+      } else {
+        const double nu_s = 0.25 * (nu_eff_(i - 1, j) + nu_eff_(i, j) +
+                                    nu_eff_(i - 1, j - 1) + nu_eff_(i, j - 1));
+        as = nu_s * dx / dy + Pos(fs);
       }
 
       const double ap = (ae + aw + an + as) / alpha;
@@ -161,11 +187,8 @@ void RansSolver::AssembleV() {
   const std::size_t ny = grid_.ny();
   const double dx = grid_.dx();
   const double dy = grid_.dy();
-  const double nu = config_.fluid.kinematic_viscosity;
   const double alpha = config_.velocity_relaxation;
   const auto& bc = config_.boundaries;
-  const double d_ew = nu * dy / dx;
-  const double d_ns = nu * dx / dy;
 
   for (std::size_t j = 0; j <= ny; ++j) {
     for (std::size_t i = 0; i < nx; ++i) {
@@ -179,27 +202,41 @@ void RansSolver::AssembleV() {
       const double fn = 0.5 * dx * (v_(i, j) + v_(i, j + 1));
       const double fs = 0.5 * dx * (v_(i, j - 1) + v_(i, j));
 
-      double ae = d_ew + Pos(-fe);
-      double aw = d_ew + Pos(fw);
-      const double an = d_ns + Pos(-fn);
-      const double as = d_ns + Pos(fs);
+      const double an = nu_eff_(i, j) * dx / dy + Pos(-fn);
+      const double as = nu_eff_(i, j - 1) * dx / dy + Pos(fs);
+      double ae = 0.0;
+      double aw = 0.0;
       double b = 0.0;
 
       if (i + 1 == nx) {
         if (IsDirichlet(bc.east.type)) {
-          ae = 2.0 * d_ew;
+          const double nu_w = bc.east.type == BoundaryType::kWall
+                                  ? WallViscosity(i, j - 1, i, j, 0.5 * dx)
+                                  : 0.5 * (nu_eff_(i, j - 1) + nu_eff_(i, j));
+          ae = 2.0 * nu_w * dy / dx;
           b += ae * bc.east.v;
-        } else {
-          ae = 0.0;
         }
+      } else if (grid_.IsSolid(i + 1, j - 1) && grid_.IsSolid(i + 1, j)) {
+        ae = 2.0 * WallViscosity(i, j - 1, i, j, 0.5 * dx) * dy / dx;
+      } else {
+        const double nu_e = 0.25 * (nu_eff_(i, j - 1) + nu_eff_(i, j) +
+                                    nu_eff_(i + 1, j - 1) + nu_eff_(i + 1, j));
+        ae = nu_e * dy / dx + Pos(-fe);
       }
       if (i == 0) {
         if (IsDirichlet(bc.west.type)) {
-          aw = 2.0 * d_ew;
+          const double nu_w = bc.west.type == BoundaryType::kWall
+                                  ? WallViscosity(i, j - 1, i, j, 0.5 * dx)
+                                  : 0.5 * (nu_eff_(i, j - 1) + nu_eff_(i, j));
+          aw = 2.0 * nu_w * dy / dx;
           b += aw * bc.west.v;
-        } else {
-          aw = 0.0;
         }
+      } else if (grid_.IsSolid(i - 1, j - 1) && grid_.IsSolid(i - 1, j)) {
+        aw = 2.0 * WallViscosity(i, j - 1, i, j, 0.5 * dx) * dy / dx;
+      } else {
+        const double nu_w = 0.25 * (nu_eff_(i, j - 1) + nu_eff_(i, j) +
+                                    nu_eff_(i - 1, j - 1) + nu_eff_(i - 1, j));
+        aw = nu_w * dy / dx + Pos(fw);
       }
 
       const double ap = (ae + aw + an + as) / alpha;
@@ -215,7 +252,6 @@ void RansSolver::AssembleV() {
     }
   }
 }
-
 void RansSolver::ApplyOutletCopy() {
   const std::size_t nx = grid_.nx();
   const std::size_t ny = grid_.ny();
@@ -295,6 +331,16 @@ SolveResult RansSolver::Step() {
   LinearSolveOptions momentum;
   momentum.max_iterations = config_.momentum_sweeps;
   momentum.relative_tolerance = 1e-3;
+
+  if (turbulence_) {
+    turbulence_->Update(u_, v_);
+    for (std::size_t j = 0; j < ny; ++j) {
+      for (std::size_t i = 0; i < nx; ++i) {
+        nu_eff_(i, j) = config_.fluid.kinematic_viscosity +
+                        turbulence_->EddyViscosity()(i, j);
+      }
+    }
+  }
 
   AssembleU();
   SolveSor(sys_u_, u_, momentum);
@@ -391,6 +437,21 @@ Field2D RansSolver::Pressure() const {
     }
   }
   return p;
+}
+
+Field2D RansSolver::EddyViscosity() const {
+  return turbulence_ ? turbulence_->EddyViscosity()
+                     : Field2D(grid_.nx(), grid_.ny());
+}
+
+Field2D RansSolver::TurbulentKineticEnergy() const {
+  return turbulence_ ? turbulence_->TurbulentKineticEnergy()
+                     : Field2D(grid_.nx(), grid_.ny());
+}
+
+Field2D RansSolver::Dissipation() const {
+  return turbulence_ ? turbulence_->Dissipation()
+                     : Field2D(grid_.nx(), grid_.ny());
 }
 
 Field2D RansSolver::CellU() const {
