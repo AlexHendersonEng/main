@@ -4,6 +4,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/DamageEvents.h"
 #include "Engine/StaticMesh.h"
+#include "InterceptInterceptor.h"
 #include "UObject/ConstructorHelpers.h"
 
 AInterceptTarget::AInterceptTarget() {
@@ -78,7 +79,8 @@ void AInterceptTarget::HandleOverlap(UPrimitiveComponent* OverlappedComponent,
   // Other targets are ignored; anything else (ground, pawn, buildings) counts
   // as an impact.
   if (!OtherActor || OtherActor == this ||
-      OtherActor->IsA<AInterceptTarget>()) {
+      OtherActor->IsA<AInterceptTarget>() ||
+      OtherActor->IsA<AInterceptInterceptor>()) {
     return;
   }
   Impact(OtherActor);
