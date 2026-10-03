@@ -1,7 +1,8 @@
 {
   "dependencies": [
+    "boost-odeint",
     "gtest",
     "matplotplusplus",
-    "boost-odeint"
+    "vtk"
   ]
 }
