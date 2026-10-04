@@ -1,26 +1,22 @@
 from __future__ import annotations
 
 import math
-from pathlib import Path
 
 import numpy as np
 import pytest
 from polaris import Model, SimulationOptions
 
-from conftest import PACKAGE_FILE, PACKAGE_ROOT, PACKAGE_SOURCES, PROJECT_ROOT
+from conftest import PACKAGE_ROOT, library_model_files
 
 pytestmark = pytest.mark.integration
 
-ATTITUDE_VALIDATION = PROJECT_ROOT / "tests" / "modelica" / "AttitudeValidation.mo"
-
 
 def _attitude_model(backend: str, class_name: str = "AttitudeValidation") -> Model:
-    files: tuple[Path, ...] = (
-        (ATTITUDE_VALIDATION, PACKAGE_ROOT.parent, *PACKAGE_SOURCES)
-        if backend == "rumoca"
-        else (PACKAGE_FILE, ATTITUDE_VALIDATION)
+    return Model(
+        f"ModelicaAerospace.Tests.Mathematics.{class_name}",
+        files=library_model_files(backend),
+        libraries=("Modelica",),
     )
-    return Model(class_name, files=files, libraries=("Modelica",))
 
 
 def _quaternion(roll: float, pitch: float, yaw: float) -> np.ndarray:

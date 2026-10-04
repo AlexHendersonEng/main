@@ -1,3 +1,4 @@
+within ModelicaAerospace.Tests.Mathematics;
 model AttitudeValidation "Exercise vector, matrix, quaternion, and Euler primitives"
   parameter Real roll = 0.3;
   parameter Real pitch = -0.2;
@@ -66,25 +67,3 @@ equation
   rotateBlock.vector = {1, 0, 0};
   blockRotatedVector = rotateBlock.rotated;
 end AttitudeValidation;
-
-model AttitudeIdentity "Identity attitude validation case"
-  extends AttitudeValidation(roll=0, pitch=0, yaw=0);
-end AttitudeIdentity;
-
-model AttitudePrincipalAxes "Principal-axis attitude validation case"
-  extends AttitudeValidation(
-    roll=1.570796326794897,
-    pitch=0,
-    yaw=-1.047197551196598);
-end AttitudePrincipalAxes;
-
-model AttitudeNearSingular "Near-gimbal-lock attitude validation case"
-  extends AttitudeValidation(
-    roll=0.3,
-    pitch=1.570796226794897,
-    yaw=-0.8);
-end AttitudeNearSingular;
-
-model AttitudeWideYaw "Large-yaw attitude validation case"
-  extends AttitudeValidation(roll=-0.4, pitch=0.25, yaw=2.6);
-end AttitudeWideYaw;

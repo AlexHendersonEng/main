@@ -60,6 +60,20 @@ represent the same rotation.
 The package uses `Mathematics` rather than `Math` because Rumoca fails to
 resolve a nested user package named `Math`.
 
+## Geodesy and coordinate frames
+
+`ModelicaAerospace.Coordinates` implements WGS-84 geodetic/ECEF conversion,
+local NED rotations and displacements, and ECEF/ECI transformations. Rotating
+frame velocity and acceleration conversions include transport, Coriolis, and
+centripetal terms. Pole behavior defines longitude as zero, longitude outputs
+use the `[-pi, pi]` range, and the Earth center is rejected because geodetic
+coordinates are undefined there.
+
+Compiler-executed validation models are shipped under
+`ModelicaAerospace.Tests`, grouped into `Common`, `Mathematics`, and
+`Coordinates` subpackages. Python tests run those package models and compare
+their outputs with independent numerical references.
+
 ## Validation
 
 Run structural tests:

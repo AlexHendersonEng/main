@@ -14,6 +14,12 @@ PACKAGE_SOURCES = (
 )
 
 
+def library_model_files(backend: str) -> tuple[Path, ...]:
+    if backend == "rumoca":
+        return (PACKAGE_FILE, PACKAGE_ROOT.parent, *PACKAGE_SOURCES[1:])
+    return (PACKAGE_FILE,)
+
+
 @pytest.fixture(params=("openmodelica", "rumoca"))
 def modelica_backend(request: pytest.FixtureRequest) -> str:
     executable = {"openmodelica": "omc", "rumoca": "rumoca"}[request.param]

@@ -36,6 +36,7 @@ def test_expected_public_namespaces_exist():
         "Navigation",
         "Propulsion",
         "Sensors",
+        "Tests",
         "Types",
         "Utilities",
     }
@@ -50,8 +51,19 @@ def test_expected_public_namespaces_exist():
 def test_all_modelica_sources_are_inside_the_library_package():
     sources = set(PROJECT_ROOT.rglob("*.mo"))
     assert sources
-    test_models = PROJECT_ROOT / "tests" / "modelica"
-    assert all(PACKAGE_ROOT in path.parents or test_models in path.parents for path in sources)
+    assert all(PACKAGE_ROOT in path.parents for path in sources)
+
+
+def test_compiler_validation_models_are_packaged_by_domain():
+    tests_package = PACKAGE_ROOT / "Tests"
+    domains = {
+        path.name
+        for path in tests_package.iterdir()
+        if path.is_dir() and (path / "package.mo").is_file()
+    }
+
+    assert domains == {"Common", "Coordinates", "Mathematics"}
+    assert not list((PROJECT_ROOT / "tests").rglob("*.mo"))
 
 
 def test_repository_metadata_files_exist():

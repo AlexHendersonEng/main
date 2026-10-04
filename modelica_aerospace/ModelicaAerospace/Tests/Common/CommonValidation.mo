@@ -1,39 +1,4 @@
-block DoubleSignal "Concrete scalar transform used to validate common connectors"
-  extends ModelicaAerospace.Interfaces.PartialScalarTransform;
-equation
-  y = 2 * u;
-end DoubleSignal;
-
-block DoubleVector "Concrete vector transform used to validate array connectors"
-  extends ModelicaAerospace.Interfaces.PartialVectorTransform;
-equation
-  y = 2 * u;
-end DoubleVector;
-
-block EnvironmentStub "Concrete environment interface"
-  extends ModelicaAerospace.Interfaces.PartialEnvironment;
-equation
-  temperature = 288.15 - 0.0065 * altitude;
-  pressure = 101325;
-  density = 1.225;
-  speedOfSound = 340.294;
-end EnvironmentStub;
-
-block SensorStub "Concrete sensor interface"
-  extends ModelicaAerospace.Interfaces.PartialSensor;
-equation
-  measurement = truth;
-end SensorStub;
-
-block VehicleStub "Concrete vehicle-dynamics interface"
-  extends ModelicaAerospace.Interfaces.PartialVehicleDynamics;
-equation
-  positionNED = {0, 0, 0};
-  velocityBody = forceBody;
-  quaternionBodyToNED = {1, 0, 0, 0};
-  angularVelocityBody = momentBody;
-end VehicleStub;
-
+within ModelicaAerospace.Tests.Common;
 model CommonValidation "Validate common types, records, constants, and interfaces"
   ModelicaAerospace.Types.GeodeticPosition location(
     latitude=0.5,
@@ -41,11 +6,11 @@ model CommonValidation "Validate common types, records, constants, and interface
     altitude=1200);
   ModelicaAerospace.Types.MassProperties properties(mass=1200);
   ModelicaAerospace.Types.RotationalState rotation;
-  DoubleSignal transform;
-  DoubleVector vectorTransform;
-  EnvironmentStub environment;
-  SensorStub sensor;
-  VehicleStub vehicle;
+  ModelicaAerospace.Tests.Common.DoubleSignal transform;
+  ModelicaAerospace.Tests.Common.DoubleVector vectorTransform;
+  ModelicaAerospace.Tests.Common.EnvironmentStub environment;
+  ModelicaAerospace.Tests.Common.SensorStub sensor;
+  ModelicaAerospace.Tests.Common.VehicleStub vehicle;
   output Real y;
   output Real vectorY[3];
   output Real environmentDensity;

@@ -3,20 +3,17 @@ from __future__ import annotations
 import pytest
 from polaris import Model, SimulationOptions
 
-from conftest import PACKAGE_FILE, PACKAGE_ROOT, PROJECT_ROOT
+from conftest import PACKAGE_ROOT, PROJECT_ROOT, library_model_files
 
 pytestmark = pytest.mark.integration
 
-COMMON_VALIDATION = PROJECT_ROOT / "tests" / "modelica" / "CommonValidation.mo"
-
 
 def _common_model(backend: str) -> Model:
-    files = (
-        (COMMON_VALIDATION, PACKAGE_ROOT.parent)
-        if backend == "rumoca"
-        else (PACKAGE_FILE, COMMON_VALIDATION)
+    return Model(
+        "ModelicaAerospace.Tests.Common.CommonValidation",
+        files=library_model_files(backend),
+        libraries=("Modelica",),
     )
-    return Model("CommonValidation", files=files, libraries=("Modelica",))
 
 
 def test_common_definitions_compile_and_simulate(modelica_backend: str):
