@@ -4,6 +4,8 @@ Vector3Input
 Vector3Output
 QuaternionInput
 QuaternionOutput
+Matrix3Input
+Matrix3Output
 PartialScalarTransform
 PartialVectorTransform
 PartialEnvironment

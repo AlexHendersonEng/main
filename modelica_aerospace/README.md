@@ -47,6 +47,19 @@ utilities, and examples.
   avoids requiring compiler support for MSL connector classes while preserving
   MSL as the library's only declared dependency.
 
+## Attitude mathematics
+
+`ModelicaAerospace.Mathematics` provides pure functions for vector normalization,
+cross products, skew matrices, quaternion products and kinematics, 3-2-1 Euler
+conversions, direction-cosine matrices, rotation validation, and active vector
+rotation. `ModelicaAerospace.Mathematics.Blocks` exposes the main attitude conversions
+through signal-oriented blocks. Quaternion-to-DCM-to-quaternion tests compare
+orientation using the absolute quaternion dot product because `q` and `-q`
+represent the same rotation.
+
+The package uses `Mathematics` rather than `Math` because Rumoca fails to
+resolve a nested user package named `Math`.
+
 ## Validation
 
 Run structural tests:

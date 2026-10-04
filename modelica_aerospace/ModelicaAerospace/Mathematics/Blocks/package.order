@@ -1,0 +1,4 @@
+Euler321ToQuaternion
+QuaternionToEuler321
+QuaternionToDCM
+RotateVectorByQuaternion

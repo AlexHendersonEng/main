@@ -32,7 +32,7 @@ def test_expected_public_namespaces_exist():
         "FlightDynamics",
         "Guidance",
         "Interfaces",
-        "Math",
+        "Mathematics",
         "Navigation",
         "Propulsion",
         "Sensors",
