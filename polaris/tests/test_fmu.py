@@ -5,7 +5,13 @@ import numpy as np
 import pytest
 
 from polaris import FmuKind, Model, SimulationOptions
-from polaris.fmu import FmuError, FmuNotRunnableError, inspect_fmu, validate_fmu
+from polaris.fmu import (
+    FmuError,
+    FmuNotRunnableError,
+    compile_source_fmu,
+    inspect_fmu,
+    validate_fmu,
+)
 from polaris.fmu_runtime import run_fmu
 
 MODEL_FILE = Path(__file__).parent / "models" / "Decay.mo"
@@ -80,9 +86,32 @@ def test_source_only_fmu_is_reported_not_run(rumoca_fmu):
     info = inspect_fmu(rumoca_fmu)
     assert not info.runnable and info.co_simulation and info.model_exchange
     with pytest.raises(FmuNotRunnableError, match="Source-code"):
-        run_fmu(rumoca_fmu)
+        run_fmu(rumoca_fmu, compile_sources=False)
     report = validate_fmu(rumoca_fmu)
     assert report.ok and report.warnings
+
+
+needs_compiler = pytest.mark.skipif(
+    not any(shutil.which(c) for c in ("clang", "gcc", "cc")), reason="no C compiler"
+)
+
+
+@pytest.mark.integration
+@needs_rumoca
+@needs_compiler
+def test_compile_and_run_source_fmu(rumoca_fmu, tmp_path):
+    built = compile_source_fmu(rumoca_fmu, tmp_path / "built.fmu")
+    assert inspect_fmu(built).runnable
+    assert not inspect_fmu(rumoca_fmu).runnable  # original is untouched
+    opts = SimulationOptions(stop_time=1.0, step_size=0.1)
+    # run_fmu compiles automatically and rumoca's FMU is accurate at modest substeps.
+    result = run_fmu(rumoca_fmu, opts, {"k": 2.0}, substeps=20)
+    assert result["x"][-1] == pytest.approx(np.exp(-2), rel=1e-3)
+
+
+def test_compile_requires_sources(tmp_path):
+    with pytest.raises(FmuError, match="not found"):
+        compile_source_fmu(tmp_path / "missing.fmu")
 
 
 def test_fmu_kind_is_exported():

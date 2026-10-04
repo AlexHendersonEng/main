@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess
+import sys
+import tempfile
+import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
+from xml.etree import ElementTree
 
 import fmpy
 from fmpy import read_model_description
@@ -72,6 +78,77 @@ def inspect_fmu(path: str | Path) -> FmuInfo:
         platforms=platforms,
         variables=variables,
     )
+
+
+# Compilers tried in order when building source-code FMUs.
+_COMPILERS = ("clang", "gcc", "cc")
+_LIB_SUFFIX = {"win32": ".dll", "darwin": ".dylib"}
+
+
+def compile_source_fmu(path: str | Path, output: str | Path | None = None) -> Path:
+    """Build a runnable FMU from a source-code FMU (e.g. one exported by rumoca).
+
+    The C sources in the archive are compiled into a shared library for this platform
+    and a new archive containing it is written; the original is left untouched.
+
+    Args:
+        path: A source-code FMU (FMI 2.0 only for now).
+        output: Destination ``.fmu``; defaults to a file in a fresh temporary directory.
+
+    Returns:
+        The path of the runnable FMU (the input path if it already has a binary).
+
+    Raises:
+        FmuError: no C compiler is on PATH, the FMI version is unsupported, or the
+            build fails (the compiler output is included in the message).
+    """
+    info = inspect_fmu(path)
+    if info.runnable:
+        return info.path
+    if "c-code" not in info.platforms:
+        raise FmuError(f"{info.path.name} contains neither binaries nor C sources")
+    if not info.fmi_version.startswith("2"):
+        raise FmuError(f"Compiling FMI {info.fmi_version} source FMUs is not supported yet")
+    compiler = next((c for c in _COMPILERS if shutil.which(c)), None)
+    if compiler is None:
+        raise FmuError(f"No C compiler found (tried {', '.join(_COMPILERS)}) to build the FMU")
+
+    if output:
+        dest = Path(output)
+    else:
+        dest = Path(tempfile.mkdtemp(prefix="polaris_fmu_")) / info.path.name
+    with tempfile.TemporaryDirectory(prefix="polaris_build_") as tmp:
+        root = Path(tmp) / "fmu"
+        with zipfile.ZipFile(info.path) as archive:
+            archive.extractall(root)
+        # The library must be named after the modelIdentifier in modelDescription.xml.
+        description = ElementTree.parse(root / "modelDescription.xml").getroot()
+        identifier = next(
+            el.get("modelIdentifier")
+            for tag in ("CoSimulation", "ModelExchange")
+            if (el := description.find(tag)) is not None
+        )
+        binary_dir = root / "binaries" / fmpy.platform
+        binary_dir.mkdir(parents=True)
+        library = binary_dir / f"{identifier}{_LIB_SUFFIX.get(sys.platform, '.so')}"
+        sources = sorted((root / "sources").glob("*.c"))
+        # FMPy ships the standard FMI headers, which source FMUs rely on but do not contain.
+        headers = Path(fmpy.__file__).parent / "c-code"
+        command = [compiler, "-shared", "-O2", f"-I{headers}", f"-I{root / 'sources'}"]
+        command += [*map(str, sources), "-o", str(library)]
+        if sys.platform != "win32":
+            # Windows needs neither: -fPIC is rejected and libm is part of the C runtime.
+            command += ["-fPIC", "-lm"]
+        proc = subprocess.run(command, capture_output=True, text=True, check=False)
+        if proc.returncode != 0 or not library.exists():
+            raise FmuError(f"Compiling {info.path.name} failed:\n{proc.stdout}{proc.stderr}")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as out:
+            for file in sorted(root.rglob("*")):
+                # Skip import/export libraries that clang emits next to the DLL on Windows.
+                if file.is_file() and file.suffix not in {".lib", ".exp"}:
+                    out.write(file, file.relative_to(root).as_posix())
+    return dest
 
 
 @dataclass(frozen=True)

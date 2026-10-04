@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from fmpy import simulate_fmu
 
-from polaris.fmu import FmuNotRunnableError, inspect_fmu
+from polaris.fmu import FmuError, FmuNotRunnableError, compile_source_fmu, inspect_fmu
 from polaris.result import Result
 from polaris.types import SimulationOptions
 
@@ -19,6 +19,7 @@ def run_fmu(
     parameters: Mapping[str, float] | None = None,
     *,
     substeps: int = 1,
+    compile_sources: bool = True,
 ) -> Result:
     """Simulate an FMU and return a :class:`~polaris.result.Result`.
 
@@ -31,9 +32,16 @@ def run_fmu(
             OpenModelica's use forward Euler, so accuracy depends on that step. With
             ``substeps=n`` the FMU is stepped ``n`` times per output point and only the
             output points are kept.
+        compile_sources: Source-code FMUs (e.g. from rumoca) are compiled with the local C
+            compiler into a temporary copy first. Set to ``False`` to raise instead.
     """
     opts = options or SimulationOptions()
     info = inspect_fmu(path)
+    if not info.runnable and compile_sources and "c-code" in info.platforms:
+        try:
+            info = inspect_fmu(compile_source_fmu(info.path))
+        except FmuError as exc:
+            raise FmuNotRunnableError(str(exc)) from exc
     if not info.runnable:
         raise FmuNotRunnableError(
             f"{info.path.name} has no binary for this platform (contains: "

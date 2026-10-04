@@ -11,9 +11,11 @@ import sys
 from pathlib import Path
 
 from polaris import Model, Result, SimulationOptions
+from polaris.analysis import jacobian, local_sensitivity
 from polaris.backends import available_backends, get_backend
 from polaris.fmu import validate_fmu
 from polaris.fmu_runtime import run_fmu
+from polaris.interactive import InteractiveSession, SessionError
 from polaris.plotting import compare, plot
 
 HERE = Path(__file__).parent
@@ -72,9 +74,9 @@ def main() -> None:
             print(f"FMU ({name}): {fmu} ({fmu.stat().st_size} bytes)")
             report = validate_fmu(fmu)
             print(f"  valid: {report.ok}, warnings: {list(report.warnings)}")
-            if report.info.runnable:
-                # substeps=20 reduces the forward-Euler error of OpenModelica's CS FMUs.
-                fmu_results[name] = run_fmu(fmu, options, substeps=20)
+            # Source-only FMUs (rumoca) are compiled automatically; substeps=20 reduces the
+            # forward-Euler error of OpenModelica's CS FMUs.
+            fmu_results[name] = run_fmu(fmu, options, substeps=20)
         except Exception as exc:  # report and continue so one backend cannot hide the others
             print(f"FMU step failed on {name}: {exc}")
 
@@ -88,6 +90,41 @@ def main() -> None:
         )
         err = abs(fmu_result["x"][-1] - results[name]["x"][-1])
         print(f"{name}: |x(5) FMU - direct| = {err:.2e}")
+
+    # 8. Jacobian (native, from rumoca) and finite-difference parameter sensitivity.
+    if "rumoca" in backends:
+        jac = jacobian(model, backend="rumoca")
+        print("state Jacobian d(der(states))/d(states), states", jac.states)
+        print(jac.state_matrix)
+        sens = local_sensitivity(
+            model, {"k": 20.0, "c": 0.5}, ["x"], options, workers=2, backend="rumoca"
+        )
+        print("dx(5)/dp:")
+        print(sens.final())
+
+    # 9. Interactive session: step the FMU, then change damping part-way through the run.
+    for name in backends:
+        fmu_path = OUT / f"MassSpringDamper_{name}.fmu"
+        if not fmu_path.exists():
+            continue
+        try:
+            with InteractiveSession(fmu_path, step_size=0.01, substeps=20) as session:
+                session.advance(2.0)
+                try:
+                    session.set(c=5.0)
+                except SessionError:
+                    # OpenModelica declares parameters fixed but still reads them live.
+                    session.set(c=5.0, force=True)
+                session.advance(3.0)
+                session.history.plot(
+                    ["x", "v"],
+                    separate=True,
+                    title=f"Interactive session ({name}), c changed at t=2",
+                    save_to=OUT / f"interactive_{name}.png",
+                )
+                print(f"{name}: interactive x(5) = {session.get('x')['x']:.5f}")
+        except Exception as exc:
+            print(f"Interactive session failed on {name}: {exc}")
     print(f"Outputs written to {OUT}")
 
 
