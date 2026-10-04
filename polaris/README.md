@@ -70,6 +70,38 @@ bounds, binds to `127.0.0.1` by default, and requires `--force-fixed-parameters`
 to expose FMU parameters declared fixed (as OpenModelica commonly exports them).
 Use `uv run polaris COMMAND --help` for full command-specific options.
 
+## HELICS FMU federates
+
+The optional HELICS integration runs one FMI 2.0 Co-Simulation FMU as a value
+federate. Install its Python bindings with `uv sync --extra helics`. The
+`FmuFederate` API takes explicit FMU-variable-to-HELICS-key mappings and
+synchronizes the FMU communication step with HELICS time grants:
+
+```python
+from polaris.cosim import FmuFederate
+
+producer = FmuFederate(
+    "producer.fmu",
+    "producer",
+    outputs={"y": "producer.y"},
+    step_size=0.05,
+    broker="local-broker",
+)
+```
+
+The broker and other federates are application-owned; a small two-FMU example is
+provided in `scripts/helics_two_fmu.py`:
+
+```powershell
+uv run --extra helics python scripts\helics_two_fmu.py
+```
+
+It connects the producer's `y` publication to the consumer's `u` input and writes
+both results, plus producer/consumer/coupling plots, under `scripts/output/`. Both
+federates must run concurrently because HELICS time grants synchronize their
+execution. Source-only Rumoca FMUs are compiled locally and therefore require a C
+compiler.
+
 ## Interactive dashboard
 
 Install the optional Dash dependency with `uv sync --extra dashboard`. An

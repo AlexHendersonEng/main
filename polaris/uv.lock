@@ -500,6 +500,24 @@ wheels = [
 ]
 
 [[package]]
+name = "helics"
+version = "3.6.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cffi" },
+    { name = "click" },
+    { name = "strip-hints" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/28/14/9303306b15eeae6221154fd98df9a4bc6dbaa8fa76ff7202f1d237323fbe/helics-3.6.1.tar.gz", hash = "sha256:b954a695251b9986c5ae508ae68e75330017d3d60685ce8b4566ab00e06cece3", size = 19563009, upload-time = "2025-02-28T08:42:21.33Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/f5/77c33b2c58be220e734e8e5c3dae41797a6bc3401996fa577e2c88559272/helics-3.6.1-py2.py3-none-macosx_10_9_universal2.macosx_10_9_x86_64.macosx_11_0_arm64.macosx_11_0_universal2.whl", hash = "sha256:f8f8ab688c18efc53436749053dacd3f993cc8aecf2223e1438eea84916366bd", size = 47696009, upload-time = "2025-02-28T08:41:58.792Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/09/3778b81cb3f71924e6fef21ea27d99ed33d5f8ba3eba02114f23bf56ce69/helics-3.6.1-py2.py3-none-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4aa15a4808e3ec8843b9adef78d2d67cb6f4d86fc87b019a516ac939863aa700", size = 28511308, upload-time = "2025-02-28T08:42:04.893Z" },
+    { url = "https://files.pythonhosted.org/packages/74/76/72691f3bf2a4c2287931b86d8c27741c513b1b54c4ea7904861dce0951e1/helics-3.6.1-py2.py3-none-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:6c50804d4ceac8ea6aa0a06ba252ff4ca2ee2d9bef3716e506818ad39d5d8826", size = 23444302, upload-time = "2025-02-28T08:42:09.863Z" },
+    { url = "https://files.pythonhosted.org/packages/07/f5/bafef697b1a2f65684da43b7a39d184a93946b552bbe9c4b8bf3a65a248b/helics-3.6.1-py2.py3-none-win32.whl", hash = "sha256:666e4faed0a172052f234e4f0b2c13bba6d1caaef9a6fd14b10f34937f528f43", size = 10928293, upload-time = "2025-02-28T08:42:14.656Z" },
+    { url = "https://files.pythonhosted.org/packages/70/ff/084318a23769cc70dcfe3e50019d55582d5c0de80555485bc9f973cd73a3/helics-3.6.1-py2.py3-none-win_amd64.whl", hash = "sha256:06c2a97e20d80d6528829c70d69eef802b21d2838c6cbc885ec4c986499c8d1f", size = 12408576, upload-time = "2025-02-28T08:42:17.997Z" },
+]
+
+[[package]]
 name = "idna"
 version = "3.20"
 source = { registry = "https://pypi.org/simple" }
@@ -1297,6 +1315,9 @@ dependencies = [
 dashboard = [
     { name = "dash" },
 ]
+helics = [
+    { name = "helics" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -1310,13 +1331,14 @@ dev = [
 requires-dist = [
     { name = "dash", marker = "extra == 'dashboard'" },
     { name = "fmpy" },
+    { name = "helics", marker = "extra == 'helics'" },
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "ompython" },
     { name = "pandas" },
     { name = "salib" },
 ]
-provides-extras = ["dashboard"]
+provides-extras = ["dashboard", "helics"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1719,6 +1741,18 @@ wheels = [
 ]
 
 [[package]]
+name = "strip-hints"
+version = "0.1.13"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wheel" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f2/af/17ec9e52446330f60752687c7bc6328a68cb1aefe940f6d919a282b6a720/strip_hints-0.1.13.tar.gz", hash = "sha256:1feaebde61269ba0dea1e7f093df7ff9d4df4980cce7e3c22ed6d86ae43dbd06", size = 30332, upload-time = "2025-02-21T01:33:20.307Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/43/93828236ade737789fc5a85cf2cdc363c4e2694a2afff9e7bb9e7590214e/strip_hints-0.1.13-py3-none-any.whl", hash = "sha256:7ba1b07a193b1cc843fd87f21072202404c25dbc42d3222ac32b2bce4b196c8a", size = 23259, upload-time = "2025-02-21T01:33:18.175Z" },
+]
+
+[[package]]
 name = "traitlets"
 version = "5.16.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1776,6 +1810,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a4/34/4dd12fc8bb7d61c91467ec3efe415ffa7d5456f799954b40c5bbaeae470e/werkzeug-3.1.9.tar.gz", hash = "sha256:55ca7c70a75689be937aa27f8ff4b018f06ff4838fc73045560bf0f5a1291060", size = 940188, upload-time = "2026-09-27T18:33:41.637Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a1/38/df03f564f43cec2684823f3cccae1a652ee7face1cbaa76fb223096e64d7/werkzeug-3.1.9-py3-none-any.whl", hash = "sha256:6392e50c78460ba618e5b21f08a71f59c99ce99cdc6cf6e3dd7e6ccca8754fab", size = 228700, upload-time = "2026-09-27T18:33:39.685Z" },
+]
+
+[[package]]
+name = "wheel"
+version = "0.48.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d0/20/50ed6bdf27dec98b568a8ae25dc599f35baa3d9709f9e83fd1edb56b9a90/wheel-0.48.0.tar.gz", hash = "sha256:94800765601e9171bf5d58d066e640662842bcedcbab982b2c90787a2c987322", size = 66471, upload-time = "2026-08-11T22:02:27.327Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2e/29/69cfbb602cd91690c55d38ba9fe53e6a7e76a6fa647bf38f19c138d25449/wheel-0.48.0-py3-none-any.whl", hash = "sha256:3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab", size = 33320, upload-time = "2026-08-11T22:02:26.1Z" },
 ]
 
 [[package]]
