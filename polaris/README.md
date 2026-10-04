@@ -1,5 +1,75 @@
 # Polaris
 
+Polaris is a Python library and CLI for running Modelica models through multiple
+compiler backends, exporting and running FMUs, and analysing model behaviour.
+
+## Installation
+
+Polaris requires Python 3.14 or newer. With `uv`, install the project and its
+development tools with:
+
+```powershell
+uv sync
+```
+
+Install optional browser-dashboard support when needed:
+
+```powershell
+uv sync --extra dashboard
+```
+
+Install OpenModelica (`omc`) and/or Rumoca separately to use those compiler
+backends. The CLI's `backends` command reports which registered compilers are
+available on the current machine.
+
+## Command-line use
+
+Commands can be run from an installed environment with `polaris ...`, or during
+development with `uv run polaris ...`. Model commands take a fully qualified
+class name and one or more Modelica source files.
+
+```powershell
+# Simulate, save a CSV, and choose recorded variables.
+uv run polaris simulate MassSpringDamper --file scripts\MassSpringDamper.mo `
+  --backend rumoca --stop 5 --step 0.01 --variable x --variable v `
+  --output scripts\output\mass_spring.csv
+
+# Export and inspect an FMU.
+uv run polaris fmu export MassSpringDamper scripts\output\MassSpringDamper.fmu `
+  --file scripts\MassSpringDamper.mo --backend rumoca
+uv run polaris fmu inspect scripts\output\MassSpringDamper.fmu
+uv run polaris fmu validate scripts\output\MassSpringDamper.fmu
+
+# Run an FMU and save the result.
+uv run polaris fmu run scripts\output\MassSpringDamper.fmu --stop 5 `
+  --step 0.01 --output scripts\output\mass_spring_fmu.csv
+
+# Compute a native Jacobian (Rumoca currently provides this capability).
+uv run polaris jacobian MassSpringDamper --file scripts\MassSpringDamper.mo `
+  --backend rumoca --at x=1 --at v=0
+
+# Local and global sensitivity analysis.
+uv run polaris sensitivity local MassSpringDamper --file scripts\MassSpringDamper.mo `
+  --backend rumoca --parameter k=20 --parameter c=0.5 --variable x --stop 5
+uv run polaris sensitivity global MassSpringDamper --file scripts\MassSpringDamper.mo `
+  --backend rumoca --bound k=10,40 --bound c=0.1,2 --output-variable x `
+  --method sobol --samples 32 --stop 5
+
+# Serve an FMU through the optional interactive dashboard.
+uv run polaris dashboard scripts\output\MassSpringDamper.fmu `
+  --control k=5,50 --control c=0,10 --variable x --variable v `
+  --force-fixed-parameters
+
+# See compiler versions and capabilities.
+uv run polaris backends
+```
+
+Simulation commands can repeat `--parameter NAME=VALUE`; global sensitivity
+commands use `--bound NAME=MIN,MAX`. The dashboard requires explicit slider
+bounds, binds to `127.0.0.1` by default, and requires `--force-fixed-parameters`
+to expose FMU parameters declared fixed (as OpenModelica commonly exports them).
+Use `uv run polaris COMMAND --help` for full command-specific options.
+
 ## Interactive dashboard
 
 Install the optional Dash dependency with `uv sync --extra dashboard`. An
