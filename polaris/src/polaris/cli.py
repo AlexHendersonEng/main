@@ -16,6 +16,7 @@ from polaris.backends import (
     get_backend,
     registered_backends,
 )
+from polaris.cosim import CoSimulation, benchmark_cosimulation, run_cosimulation
 from polaris.fmu import FmuError, inspect_fmu, validate_fmu
 from polaris.fmu_runtime import run_fmu
 from polaris.interactive import InteractiveSession, run_dashboard
@@ -140,6 +141,27 @@ def _parser() -> argparse.ArgumentParser:
     dashboard.add_argument("--force-fixed-parameters", action="store_true")
 
     commands.add_parser("backends", help="list registered and available compiler backends")
+
+    cosim = commands.add_parser("cosim", help="run or benchmark a HELICS co-simulation")
+    cosim_commands = cosim.add_subparsers(dest="cosim_command", required=True)
+    cosim_run = cosim_commands.add_parser("run", help="run a TOML-defined co-simulation")
+    cosim_run.add_argument("config", type=Path, help="Co-simulation TOML configuration")
+    cosim_run.add_argument("--workers", type=int, default=1, help="Worker processes (default: 1)")
+    cosim_run.add_argument(
+        "--output-dir", type=Path, required=True, help="Directory for per-federate result CSVs"
+    )
+
+    cosim_benchmark = cosim_commands.add_parser(
+        "benchmark", help="benchmark a TOML-defined co-simulation"
+    )
+    cosim_benchmark.add_argument("config", type=Path, help="Co-simulation TOML configuration")
+    cosim_benchmark.add_argument(
+        "--workers",
+        type=int,
+        action="append",
+        default=None,
+        help="Worker count to benchmark; may be repeated (default: 1 and 2)",
+    )
     return parser
 
 
@@ -358,6 +380,29 @@ def _dispatch(args: argparse.Namespace) -> int:
             )
         return 0
 
+    if args.command == "cosim":
+        config = CoSimulation.from_toml(args.config)
+        if args.cosim_command == "run":
+            if args.workers < 1:
+                raise ValueError("--workers must be at least 1")
+            results = run_cosimulation(config, workers=args.workers)
+            args.output_dir.mkdir(parents=True, exist_ok=True)
+            for index, (name, result) in enumerate(results.items()):
+                path = args.output_dir / f"federate-{index:03d}.csv"
+                result.save(path)
+                print(f"{name}: saved {len(result.time)} points to {path}")
+            return 0
+
+        worker_counts = args.workers if args.workers is not None else (1, 2)
+        measurements = benchmark_cosimulation(config, worker_counts=worker_counts)
+        print("workers  federates  elapsed (s)  throughput (instance-s/s)")
+        for measurement in measurements:
+            print(
+                f"{measurement.workers:7d}  {measurement.instances:9d}  "
+                f"{measurement.elapsed_seconds:11.3f}  {measurement.throughput:25.3f}"
+            )
+        return 0
+
     raise AssertionError(f"Unhandled command: {args.command}")
 
 
@@ -371,7 +416,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return _dispatch(args)
-    except (BackendError, FmuError, KeyError, OSError, RuntimeError, ValueError) as exc:
+    except (
+        BackendError,
+        FmuError,
+        ImportError,
+        KeyError,
+        OSError,
+        RuntimeError,
+        ValueError,
+    ) as exc:
         print(f"polaris: error: {exc}", file=sys.stderr)
         return 1
 

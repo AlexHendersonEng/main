@@ -162,6 +162,26 @@ The benchmark reports simulated instance-seconds per wall-clock second; use it t
 measure the workload on your machine rather than assuming that more processes improve
 throughput.
 
+### HELICS CLI and scalable example
+
+Run an existing TOML federation and save one CSV per federate, or benchmark multiple
+process counts:
+
+```powershell
+uv run --extra helics polaris cosim run federation.toml --workers 2 --output-dir results
+uv run --extra helics polaris cosim benchmark federation.toml --workers 1 --workers 2
+```
+
+The scalable example exports a `Decay` FMU, replicates it into a connected chain,
+writes a reusable `cosim.toml`, and saves per-federate CSVs and an overlay plot:
+
+```powershell
+uv run --extra helics python scripts\helics_scale.py --instances 4 --workers 2 --benchmark
+```
+
+Its generated TOML can also be run separately with `polaris cosim run`; outputs are
+written under `scripts/output/helics_scale/`.
+
 ## Interactive dashboard
 
 Install the optional Dash dependency with `uv sync --extra dashboard`. An

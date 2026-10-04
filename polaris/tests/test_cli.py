@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 from polaris.backends import Backend, Capability, Version, register_backend, unregister_backend
 from polaris.cli import main
+from polaris.cosim.scale import ScalingMeasurement
+from polaris.result import Result
 
 
 class CliBackend(Backend):
@@ -126,3 +129,56 @@ def test_invalid_parameter_is_reported(tmp_path, capsys, cli_backend):
     )
     assert status == 1
     assert "polaris: error:" in capsys.readouterr().err
+
+
+def test_cosim_run_saves_results(tmp_path, capsys, monkeypatch):
+    import polaris.cli as cli_module
+
+    config = tmp_path / "cosim.toml"
+    config.write_text(
+        """
+        stop_time = 1.0
+        [[federates]]
+        name = "plant_0"
+        fmu = "plant.fmu"
+        """,
+        encoding="utf-8",
+    )
+    result = Result(time=np.array([0.0, 1.0]), variables={"x": np.array([1.0, 0.5])})
+    monkeypatch.setattr(cli_module, "run_cosimulation", lambda config, workers: {"plant_0": result})
+
+    output_dir = tmp_path / "results"
+    status = main(["cosim", "run", str(config), "--workers", "2", "--output-dir", str(output_dir)])
+
+    assert status == 0
+    assert (output_dir / "federate-000.csv").is_file()
+    assert "plant_0: saved 2 points" in capsys.readouterr().out
+
+
+def test_cosim_benchmark_prints_measurements(tmp_path, capsys, monkeypatch):
+    import polaris.cli as cli_module
+
+    config = tmp_path / "cosim.toml"
+    config.write_text(
+        """
+        stop_time = 1.0
+        [[federates]]
+        name = "plant_0"
+        fmu = "plant.fmu"
+        """,
+        encoding="utf-8",
+    )
+    measurements = [
+        ScalingMeasurement(3, 1, 2.0, 6.0),
+        ScalingMeasurement(3, 2, 1.0, 6.0),
+    ]
+    monkeypatch.setattr(
+        cli_module, "benchmark_cosimulation", lambda config, worker_counts: measurements
+    )
+
+    status = main(["cosim", "benchmark", str(config), "--workers", "1", "--workers", "2"])
+
+    assert status == 0
+    output = capsys.readouterr().out
+    assert "throughput" in output
+    assert "2.000" in output
