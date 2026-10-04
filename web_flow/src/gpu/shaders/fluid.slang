@@ -134,7 +134,9 @@ void advectVelocityMain(uint3 threadId : SV_DispatchThreadID)
         loadSource(coordinate + int2(0, -1)) +
         loadSource(coordinate + int2(0, 1))
     );
-    float viscosityBlend = saturate(uniforms.timing.w * uniforms.timing.x);
+    float viscosityBlend = 1.0 - exp(
+        -uniforms.timing.w * uniforms.timing.x * 12.0
+    );
     advected = lerp(advected, neighborAverage, viscosityBlend);
     advected.xy *= uniforms.timing.y;
 

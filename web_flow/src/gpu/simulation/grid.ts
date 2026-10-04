@@ -5,10 +5,13 @@ export interface GridSize {
 
 const WORKGROUP_SIZE = 8
 
-function alignToWorkgroup(value: number): number {
+function alignToWorkgroup(value: number, maximum: number): number {
   return Math.max(
     WORKGROUP_SIZE,
-    Math.round(value / WORKGROUP_SIZE) * WORKGROUP_SIZE,
+    Math.min(
+      Math.floor(maximum / WORKGROUP_SIZE) * WORKGROUP_SIZE,
+      Math.round(value / WORKGROUP_SIZE) * WORKGROUP_SIZE,
+    ),
   )
 }
 
@@ -27,14 +30,20 @@ export function calculateGridSize(
 
   if (aspectRatio >= 1) {
     return {
-      width: alignToWorkgroup(longEdgeTarget),
-      height: alignToWorkgroup(longEdgeTarget / aspectRatio),
+      width: alignToWorkgroup(longEdgeTarget, maximumTextureDimension),
+      height: alignToWorkgroup(
+        longEdgeTarget / aspectRatio,
+        maximumTextureDimension,
+      ),
     }
   }
 
   return {
-    width: alignToWorkgroup(longEdgeTarget * aspectRatio),
-    height: alignToWorkgroup(longEdgeTarget),
+    width: alignToWorkgroup(
+      longEdgeTarget * aspectRatio,
+      maximumTextureDimension,
+    ),
+    height: alignToWorkgroup(longEdgeTarget, maximumTextureDimension),
   }
 }
 

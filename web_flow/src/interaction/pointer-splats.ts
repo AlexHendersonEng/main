@@ -7,6 +7,14 @@ interface PointerState {
   readonly time: number
 }
 
+export interface InterpolationInput {
+  readonly previousPosition: readonly [number, number]
+  readonly position: readonly [number, number]
+  readonly elapsedSeconds: number
+  readonly radius: number
+  readonly color: readonly [number, number, number]
+}
+
 export interface PointerSplatOptions {
   readonly brushRadius: () => number
   readonly palette: () => PaletteId
@@ -30,6 +38,44 @@ function clampVelocity(
   }
   const scale = MAXIMUM_POINTER_SPEED / speed
   return [x * scale, y * scale]
+}
+
+export function interpolateSplats({
+  previousPosition,
+  position,
+  elapsedSeconds,
+  radius,
+  color,
+}: InterpolationInput): FluidSplat[] {
+  const safeElapsedSeconds = Math.max(elapsedSeconds, 1 / 240)
+  const velocity = clampVelocity(
+    (position[0] - previousPosition[0]) / safeElapsedSeconds,
+    (position[1] - previousPosition[1]) / safeElapsedSeconds,
+  )
+  const distance = Math.hypot(
+    position[0] - previousPosition[0],
+    position[1] - previousPosition[1],
+  )
+  const steps = clamp(
+    Math.ceil(distance / Math.max(radius * 0.35, 0.005)),
+    1,
+    MAXIMUM_INTERPOLATION_STEPS,
+  )
+
+  return Array.from({ length: steps }, (_, index) => {
+    const fraction = (index + 1) / steps
+    return {
+      position: [
+        previousPosition[0] +
+          (position[0] - previousPosition[0]) * fraction,
+        previousPosition[1] +
+          (position[1] - previousPosition[1]) * fraction,
+      ],
+      velocity,
+      color,
+      radius,
+    }
+  })
 }
 
 export class PointerSplatController {
@@ -99,34 +145,17 @@ export class PointerSplatController {
         (sample.timeStamp - previous.time) / 1000,
         1 / 240,
       )
-      const velocity = clampVelocity(
-        (position[0] - previous.position[0]) / elapsedSeconds,
-        (position[1] - previous.position[1]) / elapsedSeconds,
-      )
-      const distance = Math.hypot(
-        position[0] - previous.position[0],
-        position[1] - previous.position[1],
-      )
       const radius = this.#options.brushRadius()
-      const steps = clamp(
-        Math.ceil(distance / Math.max(radius * 0.35, 0.005)),
-        1,
-        MAXIMUM_INTERPOLATION_STEPS,
-      )
+      const splats = interpolateSplats({
+        previousPosition: previous.position,
+        position,
+        elapsedSeconds,
+        radius,
+        color: this.#colorFor(event.pointerId, sample.timeStamp),
+      })
 
-      for (let step = 1; step <= steps; step += 1) {
-        const fraction = step / steps
-        this.#enqueue({
-          position: [
-            previous.position[0] +
-              (position[0] - previous.position[0]) * fraction,
-            previous.position[1] +
-              (position[1] - previous.position[1]) * fraction,
-          ],
-          velocity,
-          color: this.#colorFor(event.pointerId, sample.timeStamp),
-          radius,
-        })
+      for (const splat of splats) {
+        this.#enqueue(splat)
       }
 
       previous = {

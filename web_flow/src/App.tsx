@@ -243,6 +243,10 @@ function App() {
         <p className="eyebrow">WebGPU experiment</p>
         <h1>Chromaflow</h1>
         <p>Drag across the canvas to stir colour into the fluid.</p>
+        <div className="interaction-hint" aria-hidden="true">
+          <span />
+          Click or touch, then drag
+        </div>
       </header>
 
       {status === 'loading' && (
@@ -262,11 +266,20 @@ function App() {
         </div>
       )}
 
-      <aside
-        className="control-panel"
-        aria-label="Fluid controls"
-        data-disabled={status !== 'ready'}
-      >
+      {status !== 'error' && (
+        <aside
+          className="control-panel"
+          aria-label="Fluid controls"
+          data-disabled={status !== 'ready'}
+        >
+        <div className="panel-heading">
+          <div>
+            <span>Simulation</span>
+            <strong>{paused ? 'Paused' : 'Live controls'}</strong>
+          </div>
+          <i data-active={status === 'ready' && !paused} aria-hidden="true" />
+        </div>
+
         <div className="control-actions">
           <button
             type="button"
@@ -345,7 +358,12 @@ function App() {
           displayValue={String(settings.pressureIterations)}
           onChange={(value) => updateSetting('pressureIterations', value)}
         />
-      </aside>
+        </aside>
+      )}
+
+      <footer className="tech-label" aria-hidden="true">
+        Slang to WGSL / WebGPU compute
+      </footer>
     </main>
   )
 }
