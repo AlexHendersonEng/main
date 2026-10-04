@@ -70,9 +70,9 @@ use the `[-pi, pi]` range, and the Earth center is rejected because geodetic
 coordinates are undefined there.
 
 Compiler-executed validation models are shipped under
-`ModelicaAerospace.Tests`, grouped into `Common`, `Mathematics`, and
-`Coordinates` subpackages. Python tests run those package models and compare
-their outputs with independent numerical references.
+`ModelicaAerospace.Tests`, grouped by implementation domain. Python tests run
+those package models and compare their outputs with independent numerical
+references.
 
 ## Environment models
 
@@ -118,6 +118,31 @@ Initialization uses `PointMassInitialState`, `RigidBodyInitialState`, and
 `ModelicaAerospace.Tests.FlightDynamics` cover equilibrium, analytic
 constant-force and constant-moment motion, ballistic invariants, quaternion
 norm preservation, and the short-time flat/spherical limiting case.
+
+## Vehicle subsystems
+
+`ModelicaAerospace.Aerodynamics` scales `{CX, CY, CZ}` and `{Cl, Cm, Cn}`
+into body forces and moments, provides a linear stability-derivative model,
+and wraps `Modelica.Blocks.Tables.CombiTable1Ds` for aerodynamic tables with
+MSL linear interpolation and configurable extrapolation policies.
+
+`ModelicaAerospace.Propulsion` includes fixed-direction thrust, first-order
+engine spool and fuel flow, power-based propeller thrust, density/Mach-lapsed
+jet thrust, and fuel mass depletion. Propulsion remains separate from the
+flight-dynamics plants so different source models can be composed with the
+same force interface.
+
+`ModelicaAerospace.Actuators.Servo` combines lag, deadband, position limits,
+rate limits, bias input, and an explicit failure position. The sensor package
+provides ideal and deterministic configurable air-data, inertial, GPS-like,
+altimeter, attitude, scalar, and vector sensors. Bias, seeded broadband noise,
+quantization, and a composable first-order delay approximation are separate
+configuration surfaces.
+
+Packaged scenarios under `ModelicaAerospace.Tests.Subsystems` validate
+coefficient signs and table policies, spool and fuel-mass conservation,
+propeller and jet abstractions, actuator limits and failure behavior, ideal
+sensor exactness, and repeatable quantized sensor traces.
 
 ## Validation
 

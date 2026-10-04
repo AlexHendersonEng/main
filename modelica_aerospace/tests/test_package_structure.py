@@ -68,6 +68,7 @@ def test_compiler_validation_models_are_packaged_by_domain():
         "Environment",
         "FlightDynamics",
         "Mathematics",
+        "Subsystems",
     }
     assert not list((PROJECT_ROOT / "tests").rglob("*.mo"))
 
