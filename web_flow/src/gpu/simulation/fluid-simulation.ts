@@ -105,12 +105,20 @@ export class FluidSimulation {
         )
       },
     })
+    if (this.#destroyed) {
+      context.device.destroy()
+      return
+    }
 
     try {
       const pipelines = await createFluidPipelines(
         context.device,
         context.canvasFormat,
       )
+      if (this.#destroyed) {
+        context.device.destroy()
+        return
+      }
       const uniformBuffer = createGpuBuffer(
         context.device,
         'Simulation uniforms',

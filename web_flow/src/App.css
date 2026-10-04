@@ -1,0 +1,187 @@
+.fluid-app {
+  position: relative;
+  width: 100%;
+  min-height: 100svh;
+  overflow: hidden;
+  background: #01020a;
+  color: #f7f8ff;
+}
+
+.fluid-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.app-header {
+  position: absolute;
+  z-index: 1;
+  top: 2rem;
+  left: 2rem;
+  max-width: 28rem;
+  pointer-events: none;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 70%);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 7vw, 5.75rem);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+}
+
+.app-header p {
+  margin: 0.85rem 0 0;
+  color: rgb(235 239 255 / 78%);
+}
+
+.app-header .eyebrow {
+  margin: 0 0 0.55rem;
+  color: #8fffe1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.status-card,
+.control-panel {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgb(255 255 255 / 16%);
+  background: rgb(8 9 22 / 78%);
+  box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 36%);
+  backdrop-filter: blur(18px);
+}
+
+.status-card {
+  top: 50%;
+  left: 50%;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  transform: translate(-50%, -50%);
+}
+
+.error-card {
+  width: min(28rem, calc(100% - 2rem));
+  display: grid;
+  gap: 0.65rem;
+}
+
+.error-card strong {
+  color: #ffb4c4;
+}
+
+.error-card span,
+.error-card small {
+  color: rgb(235 239 255 / 76%);
+}
+
+.control-panel {
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: min(20rem, calc(100% - 3rem));
+  max-height: calc(100svh - 3rem);
+  padding: 1rem;
+  overflow-y: auto;
+  border-radius: 1.15rem;
+}
+
+.control-panel[data-disabled='true'] {
+  opacity: 0.55;
+}
+
+.control-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.control-actions button,
+.select-control select {
+  min-height: 2.4rem;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 0.7rem;
+  background: rgb(255 255 255 / 9%);
+  color: inherit;
+  font: inherit;
+}
+
+.control-actions button {
+  cursor: pointer;
+}
+
+.control-actions button:disabled {
+  cursor: wait;
+}
+
+.control-actions button:focus-visible,
+.select-control select:focus-visible,
+.range-control input:focus-visible {
+  outline: 2px solid #8fffe1;
+  outline-offset: 2px;
+}
+
+.select-control,
+.range-control {
+  display: grid;
+  gap: 0.42rem;
+  margin-top: 0.8rem;
+  color: rgb(243 245 255 / 82%);
+  font-size: 0.8rem;
+}
+
+.select-control span,
+.range-control span {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.select-control select {
+  padding: 0 0.7rem;
+}
+
+.select-control option {
+  background: #111225;
+}
+
+.range-control output {
+  color: #8fffe1;
+  font-variant-numeric: tabular-nums;
+}
+
+.range-control input {
+  width: 100%;
+  accent-color: #8fffe1;
+}
+
+@media (max-width: 700px) {
+  .app-header {
+    top: max(1.1rem, env(safe-area-inset-top));
+    left: 1.1rem;
+    right: 1.1rem;
+  }
+
+  .app-header h1 {
+    font-size: clamp(2.5rem, 15vw, 4.5rem);
+  }
+
+  .app-header > p:last-child {
+    max-width: 19rem;
+    font-size: 0.9rem;
+  }
+
+  .control-panel {
+    right: 0.75rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    width: min(17rem, calc(100% - 1.5rem));
+    max-height: 46svh;
+    padding: 0.8rem;
+  }
+}
