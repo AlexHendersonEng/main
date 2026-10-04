@@ -74,6 +74,28 @@ Compiler-executed validation models are shipped under
 `Coordinates` subpackages. Python tests run those package models and compare
 their outputs with independent numerical references.
 
+## Environment models
+
+`ModelicaAerospace.Environment.Atmosphere` implements the U.S. Standard
+Atmosphere 1976 from -5 km through 84.852 km geopotential altitude. Public
+altitude inputs are geometric altitude. The atmosphere state includes
+temperature, pressure, density, speed of sound, and Sutherland dynamic
+viscosity; companion blocks calculate Mach number and dynamic pressure.
+
+`ModelicaAerospace.Environment.Gravity` provides constant NED gravity,
+spherical inverse-square gravity, WGS-84 normal gravity with altitude
+correction, Earth-rotation transport velocity, and centrifugal acceleration.
+`ModelicaAerospace.Environment.Wind` provides steady NED wind, linear shear,
+one-minus-cosine gusts, and seeded low-altitude Dryden filters. The Dryden
+parameterization follows the MIL-F-8785C low-altitude formulas over 0 to
+304.8 m and uses deterministic broadband forcing so compiler runs are
+repeatable.
+
+Compiler-executed environment validation models are shipped under
+`ModelicaAerospace.Tests.Environment`; Python checks standard-atmosphere layer
+boundaries, gravity reference points, wind/gust behavior, seeded trace
+repeatability, RMS bounds and high-frequency attenuation.
+
 ## Validation
 
 Run structural tests:
