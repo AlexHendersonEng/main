@@ -62,7 +62,13 @@ def test_compiler_validation_models_are_packaged_by_domain():
         if path.is_dir() and (path / "package.mo").is_file()
     }
 
-    assert domains == {"Common", "Coordinates", "Environment", "Mathematics"}
+    assert domains == {
+        "Common",
+        "Coordinates",
+        "Environment",
+        "FlightDynamics",
+        "Mathematics",
+    }
     assert not list((PROJECT_ROOT / "tests").rglob("*.mo"))
 
 

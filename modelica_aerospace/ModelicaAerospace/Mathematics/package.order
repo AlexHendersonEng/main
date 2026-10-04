@@ -6,6 +6,7 @@ norm3
 normalizeVector3
 skewMatrix
 determinant3
+solveLinear3
 normalizeQuaternion
 quaternionConjugate
 quaternionMultiply

@@ -96,6 +96,29 @@ Compiler-executed environment validation models are shipped under
 boundaries, gravity reference points, wind/gust behavior, seeded trace
 repeatability, RMS bounds and high-frequency attenuation.
 
+## Flight dynamics
+
+`ModelicaAerospace.FlightDynamics.PointMass` provides Cartesian NED and
+flight-path-coordinate 3-DoF plants. Flight-path angle is positive upward and
+ground track is clockwise from north; velocity-axis forces are ordered
+`{tangential, upward-normal, right-lateral}`.
+
+`ModelicaAerospace.FlightDynamics.RigidBody.FlatEarth` integrates body-axis
+translation, Euler rigid-body rotation, and a scalar-first body-to-NED
+quaternion. `SphericalEarth` integrates ECEF position and velocity with central
+gravity, Coriolis and centrifugal acceleration, plus body-to-ECEF attitude.
+Applied forces and moments use the documented body axes. Both plants expose
+airspeed, angle of attack, sideslip, and quaternion norm; the flat model also
+exposes Euler angles, ground track, flight-path angle, and load factor, while
+the spherical model exposes geodetic position and orbital energy/momentum
+diagnostics.
+
+Initialization uses `PointMassInitialState`, `RigidBodyInitialState`, and
+`SphericalInitialState` records. Packaged scenarios under
+`ModelicaAerospace.Tests.FlightDynamics` cover equilibrium, analytic
+constant-force and constant-moment motion, ballistic invariants, quaternion
+norm preservation, and the short-time flat/spherical limiting case.
+
 ## Validation
 
 Run structural tests:

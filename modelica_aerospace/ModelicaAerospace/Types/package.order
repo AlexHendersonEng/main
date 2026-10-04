@@ -21,5 +21,8 @@ RotationalState
 MassProperties
 AtmosphereState
 WindState
+PointMassInitialState
+RigidBodyInitialState
+SphericalInitialState
 AerodynamicCoefficients
 PropulsionCommand
