@@ -10,7 +10,8 @@
     "prebuild": "npm run shaders",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "validate:solver": "node scripts/validate-projection.mjs"
   },
   "dependencies": {
     "react": "^19.2.8",

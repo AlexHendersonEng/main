@@ -20,6 +20,7 @@ npm run dev
 npm run build
 npm run lint
 npm run shaders
+npm run validate:solver
 ```
 
 `npm run dev` and `npm run build` compile every shader declared in `scripts/shader-manifest.mjs` before starting Vite. Generated WGSL is written to `src/gpu/shaders/generated/`, is ignored by Git, and must not be edited directly.
@@ -43,3 +44,5 @@ src/gpu/
 ```
 
 The React page will own controls and status UI. The WebGPU simulation engine will own GPU resources, compute/render pipelines, and the animation lifecycle.
+
+The solver uses ping-pong `rgba16float` textures for velocity, pressure, and dye. Each fixed timestep advects velocity, computes divergence, solves pressure with Jacobi iterations, subtracts the pressure gradient, and advects dye. `npm run validate:solver` runs a deterministic CPU reference check that confirms the projection step reduces RMS divergence.
