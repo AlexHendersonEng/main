@@ -22,7 +22,8 @@ needs_backend_and_compiler = pytest.mark.skipif(
 
 @pytest.mark.integration
 @needs_backend_and_compiler
-def test_run_cosimulation_connects_producer_to_consumer(tmp_path):
+@pytest.mark.parametrize("workers", [1, 2])
+def test_run_cosimulation_connects_producer_to_consumer(tmp_path, workers):
     """A two-federate config should drive the consumer the same way a manual run does."""
     backend = "rumoca" if shutil.which("rumoca") else "openmodelica"
     model = Model("Decay", [MODEL_FILE])
@@ -37,7 +38,7 @@ def test_run_cosimulation_connects_producer_to_consumer(tmp_path):
         connections=[{"source": "producer.y", "target": "consumer.u"}],
         stop_time=0.5,
     )
-    results = run_cosimulation(config)
+    results = run_cosimulation(config, workers=workers)
 
     assert set(results) == {"producer", "consumer"}
     producer_result = results["producer"]

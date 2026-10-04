@@ -128,6 +128,40 @@ A `CoSimulation` can also be loaded from a TOML file with `CoSimulation.from_tom
 (or from a dict with `CoSimulation.from_dict(data)`), using the same `federates`/
 `connections` shape, so federation layouts can live outside Python code.
 
+### Scaling replicated federates
+
+Use `replicate_federate` to create independently named copies of one FMU configuration.
+Per-instance parameter overrides are merged over the base parameter mapping. Pass the
+resulting specs into a `CoSimulation`; `run_cosimulation(..., workers=N)` partitions
+federates across up to `N` worker processes, with each process advancing its assigned
+federates concurrently. Process mode needs a network HELICS core (for example `zmq`);
+`inproc` cannot connect separate processes.
+
+```python
+from polaris.cosim import (
+    CoSimulation,
+    FederateSpec,
+    benchmark_cosimulation,
+    replicate_federate,
+    run_cosimulation,
+)
+
+instances = replicate_federate(
+    FederateSpec(name="plant", fmu="plant.fmu", parameters={"k": 1.0}),
+    4,
+    parameters=[{"k": value} for value in (0.8, 0.9, 1.1, 1.2)],
+)
+config = CoSimulation(federates=instances, stop_time=2.0)
+results = run_cosimulation(config, workers=2)
+
+# Runs the federation afresh at each worker count and reports throughput.
+measurements = benchmark_cosimulation(config, worker_counts=(1, 2, 4))
+```
+
+The benchmark reports simulated instance-seconds per wall-clock second; use it to
+measure the workload on your machine rather than assuming that more processes improve
+throughput.
+
 ## Interactive dashboard
 
 Install the optional Dash dependency with `uv sync --extra dashboard`. An
