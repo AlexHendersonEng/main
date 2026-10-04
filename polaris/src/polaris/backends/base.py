@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from enum import Flag, auto
 from pathlib import Path
 from typing import ClassVar
 
 from polaris.backends.versioning import Version
-from polaris.types import FmuKind, ModelSource, SimulationOptions
+from polaris.types import FmuKind, Jacobian, ModelSource, SimulationOptions
 
 
 class Capability(Flag):
@@ -19,6 +20,8 @@ class Capability(Flag):
     SIMULATE = auto()
     # Produce a distributable FMU.
     EXPORT_FMU = auto()
+    # Native (analytic or AD) Jacobians of the state derivatives at a point.
+    JACOBIAN = auto()
 
 
 class BackendError(Exception):
@@ -69,6 +72,18 @@ class Backend(ABC):
     ) -> Path:
         """Export an FMU, returning its path."""
         raise self._unsupported(Capability.EXPORT_FMU)
+
+    def jacobian(
+        self,
+        source: ModelSource,
+        work_dir: Path,
+        at: Mapping[str, float] | None = None,
+    ) -> Jacobian:
+        """Jacobian of the state derivatives at t=0.
+
+        ``at`` maps state names to values; states not listed keep their initial value.
+        """
+        raise self._unsupported(Capability.JACOBIAN)
 
     def _unsupported(self, capability: Capability) -> UnsupportedCapabilityError:
         return UnsupportedCapabilityError(

@@ -81,11 +81,10 @@ class _OMPythonRunner:
         try:
             for command in [f"cd({_quote(cwd)})", *commands]:
                 try:
-                    expr = command.rstrip(";")
-                    # getErrorString() returns "" when there are no errors, which OMPython's
-                    # parser rejects with a warning, so read its raw text instead.
-                    parsed = expr != "getErrorString()"
-                    out.append(str(session.sendExpression(expr, parsed=parsed)))
+                    # Raw text only: we judge success by output files, and OMPython's result
+                    # parser both warns on empty strings (getErrorString) and is not
+                    # thread-safe, which breaks concurrent runs (e.g. sensitivity sweeps).
+                    out.append(str(session.sendExpression(command.rstrip(";"), parsed=False)))
                 except Exception as exc:
                     raise BackendError(f"OpenModelica command failed: {command}\n{exc}") from exc
         finally:

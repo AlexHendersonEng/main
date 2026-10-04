@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 
+import numpy as np
+
 
 class FmuKind(StrEnum):
     """FMI interface type; values match the ``fmuType`` strings compilers expect."""
@@ -39,3 +41,20 @@ class SimulationOptions:
     solver: str | None = None
     # Variable names to record; empty means everything.
     outputs: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Jacobian:
+    """First derivatives of the state derivatives at one operating point.
+
+    ``state_matrix[i, j]`` is d(der(states[i])) / d(states[j]) and
+    ``parameter_matrix[i, j]`` is d(der(states[i])) / d(parameters[j]).
+    """
+
+    states: tuple[str, ...]
+    state_matrix: np.ndarray
+    parameters: tuple[str, ...]
+    parameter_matrix: np.ndarray
+    # Where the derivatives were evaluated.
+    time: float = 0.0
+    state_values: dict[str, float] = field(default_factory=dict)

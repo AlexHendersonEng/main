@@ -14,11 +14,15 @@ Known differences from OpenModelica (verified against rumoca 0.10.0):
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 from typing import ClassVar
+
+import numpy as np
 
 from polaris.backends.base import (
     Backend,
@@ -27,7 +31,7 @@ from polaris.backends.base import (
     Capability,
 )
 from polaris.backends.versioning import Version
-from polaris.types import FmuKind, ModelSource, SimulationOptions
+from polaris.types import FmuKind, Jacobian, ModelSource, SimulationOptions
 
 # Same rule as the OpenModelica backend: only plain Modelica paths may be spliced into
 # generated source text.
@@ -55,7 +59,9 @@ class RumocaBackend(Backend):
     """
 
     name: ClassVar[str] = "rumoca"
-    capabilities: ClassVar[Capability] = Capability.SIMULATE | Capability.EXPORT_FMU
+    capabilities: ClassVar[Capability] = (
+        Capability.SIMULATE | Capability.EXPORT_FMU | Capability.JACOBIAN
+    )
 
     def __init__(self, executable: str | None = None) -> None:
         self._executable = executable or shutil.which("rumoca")
@@ -116,6 +122,42 @@ class RumocaBackend(Backend):
         final = work_dir / f"{source.class_name}.fmu"
         shutil.copyfile(produced, final)
         return final
+
+    def jacobian(
+        self,
+        source: ModelSource,
+        work_dir: Path,
+        at: Mapping[str, float] | None = None,
+    ) -> Jacobian:
+        # ``--inspect jacobian`` differentiates the lowered model and prints dense matrices
+        # as JSON, so no simulation is needed.
+        work_dir.mkdir(parents=True, exist_ok=True)
+        entry, model, roots = self._entry(source, work_dir, with_parameters=True)
+        args = ["compile", str(entry), "-m", model, "--inspect", "jacobian", "--format", "json"]
+        args += self._root_args(roots)
+        if at:
+            point = ",".join(f"{_check_ident(k, 'state')}={float(v)!r}" for k, v in at.items())
+            args += ["--at", point]
+        proc = self._run(args, work_dir)
+        if proc.returncode != 0:
+            raise BackendError(f"rumoca jacobian failed:\n{proc.stdout}{proc.stderr}")
+        try:
+            data = json.loads(proc.stdout)
+        except json.JSONDecodeError as exc:
+            raise BackendError(f"Unreadable rumoca jacobian output:\n{proc.stdout}") from exc
+        # Each block carries its own ``error`` field (e.g. for models without states).
+        for block in ("state_jacobian", "parameter_jacobian"):
+            if data[block].get("error"):
+                raise BackendError(f"rumoca {block}: {data[block]['error']}")
+        state, param = data["state_jacobian"], data["parameter_jacobian"]
+        return Jacobian(
+            states=tuple(state["labels"]),
+            state_matrix=np.array(state["matrix"], dtype=float),
+            parameters=tuple(param["param_labels"]),
+            parameter_matrix=np.array(param["matrix"], dtype=float),
+            time=float(data["t"]),
+            state_values={s["name"]: float(s["value"]) for s in data["states"]},
+        )
 
     def _entry(
         self, source: ModelSource, work_dir: Path, *, with_parameters: bool
