@@ -102,6 +102,32 @@ federates must run concurrently because HELICS time grants synchronize their
 execution. Source-only Rumoca FMUs are compiled locally and therefore require a C
 compiler.
 
+### Declarative multi-federate co-simulations
+
+For federations with more than two FMUs, describe the federates and the
+publication-to-subscription links between them with `CoSimulation` instead of wiring
+each `FmuFederate` by hand. Connections reference variables as `"federate.variable"`;
+the runner derives each federate's HELICS input/output mappings from them, starts a
+broker sized for the federation, and runs every federate concurrently:
+
+```python
+from polaris.cosim import CoSimulation, FederateSpec, run_cosimulation
+
+config = CoSimulation(
+    federates=[
+        FederateSpec(name="producer", fmu="producer.fmu", step_size=0.05),
+        FederateSpec(name="consumer", fmu="consumer.fmu", step_size=0.05),
+    ],
+    connections=[{"source": "producer.y", "target": "consumer.u"}],
+    stop_time=2.0,
+)
+results = run_cosimulation(config)  # {"producer": Result, "consumer": Result}
+```
+
+A `CoSimulation` can also be loaded from a TOML file with `CoSimulation.from_toml(path)`
+(or from a dict with `CoSimulation.from_dict(data)`), using the same `federates`/
+`connections` shape, so federation layouts can live outside Python code.
+
 ## Interactive dashboard
 
 Install the optional Dash dependency with `uv sync --extra dashboard`. An

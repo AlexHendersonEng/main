@@ -81,8 +81,10 @@ class FmuFederate:
         self.start_time = start_time
         self.inputs = dict(inputs or {})
         self.outputs = dict(outputs or {})
-        if not self.outputs:
-            raise ValueError("At least one output mapping is required")
+        if not self.inputs and not self.outputs:
+            # A federate with neither is disconnected from the federation entirely;
+            # a pure sink (no outputs) or pure source (no inputs) is still valid.
+            raise ValueError("At least one input or output mapping is required")
         if len(set(self.inputs.values())) != len(self.inputs):
             raise ValueError("Each FMU input must use a unique HELICS subscription key")
         if len(set(self.outputs.values())) != len(self.outputs):
