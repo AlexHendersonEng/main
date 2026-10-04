@@ -50,7 +50,8 @@ def test_expected_public_namespaces_exist():
 def test_all_modelica_sources_are_inside_the_library_package():
     sources = set(PROJECT_ROOT.rglob("*.mo"))
     assert sources
-    assert all(PACKAGE_ROOT in path.parents or path == PACKAGE_ROOT for path in sources)
+    test_models = PROJECT_ROOT / "tests" / "modelica"
+    assert all(PACKAGE_ROOT in path.parents or test_models in path.parents for path in sources)
 
 
 def test_repository_metadata_files_exist():

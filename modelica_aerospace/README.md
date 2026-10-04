@@ -30,6 +30,23 @@ namespaces cover types, interfaces, mathematics, coordinates, environment
 models, flight dynamics, vehicle subsystems, guidance/navigation/control,
 utilities, and examples.
 
+## Public conventions
+
+- Public quantities use SI units. Angles are radians; degree display units are
+  metadata only.
+- Body axes are right-handed: x forward, y starboard, z down.
+- Local navigation axes are north, east, down (NED).
+- ECEF uses x through the equator and prime meridian, y through 90 degrees east,
+  and z through the north pole. ECI is aligned with ECEF at the model epoch.
+- Quaternions are scalar-first `{w, x, y, z}` and represent active rotations
+  from body coordinates to the named reference frame.
+- Body angular velocity is ordered `{p, q, r}` about body `{x, y, z}`.
+- Aerodynamic body-force coefficients are `{CX, CY, CZ}` and moment
+  coefficients are `{Cl, Cm, Cn}`.
+- Signal connectors are library-owned aliases of built-in Modelica types. This
+  avoids requiring compiler support for MSL connector classes while preserving
+  MSL as the library's only declared dependency.
+
 ## Validation
 
 Run structural tests:

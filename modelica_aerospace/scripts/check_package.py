@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 PACKAGE_NAME = "ModelicaAerospace"
@@ -22,6 +23,14 @@ def _declared_entries(package_dir: Path) -> set[str]:
         path.name
         for path in package_dir.iterdir()
         if path.is_dir() and (path / "package.mo").is_file()
+    )
+    package_source = (package_dir / "package.mo").read_text(encoding="utf-8")
+    entries.update(
+        re.findall(
+            r"^  constant\s+[A-Za-z_][A-Za-z0-9_.]*\s+([A-Za-z_][A-Za-z0-9_]*)",
+            package_source,
+            flags=re.MULTILINE,
+        )
     )
     return entries
 
