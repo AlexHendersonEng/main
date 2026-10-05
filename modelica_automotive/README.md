@@ -50,6 +50,19 @@ vehicle plants, tires, wheels, brakes, steering, suspension, aerodynamics,
 powertrain, drivers, sensors, controls, scenarios, utilities, examples, and
 packaged validation models.
 
+## Longitudinal dynamics
+
+`ModelicaAutomotive.VehicleDynamics.Longitudinal.Body` integrates forward
+position and speed from an externally supplied net tire force. It includes
+quadratic aerodynamic drag, smoothly regularized rolling resistance, and the
+gravity component on a positive-uphill road grade. Force-producing tire and
+powertrain models remain separate so they can be replaced independently.
+
+`ModelicaAutomotive.Road` provides locally constant heading, grade, bank,
+quadratic crown, elevation, and friction descriptions. `FourCornerRoad`
+evaluates the same surface at wheel contact points ordered front-left,
+front-right, rear-left, rear-right.
+
 ## Validation
 
 The fast required checks do not need a Modelica compiler:
