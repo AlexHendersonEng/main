@@ -4,21 +4,44 @@
 simulations from reusable, signal-oriented blocks. The library targets
 OpenModelica and Rumoca and depends only on the Modelica Standard Library.
 
-This checkpoint establishes the package hierarchy and compiler compatibility
-harness. Domain models and stable public interfaces will be added in later,
-reviewed checkpoints.
+## Installation
 
-## Python environment
-
-The structural checks and integration tests are managed as a standalone uv
-project. The environment installs `polaris` from a pinned commit of this
-repository so later Polaris changes cannot silently alter the validation
-environment:
+The library requires Modelica Standard Library 4.0.0 and targets OpenModelica
+and Rumoca. Install at least one compiler and confirm that `omc` or `rumoca` is
+on `PATH`. The Python validation environment is a standalone uv project:
 
 ```powershell
 Set-Location modelica_aerospace
-uv sync
+uv sync --locked
+uv run polaris backends
 ```
+
+The environment installs `polaris` from the commit pinned in both
+`pyproject.toml` and `uv.lock`, so later Polaris changes cannot silently alter
+validation.
+
+To expose the package to Modelica tools through `MODELICAPATH`, add the
+directory containing `ModelicaAerospace`:
+
+```powershell
+$env:MODELICAPATH = "$(Resolve-Path .);$env:MODELICAPATH"
+omc
+```
+
+Alternatively, pass `ModelicaAerospace\package.mo` explicitly. Polaris uses
+this approach:
+
+```powershell
+uv run polaris simulate ModelicaAerospace.Examples.BallisticTrajectory `
+  --file ModelicaAerospace\package.mo --library Modelica `
+  --backend openmodelica --stop 20 --step 0.1 `
+  --variable positionNED[1] --variable positionNED[3] `
+  --output ballistic.csv
+```
+
+Rumoca resolves sibling package classes from source roots. The checked-in
+Python harness supplies the package parent and ordered Modelica sources
+automatically through `library_model_files`.
 
 Update the pinned commit deliberately in `pyproject.toml`, then run `uv lock`
 and the full validation suite before accepting a newer Polaris revision.
@@ -46,6 +69,23 @@ utilities, and examples.
 - Signal connectors are library-owned aliases of built-in Modelica types. This
   avoids requiring compiler support for MSL connector classes while preserving
   MSL as the library's only declared dependency.
+
+## Validity and model fidelity
+
+- The atmosphere implements U.S. Standard Atmosphere 1976 from -5 km through
+  84.852 km geopotential altitude; inputs are geometric altitude.
+- The low-altitude Dryden model is valid from 0 through 304.8 m and requires
+  positive true airspeed.
+- WGS-84 geodetic conversion rejects the Earth center and defines longitude as
+  zero at the poles.
+- Flight-path coordinates require positive speed and are singular for vertical
+  flight. Flat-Earth models omit curvature and Earth rotation; use
+  `SphericalEarth` when those effects matter.
+- Aerodynamic derivatives, propulsion lapse laws, sensor errors, and examples
+  are deliberately low-order building blocks, not certified vehicle data.
+- Table aerodynamics and gain scheduling use MSL native table objects. Rumoca
+  0.10 does not lower that constructor, so their dedicated tests are
+  OpenModelica-only.
 
 ## Attitude mathematics
 
@@ -197,26 +237,52 @@ uv run pytest tests\test_examples.py
 
 ## Validation
 
-Run structural tests:
+The fast required checks do not need a Modelica compiler:
 
 ```powershell
 Set-Location modelica_aerospace
-uv run pytest tests\test_package_structure.py
-```
-
-Run the real-compiler package smoke tests:
-
-```powershell
-Set-Location modelica_aerospace
-uv run pytest -m integration tests\test_compiler_smoke.py
-```
-
-The integration tests skip an individual backend only when its compiler is not
-installed.
-
-Run the Python quality checks with:
-
-```powershell
+uv sync --locked
 uv run ruff check scripts tests
 uv run python scripts\check_package.py
+uv run pytest -m "not integration"
 ```
+
+Run all available compiler integrations locally:
+
+```powershell
+Set-Location modelica_aerospace
+uv run pytest -m integration
+```
+
+By default, a locally unavailable compiler is reported as a skip. For a strict
+backend run, set `MODELICA_AEROSPACE_BACKENDS`; a missing requested executable
+then fails rather than skips:
+
+```powershell
+$env:MODELICA_AEROSPACE_BACKENDS = "openmodelica"
+uv run pytest -m integration
+
+$env:MODELICA_AEROSPACE_BACKENDS = "rumoca"
+uv run pytest -m integration
+
+$env:MODELICA_AEROSPACE_BACKENDS = "openmodelica,rumoca"
+uv run pytest -m integration
+```
+
+Run the complete local quality gate with both compilers installed:
+
+```powershell
+Remove-Item Env:MODELICA_AEROSPACE_BACKENDS -ErrorAction SilentlyContinue
+uv run ruff check scripts tests
+uv run python scripts\check_package.py
+uv run pytest
+```
+
+`TRACEABILITY.md` maps every public executable class to its requirement,
+reference basis, and direct validation. A structural test fails when a new
+public function, block, or example is absent from that matrix.
+
+The `Modelica Aerospace` GitHub Actions workflow separates the compiler-free
+fast gate from strict OpenModelica and Rumoca integration jobs. The compiler
+jobs install and identify their requested backend before running tests, so a
+missing compiler cannot produce a skip-shaped success.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import tomllib
 
 from conftest import PACKAGE_ROOT, PROJECT_ROOT
@@ -75,9 +76,39 @@ def test_compiler_validation_models_are_packaged_by_domain():
 
 
 def test_repository_metadata_files_exist():
-    for name in (".gitignore", "README.md", "LICENSE", "pyproject.toml", "uv.lock"):
+    for name in (
+        ".gitignore",
+        "README.md",
+        "TRACEABILITY.md",
+        "LICENSE",
+        "pyproject.toml",
+        "uv.lock",
+    ):
         path = PROJECT_ROOT / name
         assert path.is_file() and path.stat().st_size > 0
+
+
+def test_every_public_executable_class_is_traceable():
+    traceability = (PROJECT_ROOT / "TRACEABILITY.md").read_text(encoding="utf-8")
+    declarations = re.compile(r"^(?:block|function|model)\s+([A-Za-z_][A-Za-z0-9_]*)", re.MULTILINE)
+    public_classes: set[str] = set()
+    for source in PACKAGE_ROOT.rglob("*.mo"):
+        relative = source.relative_to(PACKAGE_ROOT)
+        if relative.name == "package.mo" or relative.parts[0] == "Tests":
+            continue
+        match = declarations.search(source.read_text(encoding="utf-8"))
+        if match:
+            namespace = ".".join(relative.parts[:-1])
+            prefix = f"ModelicaAerospace.{namespace}" if namespace else "ModelicaAerospace"
+            public_classes.add(f"{prefix}.{match.group(1)}")
+
+    missing = sorted(name for name in public_classes if f"`{name}`" not in traceability)
+    assert not missing, f"public executable classes missing from TRACEABILITY.md: {missing}"
+
+
+def test_ci_workflow_exists():
+    workflow = PROJECT_ROOT.parent / ".github" / "workflows" / "modelica-aerospace.yml"
+    assert workflow.is_file() and workflow.stat().st_size > 0
 
 
 def test_python_tooling_is_managed_by_uv():

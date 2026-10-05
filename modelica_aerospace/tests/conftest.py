@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
@@ -12,6 +13,25 @@ PACKAGE_SOURCES = (
     PACKAGE_FILE,
     *sorted(path for path in PACKAGE_ROOT.rglob("*.mo") if path != PACKAGE_FILE),
 )
+BACKEND_EXECUTABLES = {"openmodelica": "omc", "rumoca": "rumoca"}
+
+
+def _requested_backends() -> tuple[str, ...]:
+    configured = os.environ.get("MODELICA_AEROSPACE_BACKENDS")
+    if configured is None:
+        return tuple(BACKEND_EXECUTABLES)
+    requested = tuple(name.strip() for name in configured.split(",") if name.strip())
+    invalid = sorted(set(requested) - set(BACKEND_EXECUTABLES))
+    if not requested or invalid:
+        raise pytest.UsageError(
+            "MODELICA_AEROSPACE_BACKENDS must contain openmodelica and/or rumoca; "
+            f"invalid={invalid}"
+        )
+    return requested
+
+
+REQUESTED_BACKENDS = _requested_backends()
+STRICT_BACKEND_SELECTION = "MODELICA_AEROSPACE_BACKENDS" in os.environ
 
 
 def library_model_files(backend: str) -> tuple[Path, ...]:
@@ -20,9 +40,14 @@ def library_model_files(backend: str) -> tuple[Path, ...]:
     return (PACKAGE_FILE,)
 
 
-@pytest.fixture(params=("openmodelica", "rumoca"))
+@pytest.fixture(params=REQUESTED_BACKENDS)
 def modelica_backend(request: pytest.FixtureRequest) -> str:
-    executable = {"openmodelica": "omc", "rumoca": "rumoca"}[request.param]
+    executable = BACKEND_EXECUTABLES[request.param]
     if shutil.which(executable) is None:
+        if STRICT_BACKEND_SELECTION:
+            pytest.fail(
+                f"required backend {request.param!r} is unavailable: "
+                f"{executable!r} was not found on PATH"
+            )
         pytest.skip(f"{executable} not installed")
     return str(request.param)
