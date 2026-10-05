@@ -173,6 +173,28 @@ Rumoca currently cannot lower the MSL native table constructor used by
 `GainSchedule`, so the combined MSL control scenario is OpenModelica-only;
 the aerospace-specific guidance and navigation scenarios run on both backends.
 
+## Integrated examples
+
+`ModelicaAerospace.Examples` contains bounded, runnable compositions that are
+regression-tested through Polaris on OpenModelica and Rumoca:
+
+| Example | Main parameters and expected behavior | Regression basis |
+| --- | --- | --- |
+| `AtmosphereGeodesy` | One-metre atmospheric ascent from 10 km at 45 degrees north, 93 degrees west | Independent U.S. Standard Atmosphere and WGS-84 formulas |
+| `BallisticTrajectory` | 50 m/s north and 100 m/s upward for 20 s under constant gravity | Closed-form position/velocity and conserved mechanical energy |
+| `LongitudinalAircraft` | 1200 kg, 16 m2 wing, 70 m/s trim at 1 km; throttle step at 2 s | Initial force balance and compact final-state baseline |
+| `SixDegreeOfFreedomAircraft` | 1000 kg, 80 m/s flat-Earth trim; 0.5 s aileron pulse | Rate damping, bounded airspeed, normalized quaternion, and final position |
+| `DrydenGustResponse` | 60 m/s at 100 m with seed 23 and 12 m/s reference wind | Deterministic response extrema and bounded turbulence components |
+| `WaypointFollowing` | 50 m/s toward `{1000, 500, 0}` NED with a 25 m acceptance radius | Initial geometry, closest approach, and acceptance-sphere entry |
+
+Each example declares an `experiment` annotation with a finite stop time,
+tolerance, and output interval. Run all example regressions with:
+
+```powershell
+Set-Location modelica_aerospace
+uv run pytest tests\test_examples.py
+```
+
 ## Validation
 
 Run structural tests:
