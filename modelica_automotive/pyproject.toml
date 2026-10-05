@@ -1,0 +1,31 @@
+[project]
+name = "modelica-automotive"
+version = "0.1.0"
+description = "Composable Modelica automotive vehicle-dynamics blocks"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.14"
+dependencies = [
+    "polaris",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.uv.sources]
+polaris = { git = "https://github.com/AlexHendersonEng/main.git", rev = "ccb9e096d9d070d19552abdaa2b7f3fefe161c87", subdirectory = "polaris" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: requires a real Modelica compiler on PATH"]
+
+[tool.ruff]
+line-length = 100
+src = ["scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
