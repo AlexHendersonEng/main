@@ -69,6 +69,7 @@ def test_compiler_validation_models_are_packaged_by_domain():
         "FlightDynamics",
         "Mathematics",
         "Subsystems",
+        "GuidanceNavigationControl",
     }
     assert not list((PROJECT_ROOT / "tests").rglob("*.mo"))
 

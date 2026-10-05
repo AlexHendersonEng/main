@@ -144,6 +144,35 @@ coefficient signs and table policies, spool and fuel-mass conservation,
 propeller and jet abstractions, actuator limits and failure behavior, ideal
 sensor exactness, and repeatable quantized sensor traces.
 
+## Guidance, navigation, and control
+
+`ModelicaAerospace.Guidance` provides NED waypoint line-of-sight commands,
+horizontal straight-line look-ahead guidance, and wrapped heading plus
+altitude and speed command errors. Heading and ground track are clockwise from
+north. Flight-path angle is positive upward, so an NED waypoint above the
+vehicle produces a positive command.
+
+`ModelicaAerospace.Navigation.KinematicOutputs` derives total speed, horizontal
+ground speed, ground track, and flight-path angle from NED velocity.
+`ComplementaryFilter` combines a propagated rate with an absolute measurement;
+its optional angular mode wraps correction errors and outputs to `[-pi, pi]`.
+
+`ModelicaAerospace.Control` reuses MSL rather than duplicating generic control
+algorithms. `LimitedPID` wraps `Modelica.Blocks.Continuous.LimPID`, including
+output saturation and anti-windup. `GainSchedule` wraps
+`Modelica.Blocks.Tables.CombiTable1Ds`; `ModeSelector` wraps the MSL logical
+switch; and `CommandLimiter` composes the MSL slew-rate and magnitude limiters.
+The gain-schedule points must be strictly increasing.
+
+Packaged scenarios under
+`ModelicaAerospace.Tests.GuidanceNavigationControl` cover coincident waypoints,
+heading wraparound, cross-track correction, kinematic signs, scalar and angular
+navigation fusion, gain interpolation and endpoint clamping, mode transitions,
+command limits, PID saturation, anti-windup recovery, and closed-loop response.
+Rumoca currently cannot lower the MSL native table constructor used by
+`GainSchedule`, so the combined MSL control scenario is OpenModelica-only;
+the aerospace-specific guidance and navigation scenarios run on both backends.
+
 ## Validation
 
 Run structural tests:
