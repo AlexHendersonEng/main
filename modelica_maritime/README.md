@@ -83,6 +83,39 @@ and linear depth profiles in NED coordinates. Horizontal current direction is
 the direction toward which the water flows, measured clockwise from north;
 vertical current is positive down.
 
+## Expanded maritime environment
+
+`ProfileWater` and `TabulatedCurrent` provide continuous piecewise-linear
+temperature, salinity, density, and NED-current profiles with endpoint
+clamping. Hydrostatic pressure integrates the piecewise-linear density profile
+exactly. The profile grid must contain at least two strictly increasing
+depths. MSL table objects remain preferred for general interpolation, but
+Rumoca 0.10 cannot lower their native table constructor; the small scalar
+clamped-ramp interpolation used here is the portable compatibility exception.
+
+`Environment.Wind` supplies steady and sinusoidally gusting deterministic wind
+in NED coordinates. Wind direction is the direction toward which the air
+moves, clockwise from north, and vertical velocity is positive down.
+
+`Environment.Waves` supplies deep-water Airy regular-wave kinematics and a
+finite-component deterministic irregular-wave realization. Spectrum choices
+are Pierson-Moskowitz from wind speed, JONSWAP from significant height, peak
+period, and peak enhancement, and Bretschneider from significant height and
+peak period. Each component uses `a_i = sqrt(2*S(f_i)*delta_f)`; the exposed
+zeroth moment is `sum(S(f_i)*delta_f)` and the realized significant height is
+`4*sqrt(m0)`. Directions can vary per component, and default phases are
+repeatable for a configurable integer seed. These are first-order deep-water
+models: finite-depth dispersion, breaking, second-order drift, diffraction,
+radiation memory, and vessel-generated waves are outside their validity.
+
+`Environment.Bathymetry` provides flat and planar-sloped seafloors with NED
+positive-down depth and positive altitude above the seafloor.
+`Environment.Loads.QuadraticMediumLoad` applies drag opposite explicitly
+supplied vehicle-minus-current or vehicle-minus-wind body velocity.
+`LinearWaveLoad` maps wave elevation and body-frame particle velocity to a
+first-order generalized load using user-supplied coefficients. Environment
+generation is intentionally separate from load application.
+
 ## Generic planar vessel dynamics
 
 `ModelicaMaritime.VesselDynamics.Generic.Planar3DOF` integrates surge, sway,
