@@ -105,6 +105,17 @@ def test_every_public_executable_class_is_traceable():
     assert not missing, f"public executable classes missing from TRACEABILITY.md: {missing}"
 
 
+def test_every_example_has_finite_experiment_and_documentation():
+    examples = PACKAGE_ROOT / "Examples"
+    for source in examples.glob("*.mo"):
+        if source.name == "package.mo":
+            continue
+        text = source.read_text(encoding="utf-8")
+        assert "experiment(" in text, f"{source.name} lacks an experiment annotation"
+        assert re.search(r"StopTime\s*=\s*[0-9]", text), f"{source.name} lacks a finite StopTime"
+        assert "Documentation(info=" in text, f"{source.name} lacks documentation"
+
+
 def test_python_tooling_is_managed_by_uv():
     config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert config["project"]["name"] == "modelica-maritime"

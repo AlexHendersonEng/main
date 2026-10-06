@@ -55,6 +55,10 @@ metadata are validated by `tests\test_package_structure.py`.
 | `ModelicaMaritime.Examples.SurfaceManeuvering` | Bounded generic vessel acceleration and turning in steady current | Integrated regression over generic 3-DoF dynamics | `tests\test_examples.py` |
 | `ModelicaMaritime.Examples.MMGTurningCircle` | Constant-rudder integrated MMG maneuver | Synthetic parameter-set turning-circle regression envelope | `tests\test_examples.py` |
 | `ModelicaMaritime.Examples.UnderwaterFreeDecay` | Stable underwater attitude and relative-speed decay | Integrated neutral-buoyancy hydrostatic and damping regression | `tests\test_examples.py` |
+| `ModelicaMaritime.Examples.SurfaceWaveResponse` | Fossen-style six-degree-of-freedom surface response to regular-wave excitation | Integrated deterministic Airy-wave/load regression envelope | `tests\test_examples.py` |
+| `ModelicaMaritime.Examples.UnderwaterDepthHeadingHold` | Closed-loop underwater depth, heading, and through-water speed hold | Integrated Fossen propulsion and limited-controller regression | `tests\test_examples.py` |
+| `ModelicaMaritime.Examples.UnderwaterWaypointBathymetry` | Underwater waypoint following at commanded altitude over sloped terrain | Integrated guidance, bathymetry, depth conversion, and Fossen regression | `tests\test_examples.py` |
+| `ModelicaMaritime.Examples.PropulsionFailureResponse` | Bounded degraded surface response after a propulsion failure | Twin-thruster allocation and explicit failure-mode regression | `tests\test_examples.py` |
 
 The structural test derives public executable classes from the Modelica source
 tree and fails if a future class is not named in this matrix.

@@ -2,3 +2,7 @@ PackageSmoke
 SurfaceManeuvering
 MMGTurningCircle
 UnderwaterFreeDecay
+SurfaceWaveResponse
+UnderwaterDepthHeadingHold
+UnderwaterWaypointBathymetry
+PropulsionFailureResponse

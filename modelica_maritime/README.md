@@ -5,9 +5,9 @@ and underwater-vehicle simulations from reusable, signal-oriented blocks. The
 library targets OpenModelica and Rumoca and depends only on the Modelica
 Standard Library.
 
-The initial scaffold establishes package, interface, validation, and tooling
-contracts. Dynamics, environment, propulsion, sensing, and guidance models are
-added incrementally at reviewed checkpoints.
+The library includes generic coefficient-based, MMG-style, and Fossen-style
+dynamics together with environment, propulsion, actuator, sensing,
+navigation, guidance, control, validation, and integrated example packages.
 
 ## Installation
 
@@ -141,9 +141,18 @@ is OpenModelica-only.
 
 ## Integrated examples
 
-`ModelicaMaritime.Examples.SurfaceManeuvering` accelerates a generic vessel,
-applies a finite yaw moment, and continues in steady current while exercising
-added inertia, Coriolis terms, water-relative damping, and planar kinematics.
+All examples have finite experiment annotations and direct regression tests.
+
+| Example | Capability exercised | Regression basis |
+| --- | --- | --- |
+| `PackageSmoke` | Independent package load and simulation | Constant analytic output on each requested compiler |
+| `SurfaceManeuvering` | Generic 3-DoF acceleration, turning, and current response | Bounded pose, velocity, yaw rate, and non-negative dissipation |
+| `MMGTurningCircle` | MMG hull/propeller/rudder turning maneuver | Heading excursion, horizontal extent, and bounded velocities |
+| `UnderwaterFreeDecay` | Fossen hydrostatic roll/pitch and relative-speed decay | Quaternion bound, decaying attitude/speed, and dissipative power |
+| `SurfaceWaveResponse` | Fossen 6-DoF regular-wave excitation | Wave amplitude, forward progress, quaternion bound, and bounded motion |
+| `UnderwaterDepthHeadingHold` | Closed-loop depth, heading, and surge hold | Final tracking errors and bounded translational/rotational rates |
+| `UnderwaterWaypointBathymetry` | Waypoint following at fixed altitude over slope | Waypoint distance, altitude/depth agreement, and quaternion bound |
+| `PropulsionFailureResponse` | Twin-thruster path response after one failure | Failure activation, forward progress, and bounded degraded motion |
 
 ## MMG-style maneuvering
 
@@ -313,3 +322,8 @@ uv run pytest -m integration
 
 `TRACEABILITY.md` maps every public executable class to its requirement,
 reference basis, and direct validation.
+
+The repository currently has no `.github\workflows` infrastructure, so this
+package does not add an unverified compiler-install workflow. The commands
+above are the authoritative local/CI gates; strict jobs should set
+`MODELICA_MARITIME_BACKENDS` to the compiler assigned to that job.
