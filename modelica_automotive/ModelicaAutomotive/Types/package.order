@@ -15,3 +15,6 @@ VehicleGeometry
 MassProperties
 VehicleInitialState
 RoadParameters
+LinearTireParameters
+FialaTireParameters
+MagicFormulaTireParameters

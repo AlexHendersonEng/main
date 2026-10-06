@@ -5,4 +5,5 @@ Vector3Output
 QuaternionOutput
 CornerInput
 CornerOutput
+PartialTire
 PartialVehicleDynamics

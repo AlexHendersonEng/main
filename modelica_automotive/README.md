@@ -63,6 +63,20 @@ quadratic crown, elevation, and friction descriptions. `FourCornerRoad`
 evaluates the same surface at wheel contact points ordered front-left,
 front-right, rear-left, rear-right.
 
+## Tires, wheels, and brakes
+
+`ModelicaAutomotive.Tires` provides regularized wheel-slip kinematics and
+linear, Fiala brush, and compact parameterized Magic Formula tire models.
+Positive slip ratio produces forward force and positive slip angle produces
+leftward force. Every model applies a combined friction-circle limit based on
+normal load and road friction.
+
+`ModelicaAutomotive.Wheels.RotationalDynamics` integrates wheel speed from hub,
+signed brake, and tire reaction torques. Brake models include ideal commanded
+torque, first-order actuation, clamp-force friction limiting, and an MSL
+table-mapped option. The mapped brake is validated only with OpenModelica
+because Rumoca 0.10 cannot lower the MSL native table constructor.
+
 ## Validation
 
 The fast required checks do not need a Modelica compiler:
