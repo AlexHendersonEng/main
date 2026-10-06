@@ -139,6 +139,23 @@ wheel traction control, saturated direct-yaw-moment stabilization, and
 regenerative/friction brake blending. All controllers use signal interfaces
 so they can be connected to reduced-order or full-body plants.
 
+## Scenarios and reference applications
+
+`ModelicaAutomotive.Scenarios` defines road-actor and path records, a smooth
+double-lane-change path, phased open-loop maneuver commands, integrated
+distance/tracking/yaw/control metrics, and explicit completion/failure
+criteria. Metric accumulation uses explicit integral states because Rumoca
+0.10 cannot resolve `Modelica.Blocks.Continuous.Integrator`; the equations
+retain the same standard continuous-integration behavior.
+
+The example suite covers acceleration and coastdown, steady and transient
+handling, swept steering, double-lane-change tracking, split-friction braking
+with ABS, a traction-controlled launch, stability-controlled turning, single-
+bump and rough-road ride, graded operation, and a closed-loop drive cycle with
+regenerative energy recovery. Examples expose consistent pose, wheel, force,
+suspension, command, energy, and scenario outputs for external plotting or
+animation.
+
 ## Validation
 
 The fast required checks do not need a Modelica compiler:

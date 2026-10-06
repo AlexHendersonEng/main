@@ -8,3 +8,9 @@ SuspensionBumpResponse
 FullBodyManeuver
 GradeShiftAcceleration
 RegenerativeBraking
+DoubleLaneChange
+SplitFrictionABS
+TractionControlledLaunch
+StabilityControlledTurn
+RoughRoadRide
+IntegratedDriveCycle

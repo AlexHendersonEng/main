@@ -72,6 +72,7 @@ def test_compiler_validation_models_are_packaged_by_domain():
         "Planar",
         "PowertrainAerodynamics",
         "DriversSensorsControl",
+        "Scenarios",
         "SuspensionRigidBody",
         "Tires",
         "WheelsBrakes",
