@@ -1,0 +1,75 @@
+{
+  "scenario_name": "Helios Sample Scenario",
+  "vehicles": [
+    {
+      "id": "aircraft_1",
+      "type": "Aircraft",
+      "model_path": "Models/aircraft_1.obj",
+      "trajectory_csv": "Trajectories/aircraft_1.csv",
+      "scale": 1.0,
+      "visible": true
+    },
+    {
+      "id": "truck_1",
+      "type": "GroundVehicle",
+      "model_path": "Models/truck_1.obj",
+      "trajectory_csv": "Trajectories/truck_1.csv",
+      "scale": 1.0,
+      "visible": true
+    },
+    {
+      "id": "boat_1",
+      "type": "Boat",
+      "model_path": "Models/boat_1.stl",
+      "trajectory_csv": "Trajectories/boat_1.csv",
+      "scale": 1.0,
+      "visible": true
+    },
+    {
+      "id": "sub_1",
+      "type": "UnderwaterVessel",
+      "model_path": "Models/sub_1.stl",
+      "trajectory_csv": "Trajectories/sub_1.csv",
+      "scale": 1.0,
+      "visible": true
+    }
+  ],
+  "cameras": [
+    {
+      "id": "chase_cam",
+      "attached_to": "aircraft_1",
+      "location": { "x": -800.0, "y": 0.0, "z": 200.0 },
+      "rotation": { "pitch": -5.0, "yaw": 0.0, "roll": 0.0 },
+      "fov": 90.0,
+      "export": {
+        "enabled": true,
+        "mode": "video",
+        "resolution_x": 1920,
+        "resolution_y": 1080,
+        "frame_rate": 30,
+        "output_directory": "Renders/chase_cam",
+        "output_name": "chase_cam"
+      }
+    },
+    {
+      "id": "world_overview",
+      "attached_to": "",
+      "location": { "x": 0.0, "y": 0.0, "z": 5000.0 },
+      "rotation": { "pitch": -90.0, "yaw": 0.0, "roll": 0.0 },
+      "fov": 60.0,
+      "export": {
+        "enabled": true,
+        "mode": "image_sequence",
+        "resolution_x": 1280,
+        "resolution_y": 720,
+        "frame_rate": 24,
+        "output_directory": "Renders/world_overview",
+        "output_name": "frame"
+      }
+    }
+  ],
+  "playback": {
+    "default_speed": 1.0,
+    "loop": false
+  }
+}
