@@ -6,3 +6,5 @@ bodyRatesToEuler321Rates
 rigidBodyKinematics321
 depthFromPositionNED
 altitudeAboveSeafloor
+quaternionBodyToNEDMatrix
+quaternionDerivativeBodyToNED

@@ -23,5 +23,6 @@ PlanarHydrodynamicProperties
 MMGHullCoefficients
 MMGPropellerProperties
 MMGRudderProperties
+FossenHydrodynamicProperties
 RigidBodyInitialState
 WaterState

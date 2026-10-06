@@ -64,3 +64,27 @@ def test_mmg_turning_circle_example_is_bounded(modelica_backend: str):
     assert np.max(np.abs(surge)) < 10
     assert np.max(np.abs(sway)) < 5
     assert np.max(np.abs(yaw_rate)) < 1
+
+
+def test_underwater_free_decay_example_is_bounded(modelica_backend: str):
+    model = Model(
+        "ModelicaMaritime.Examples.UnderwaterFreeDecay",
+        files=library_model_files(modelica_backend),
+        libraries=("Modelica",),
+    )
+    result = model.simulate(
+        SimulationOptions(stop_time=40, step_size=0.05),
+        backend=modelica_backend,
+    )
+
+    quaternion_norm = np.asarray(result["quaternionNorm"])
+    roll_component = np.asarray(result["quaternion[2]"])
+    pitch_component = np.asarray(result["quaternion[3]"])
+    relative_surge = np.asarray(result["velocityBody[1]"]) - 0.2
+    dissipation = np.asarray(result["dissipationPower"])
+
+    assert np.max(np.abs(quaternion_norm - 1)) < 2e-6
+    assert abs(roll_component[-1]) < abs(roll_component[0])
+    assert abs(pitch_component[-1]) < abs(pitch_component[0])
+    assert abs(relative_surge[-1]) < abs(relative_surge[0])
+    assert np.all(dissipation >= -1e-7)

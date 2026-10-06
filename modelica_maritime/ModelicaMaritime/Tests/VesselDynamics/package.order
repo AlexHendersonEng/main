@@ -7,3 +7,10 @@ MMGComponentValidation
 MMGStraightEquilibrium
 MMGZigZag
 MMGInvalidGeometry
+FossenComponentValidation
+FossenNeutralTrim
+FossenConstantForce
+FossenConstantMoment
+FossenBuoyancy
+FossenFreeDecay
+FossenInvalidMass

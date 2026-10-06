@@ -141,6 +141,45 @@ turn with synthetic validation coefficients. Packaged tests also cover
 straight-ahead equilibrium, independently calculated component loads, and a
 heading-triggered 10-degree/10-degree zig-zag maneuver.
 
+## Fossen-style six-degree-of-freedom dynamics
+
+`ModelicaMaritime.VesselDynamics.Fossen.SixDOF` implements the matrix equation
+
+`M*der(nu) + C_RB(nu)*nu + C_A(nu_r)*nu_r + D(nu_r)*nu_r + g(eta) = tau`
+
+using body velocity `nu = {u, v, w, p, q, r}` and a normalized scalar-first
+body-to-NED quaternion. The Modelica equation system solves the mass-matrix
+equation directly; the library does not recreate a general linear solver.
+Built-in array operations and `cross` are used for matrix and moment algebra.
+The implementation exposes damping and restoring loads as `-D*nu_r` and
+`-g(eta)` on the right-hand side.
+
+Rigid-body mass is assembled from mass, center of gravity, and inertia about
+the center of gravity. User-supplied added mass uses positive inertia values.
+Rigid-body Coriolis terms use ground-relative velocity; added-mass Coriolis
+and damping use water-relative velocity. Current acceleration and vorticity
+are omitted. Total inertia must be symmetric, positive, and strictly
+diagonally dominant; this portable sufficient condition is intentionally
+stricter than general positive definiteness.
+
+Hydrostatic load combines weight and fixed-displacement buoyancy at separate
+centers of gravity and buoyancy. It supports neutral, positive, and negative
+buoyancy and low-order roll/pitch restoring behavior. Displaced volume and
+buoyancy center are constant, so waterplane-area variation, emergence,
+flooding, and nonlinear surface-piercing hydrostatics are outside this model.
+
+MSL quaternion normalization and MultiBody frame utilities were evaluated for
+this implementation. OpenModelica supports them, but Rumoca 0.10 cannot
+resolve those nested MSL APIs. The small scalar-first quaternion conversion
+and derivative functions are therefore retained as portable equivalents; MSL
+functionality remains preferred wherever both target compilers can lower it.
+
+Packaged tests cover rigid-body matrix mechanics, Coriolis power neutrality,
+constant force and principal moment motion, neutral trim, positive and
+negative buoyancy, invalid inertia rejection, hydrostatic free decay, frame
+rotation, and quaternion normalization. `UnderwaterFreeDecay` is the
+integrated example.
+
 ## Validation
 
 Fast compiler-free checks:
