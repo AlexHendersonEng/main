@@ -213,6 +213,39 @@ negative buoyancy, invalid inertia rejection, hydrostatic free decay, frame
 rotation, and quaternion normalization. `UnderwaterFreeDecay` is the
 integrated example.
 
+## Propulsion, control surfaces, ballast, and actuators
+
+`Propulsion.OpenWaterPropeller` implements signed low-order open-water thrust
+and torque using quadratic `KT(J)` and `KQ(J)` curves, wake fraction, thrust
+deduction, and signed shaft rate. It exposes advance ratio, thrust, torque, and
+shaft power. `FirstOrderShaft` provides reversible motor/shaft lag with
+enable/failure shutdown. `FixedThruster` and `AzimuthThruster` map bounded
+forward/reverse commands into six-component body loads at configurable
+application points, so the same load can drive generic planar or Fossen
+six-degree-of-freedom vehicles.
+
+`Actuators.ControlSurface` is a low-order rudder, hydroplane, or fin model. It
+uses axial relative water speed, configurable normal direction, lift slope,
+profile drag, and application-point moments. It is intended for controls and
+system studies, not stall, cavitation, ventilation, or detailed propeller-race
+prediction.
+
+`Actuators.Servo` provides bias, deadband, position and asymmetric slew-rate
+limits, and a commanded failure position. MSL `Limiter` and
+`SlewRateLimiter` blocks were evaluated and work in OpenModelica, but Rumoca
+0.10 cannot resolve `Modelica.Blocks.Nonlinear`; `CommandLimiter` therefore
+retains the equivalent portable state equations as a compiler-compatibility
+exception.
+
+`BallastTank` integrates bounded ballast-water mass and exposes its positive-
+down weight load. `VariableBuoyancy` integrates displaced volume and exposes
+the incremental upward buoyancy load. These abstractions do not automatically
+modify vehicle inertia or center-of-gravity/buoyancy records; users must
+couple those effects separately when required. `EnergyStore` integrates
+bounded charge/discharge energy, enforces power and empty/full limits, and
+exposes state of charge. Detailed electrical networks remain outside the
+initial library.
+
 ## Validation
 
 Fast compiler-free checks:
