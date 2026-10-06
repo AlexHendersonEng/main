@@ -67,6 +67,7 @@ def test_compiler_validation_models_are_packaged_by_domain():
         "Common",
         "Coordinates",
         "Environment",
+        "GNC",
         "Subsystems",
         "VesselDynamics",
     }

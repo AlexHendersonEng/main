@@ -246,6 +246,45 @@ bounded charge/discharge energy, enforces power and empty/full limits, and
 exposes state of charge. Detailed electrical networks remain outside the
 initial library.
 
+## Sensors, navigation, guidance, and control
+
+`Sensors` provides ideal scalar/vector pass-through sensors and deterministic
+non-ideal primitives with configurable bias, bounded repeatable forcing, and
+quantization. Maritime assemblies cover NED position/ground velocity, wrapped
+heading, water-relative speed/log, acceleration and angular rate, pressure-
+derived positive-down depth, positive-up seafloor altitude, and horizontal
+range/bearing. The deterministic forcing is intended for repeatable system
+tests; it is not a stochastic sensor-error certification model.
+
+`Navigation` provides ground speed/track, depth rate, and sideslip outputs;
+NED/yaw dead reckoning; scalar complementary filtering with shortest-angle
+correction; and complementary position propagation/correction. These are
+basic low-order navigation building blocks, not a covariance-based INS,
+Kalman filter, SLAM, or geodetic navigation system.
+
+`Guidance` provides horizontal line-of-sight tracking, three-dimensional NED
+waypoints, depth/altitude command selection, current-compensated heading, and
+wrapped heading/depth/speed errors. Depth remains positive down, altitude is
+positive upward from the seafloor, and current compensation subtracts current
+from desired ground velocity to obtain the required through-water heading and
+speed.
+
+`Control.LimitedPID` implements proportional, integral, optional filtered
+derivative, output saturation, and back-calculation anti-windup.
+`HeadingController` applies shortest-angle heading error, while
+`PlanarAllocator` maps normalized surge/yaw demand to port/starboard thrusters
+and rudder. MSL `LimPID` was evaluated first and works in OpenModelica, but
+Rumoca 0.10 cannot resolve `Modelica.Blocks.Continuous` or its controller
+enumerations; the portable controller equations are retained for strict
+dual-backend support.
+
+Packaged closed-loop tests cover a twin-thruster surface vessel following an
+LOS path in cross-current and a Fossen six-degree-of-freedom underwater
+vehicle tracking heading, depth, speed, and a three-dimensional waypoint.
+The finite underwater mission latches waypoint capture and removes commanded
+yaw moment after entry so the vehicle settles rather than chasing an
+ill-defined bearing at zero range.
+
 ## Validation
 
 Fast compiler-free checks:
