@@ -18,3 +18,5 @@ RoadParameters
 LinearTireParameters
 FialaTireParameters
 MagicFormulaTireParameters
+PlanarInitialState
+PlanarVehicleParameters

@@ -104,3 +104,48 @@ def test_split_friction_braking_slows_vehicle_and_generates_yaw_moment(
     assert np.min(left_force) < np.min(right_force)
     assert np.max(np.abs(yaw_moment)) > 1000
     assert np.all(np.isfinite(speed))
+
+
+def test_bicycle_models_converge_at_low_speed(modelica_backend: str):
+    model = Model(
+        "ModelicaAutomotive.Examples.BicycleComparison",
+        files=library_model_files(modelica_backend),
+        libraries=("Modelica",),
+    )
+    result = model.simulate(
+        SimulationOptions(stop_time=8, step_size=0.02, tolerance=1e-9),
+        backend=modelica_backend,
+    )
+    assert result["kinematicYaw"][-1] > 0
+    assert result["dynamicYaw"][-1] > 0
+    assert result["dynamicYaw"][-1] == pytest.approx(
+        result["kinematicYaw"][-1],
+        rel=0.08,
+    )
+    kinematic_position = np.array(
+        [result["kinematicPosition[1]"][-1], result["kinematicPosition[2]"][-1]]
+    )
+    dynamic_position = np.array(
+        [result["dynamicPosition[1]"][-1], result["dynamicPosition[2]"][-1]]
+    )
+    assert np.linalg.norm(dynamic_position - kinematic_position) < 2
+
+
+def test_planar_maneuver_response_is_bounded(modelica_backend: str):
+    model = Model(
+        "ModelicaAutomotive.Examples.PlanarManeuver",
+        files=library_model_files(modelica_backend),
+        libraries=("Modelica",),
+    )
+    result = model.simulate(
+        SimulationOptions(stop_time=10, step_size=0.01, tolerance=1e-8),
+        backend=modelica_backend,
+    )
+    steering_angle = np.asarray(result["steeringAngle"])
+    yaw_rate = np.asarray(result["yawRate"])
+    lateral_acceleration = np.asarray(result["lateralAcceleration"])
+    assert np.max(np.abs(steering_angle)) <= 0.2
+    assert np.max(np.abs(yaw_rate)) < 0.5
+    assert np.max(np.abs(lateral_acceleration)) < 8
+    assert np.all(np.isfinite(result["position[1]"]))
+    assert np.all(np.isfinite(result["position[2]"]))

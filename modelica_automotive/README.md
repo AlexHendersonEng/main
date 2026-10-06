@@ -77,6 +77,19 @@ torque, first-order actuation, clamp-force friction limiting, and an MSL
 table-mapped option. The mapped brake is validated only with OpenModelica
 because Rumoca 0.10 cannot lower the MSL native table constructor.
 
+## Steering and planar handling
+
+`ModelicaAutomotive.Steering` provides steering-wheel ratio and limits,
+first-order rate-limited response, and Ackermann front-wheel geometry.
+`VehicleDynamics.Planar` includes rear-axle kinematic bicycle, linear-tire
+dynamic bicycle, and force-driven double-track plants.
+
+The double-track plant transforms each wheel's longitudinal and lateral force
+through its steering angle, integrates body translation and yaw, accepts
+separate external body loads, and reports quasi-static longitudinal and
+lateral corner-load transfer. Its load approximation is intended for
+maneuvers where all four reported normal loads remain positive.
+
 ## Validation
 
 The fast required checks do not need a Modelica compiler:
