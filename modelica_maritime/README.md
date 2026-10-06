@@ -83,6 +83,35 @@ and linear depth profiles in NED coordinates. Horizontal current direction is
 the direction toward which the water flows, measured clockwise from north;
 vertical current is positive down.
 
+## Generic planar vessel dynamics
+
+`ModelicaMaritime.VesselDynamics.Generic.Planar3DOF` integrates surge, sway,
+and yaw with a symmetric rigid-body matrix, a user-supplied symmetric added-
+inertia matrix, rigid-body and added-mass Coriolis terms, linear and quadratic
+water-relative damping, external body loads, and steady NED current input.
+Added-mass parameters use positive inertia values rather than the negative
+hydrodynamic-derivative sign convention.
+
+The model exposes ground-relative body velocity, current velocity in body
+axes, water-relative velocity, acceleration, kinetic energy, and dissipation
+power. Current is assumed spatially uniform and slowly varying; current
+acceleration and current vorticity are omitted from this first generic model.
+The total inertia matrix is required to be symmetric positive definite.
+
+`ModelicaMaritime.Hydrodynamics` supplies reusable planar rigid-body mass,
+Coriolis, damping, and coefficient-scaling models. Coefficient loads use
+`0.5*rho*U^2*L*T` for surge and sway and an additional reference length for
+yaw moment. `TablePlanarCoefficients` wraps the MSL `CombiTable1Ds` object for
+linear interpolation and configurable extrapolation. Rumoca 0.10 does not
+lower that MSL native table constructor, so the dedicated interpolation test
+is OpenModelica-only.
+
+## Integrated examples
+
+`ModelicaMaritime.Examples.SurfaceManeuvering` accelerates a generic vessel,
+applies a finite yaw moment, and continues in steady current while exercising
+added inertia, Coriolis terms, water-relative damping, and planar kinematics.
+
 ## Validation
 
 Fast compiler-free checks:

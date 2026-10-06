@@ -17,6 +17,8 @@ Quaternion
 GeneralizedVelocity
 GeneralizedForce
 MassProperties
+PlanarMassProperties
 PlanarInitialState
+PlanarHydrodynamicProperties
 RigidBodyInitialState
 WaterState
