@@ -6,6 +6,7 @@ import shutil
 import numpy as np
 import pytest
 from polaris import Model, SimulationOptions
+from polaris.backends.base import BackendError
 
 from conftest import library_model_files
 
@@ -111,3 +112,89 @@ def test_msl_coefficient_table_interpolation():
         _array(result, "interpolated", 3),
         np.array([-0.1, -0.25, -0.05]) + np.array([1e-8, 2e-8, 3e-8]),
     )
+
+
+def test_mmg_component_loads_match_independent_formulas(modelica_backend: str):
+    result = _vessel_model(modelica_backend, "MMGComponentValidation").simulate(
+        SimulationOptions(stop_time=0.1, step_size=0.1),
+        backend=modelica_backend,
+    )
+    relative = np.array([5.0, 1.0, 0.1])
+    speed = math.hypot(relative[0], relative[1])
+    sway = relative[1] / speed
+    yaw_rate = relative[2] * 10 / speed
+    scale = 0.5 * 1000 * 10 * 2 * speed**2
+    expected_hull = np.array(
+        [
+            scale * (-0.02 - 0.1 * sway**2),
+            scale * (-0.5 * sway + 0.1 * yaw_rate),
+            scale * 10 * (0.08 * sway - 0.15 * yaw_rate),
+        ]
+    )
+
+    axial_velocity = (1 - 0.2) * relative[0]
+    advance_ratio = axial_velocity / (2 * 2)
+    thrust_coefficient = 0.25 - 0.1 * advance_ratio - 0.05 * advance_ratio**2
+    thrust = 1000 * 2**2 * 2**4 * thrust_coefficient
+    expected_propeller = np.array([0.9 * thrust, 0, 0])
+
+    rudder_inflow = np.array([1.1 * axial_velocity, 0.8 * (1 - 4 * 0.1)])
+    angle_of_attack = 0.15 - math.atan2(rudder_inflow[1], rudder_inflow[0])
+    normal_force = (
+        0.5 * 1000 * 3 * float(np.dot(rudder_inflow, rudder_inflow)) * 6 * math.sin(angle_of_attack)
+    )
+    expected_rudder = np.array(
+        [
+            -0.9 * normal_force * math.sin(0.15),
+            -1.2 * normal_force * math.cos(0.15),
+            -(-4 + 0.2 * -1) * normal_force * math.cos(0.15),
+        ]
+    )
+
+    np.testing.assert_allclose(_array(result, "hullLoad", 3), expected_hull, rtol=1e-12)
+    np.testing.assert_allclose(
+        _array(result, "propellerLoad", 3),
+        expected_propeller,
+        rtol=1e-12,
+    )
+    np.testing.assert_allclose(_array(result, "rudderLoad", 3), expected_rudder, rtol=1e-12)
+    np.testing.assert_allclose(
+        _array(result, "totalLoad", 3),
+        expected_hull + expected_propeller + expected_rudder,
+        rtol=1e-12,
+    )
+    np.testing.assert_allclose(_array(result, "componentSumError", 3), 0, atol=1e-10)
+    assert result["advanceRatio"][-1] == pytest.approx(advance_ratio)
+    assert result["thrustCoefficient"][-1] == pytest.approx(thrust_coefficient)
+    assert result["rudderAngleOfAttack"][-1] == pytest.approx(angle_of_attack)
+
+
+def test_mmg_straight_ahead_equilibrium(modelica_backend: str):
+    result = _vessel_model(modelica_backend, "MMGStraightEquilibrium").simulate(
+        SimulationOptions(stop_time=10, step_size=0.1),
+        backend=modelica_backend,
+    )
+    np.testing.assert_allclose(_array(result, "mmgLoadBody", 3), [0, 0, 0], atol=1e-8)
+    np.testing.assert_allclose(_array(result, "accelerationBody", 3), [0, 0, 0], atol=1e-10)
+    np.testing.assert_allclose(_array(result, "velocityBody", 3), [5, 0, 0], atol=1e-10)
+    np.testing.assert_allclose(_array(result, "poseNED", 3), [50, 0, 0], atol=2e-5)
+
+
+def test_mmg_zig_zag_reverses_heading(modelica_backend: str):
+    result = _vessel_model(modelica_backend, "MMGZigZag").simulate(
+        SimulationOptions(stop_time=120, step_size=0.1),
+        backend=modelica_backend,
+    )
+    heading = np.asarray(result["poseNED[3]"])
+    assert np.max(heading) >= math.radians(10)
+    assert np.min(heading) <= -math.radians(10)
+    assert result["maneuverPhase"][-1] == pytest.approx(3)
+    assert np.all(np.isfinite(_array(result, "velocityBody", 3, final=False)))
+
+
+def test_mmg_invalid_geometry_fails_explicitly(modelica_backend: str):
+    with pytest.raises((BackendError, ValueError)):
+        _vessel_model(modelica_backend, "MMGInvalidGeometry").simulate(
+            SimulationOptions(stop_time=0.1, step_size=0.1),
+            backend=modelica_backend,
+        )

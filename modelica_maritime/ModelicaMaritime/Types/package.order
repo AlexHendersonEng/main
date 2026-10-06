@@ -20,5 +20,8 @@ MassProperties
 PlanarMassProperties
 PlanarInitialState
 PlanarHydrodynamicProperties
+MMGHullCoefficients
+MMGPropellerProperties
+MMGRudderProperties
 RigidBodyInitialState
 WaterState

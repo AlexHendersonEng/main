@@ -3,3 +3,7 @@ CoefficientTableValidation
 PlanarConstantForce
 PlanarCurrentAdvection
 PlanarDamping
+MMGComponentValidation
+MMGStraightEquilibrium
+MMGZigZag
+MMGInvalidGeometry

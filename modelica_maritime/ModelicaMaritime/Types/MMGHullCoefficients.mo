@@ -1,0 +1,20 @@
+within ModelicaMaritime.Types;
+record MMGHullCoefficients "Nondimensional polynomial MMG hull coefficients"
+  Real surgeConstant = 0 "X0";
+  Real surgeSway2 = 0 "Xvv";
+  Real surgeSwayYaw = 0 "Xvr";
+  Real surgeYaw2 = 0 "Xrr";
+  Real surgeSway4 = 0 "Xvvvv";
+  Real swayLinear = 0 "Yv";
+  Real swayYaw = 0 "Yr";
+  Real swayCubic = 0 "Yvvv";
+  Real sway2Yaw = 0 "Yvvr";
+  Real swayYaw2 = 0 "Yvrr";
+  Real swayYawRateCubic = 0 "Yrrr";
+  Real yawSway = 0 "Nv";
+  Real yawRate = 0 "Nr";
+  Real yawSwayCubic = 0 "Nvvv";
+  Real yawSway2Rate = 0 "Nvvr";
+  Real yawSwayRate2 = 0 "Nvrr";
+  Real yawRateCubic = 0 "Nrrr";
+end MMGHullCoefficients;

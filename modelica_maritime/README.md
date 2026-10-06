@@ -112,6 +112,35 @@ is OpenModelica-only.
 applies a finite yaw moment, and continues in steady current while exercising
 added inertia, Coriolis terms, water-relative damping, and planar kinematics.
 
+## MMG-style maneuvering
+
+`ModelicaMaritime.VesselDynamics.MMG` separates hull, propeller, and rudder
+loads so each component can be parameterized and validated independently.
+`HullLoads` uses normalized sway velocity and yaw rate with configurable
+low-order polynomial coefficients. `PropellerLoads` uses an open-water
+quadratic thrust-coefficient polynomial with explicit nominal wake fraction
+and thrust deduction. `RudderLoads` uses axial propeller inflow, local lateral
+inflow, normal-force slope, steering-resistance deduction, and hull-rudder
+interaction coefficients.
+
+`MMGLoads` exposes every component load and their exact sum.
+`MMG.Planar3DOF` composes those loads over the generic planar plant; its
+inherited `generalizedForceBody` input represents additional external loads.
+The supplied parameter records contain no hard-coded vessel data, allowing
+published benchmark or user vessel coefficients to be supplied explicitly.
+
+The implementation is a low-order MMG-style engineering abstraction. Wake
+fraction is presently constant, propeller thrust uses a quadratic `KT(J)`
+curve, rudder inflow uses configurable axial and lateral scale factors, and
+shallow-water, bank, drift-dependent wake, and detailed propeller-rudder race
+corrections are not yet included. Parameter assertions reject non-positive
+geometry and invalid interaction fractions.
+
+`ModelicaMaritime.Examples.MMGTurningCircle` demonstrates a constant-rudder
+turn with synthetic validation coefficients. Packaged tests also cover
+straight-ahead equilibrium, independently calculated component loads, and a
+heading-triggered 10-degree/10-degree zig-zag maneuver.
+
 ## Validation
 
 Fast compiler-free checks:
