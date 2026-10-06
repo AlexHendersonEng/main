@@ -64,6 +64,8 @@ def validate_package(package_root: Path) -> list[str]:
     expected_uses = 'uses(Modelica(version="4.0.0"))'
     if compact_source.count("uses(") != 1 or expected_uses not in compact_source:
         errors.append(f'{PACKAGE_NAME}: expected exactly uses(Modelica(version="4.0.0"))')
+    if 'version="0.1.0"' not in compact_source:
+        errors.append(f'{PACKAGE_NAME}: expected version="0.1.0"')
     return errors
 
 

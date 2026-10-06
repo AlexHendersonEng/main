@@ -5,10 +5,10 @@ vehicle-dynamics simulations from reusable, signal-oriented blocks. The
 library targets OpenModelica and Rumoca and depends only on Modelica Standard
 Library 4.0.0.
 
-The library is under active development. The initial scaffold defines stable
-physical conventions, common interfaces, validation tooling, and a compiler
-smoke model; longitudinal, planar, tire, suspension, powertrain, control, and
-scenario models will be added in reviewed phases.
+Version 0.1.0 provides the initial reviewed vehicle-dynamics library:
+longitudinal, planar, and full-body plants; tire, wheel, brake, steering,
+suspension, aerodynamic, and powertrain components; drivers, sensors, chassis
+controls, scenarios, examples, and dual-backend validation.
 
 ## Installation
 
@@ -44,12 +44,38 @@ omc
   rearRight}`.
 - Signal connectors are library-owned aliases of built-in Modelica types.
 
-## Package layout
+## Package map
 
-The public namespaces cover shared types and interfaces, mathematics, roads,
-vehicle plants, tires, wheels, brakes, steering, suspension, aerodynamics,
-powertrain, drivers, sensors, controls, scenarios, utilities, examples, and
-packaged validation models.
+| Namespace | Purpose |
+| --- | --- |
+| `Types`, `Interfaces`, `Constants` | SI aliases, records, signal connectors, ordering, and physical constants |
+| `Mathematics`, `Utilities` | Automotive transforms, quaternion operations, regularization, aggregation, and assertions |
+| `Road` | Local grade, bank, crown, friction, height, normal, and four-corner queries |
+| `VehicleDynamics` | Longitudinal, bicycle, double-track, and quaternion full-body plants |
+| `Tires`, `Wheels`, `Brakes` | Slip kinematics, tire families, wheel rotation, and brake abstractions |
+| `Steering`, `Suspension`, `Aerodynamics` | Steering geometry/dynamics, four-corner ride, and body aerodynamic loads |
+| `Powertrain` | Machines, storage, gearing, differentials, torque distribution, shafts, and clutch behavior |
+| `Drivers`, `Sensors`, `Control` | Speed/path drivers, deterministic sensing, ABS, TCS, yaw control, and brake blending |
+| `Scenarios`, `Examples` | Reusable maneuvers, metrics, termination criteria, and bounded applications |
+| `Tests` | Compiler-executed validation models grouped by physical domain |
+
+## Model selection
+
+- Use `VehicleDynamics.Longitudinal.Body` for acceleration, coastdown,
+  gradeability, braking, and drive-cycle studies without lateral motion.
+- Use `Planar.KinematicBicycle` for low-speed path geometry where tire-force
+  transients are not required.
+- Use `Planar.DynamicBicycle` for small-angle linear handling and controller
+  development.
+- Use `Planar.DoubleTrack` for individual wheel forces, steering angles,
+  yaw moments, and quasi-static corner loads.
+- Use `RigidBody.FullBody` with external tire and suspension loads when
+  three-dimensional translation and attitude are required.
+- Start with `LinearTire`; use `FialaTire` for brush saturation or
+  `MagicFormulaTire` for compact user-parameterized empirical behavior.
+- Use ideal components for architecture studies, first-order components for
+  actuator transients, and mapped components only when table data and the
+  selected compiler support MSL native tables.
 
 ## Longitudinal dynamics
 
@@ -155,6 +181,57 @@ bump and rough-road ride, graded operation, and a closed-loop drive cycle with
 regenerative energy recovery. Examples expose consistent pose, wheel, force,
 suspension, command, energy, and scenario outputs for external plotting or
 animation.
+
+## Validity limits and unsupported workflows
+
+- This is an engineering simulation library, not a certified vehicle dataset
+  or production-control implementation. Default parameters are illustrative.
+- The compact Magic Formula model is not a complete Pacejka implementation;
+  users must supply coefficients appropriate to their operating range.
+- Slip calculations use documented low-speed regularization. Results near
+  standstill should be interpreted as solver-robust limits rather than tire
+  test-rig fidelity.
+- The dynamic bicycle assumes small angles and linear cornering stiffness.
+  The double-track corner-load approximation is valid only while all reported
+  normal loads remain positive.
+- Suspension models use reduced sprung-body coordinates and do not include
+  detailed unsprung mass, bushings, compliance kinematics, or structural
+  flexibility.
+- `RigidBody.FullBody` uses a flat world frame and expects externally
+  assembled tire, suspension, aerodynamic, and propulsion loads.
+- Road models are local analytic surfaces, not mesh terrain, collision, or
+  road-network simulators.
+- Sensors are ideal or deterministic; stochastic perception, camera, radar,
+  lidar, and environment models are outside version 0.1.0.
+- No GUI, photorealistic visualization, tire-data fitting, traffic engine,
+  thermal system, emissions certification, FMI packaging, or hard real-time
+  qualification is included.
+
+## MSL reuse and backend compatibility
+
+The package depends only on Modelica Standard Library 4.0.0. Generic MSL
+tables and types are reused when supported by both requested compilers;
+automotive-specific equations and portable equivalents are used when MSL
+does not provide the behavior or a backend cannot lower the MSL class.
+
+| Capability | OpenModelica | Rumoca 0.10 |
+| --- | --- | --- |
+| Core dynamics, tires, suspension, powertrain, controls, scenarios | Supported | Supported |
+| MSL `CombiTable1Ds` mapped brake, aerodynamic, and torque models | Supported | Not lowered; dedicated tests skip |
+| MSL `Blocks.Continuous.Integrator` in scenario metrics | Supported | Not resolved; equivalent explicit states used |
+| Strict requested-backend behavior | Missing executable fails | Missing executable fails |
+
+No continuous-integration workflow is included in this phase; validation is
+run locally until CI is separately requested.
+
+## Extension points
+
+The signal-oriented boundaries allow additional truck, trailer, two-wheeler,
+advanced tire-data, active-suspension, torque-vectoring, ADAS sensor,
+external visualization, FMI, and real-time packages to be added without
+changing the existing plant contracts. New executable classes must be added
+to `TRACEABILITY.md` and validated by packaged compiler models plus
+independent Python references.
 
 ## Validation
 

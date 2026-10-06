@@ -7,6 +7,8 @@ block ConstantRoad "Locally constant grade, bank, crown, and friction surface"
   ModelicaAutomotive.Interfaces.Vector3Output normalWorld;
   ModelicaAutomotive.Interfaces.RealOutput frictionCoefficient;
 equation
+  assert(road.frictionCoefficient >= 0,
+    "road frictionCoefficient must not be negative");
   height = ModelicaAutomotive.Road.roadHeight(
     longitudinalPosition,
     lateralPosition,

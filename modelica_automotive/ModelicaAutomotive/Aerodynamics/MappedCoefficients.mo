@@ -16,6 +16,12 @@ protected
     smoothness=Modelica.Blocks.Types.Smoothness.LinearSegments,
     extrapolation=Modelica.Blocks.Types.Extrapolation.HoldLastPoint);
 equation
+  assert(size(coefficientTable, 1) >= 2,
+    "coefficientTable must contain at least two rows");
+  for row in 2:size(coefficientTable, 1) loop
+    assert(coefficientTable[row, 1] > coefficientTable[row - 1, 1],
+      "coefficientTable speed values must be strictly increasing");
+  end for;
   table.u = speed;
   dragCoefficient = table.y[1];
   sideCoefficient = table.y[2];

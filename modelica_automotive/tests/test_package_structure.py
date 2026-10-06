@@ -111,6 +111,51 @@ def test_every_public_executable_class_is_traceable():
     assert not missing, f"public executable classes missing from TRACEABILITY.md: {missing}"
 
 
+def test_public_executable_classes_have_short_descriptions():
+    declarations = re.compile(
+        r"^(?:block|function|model)\s+[A-Za-z_][A-Za-z0-9_]*\s+\"[^\"]+\"",
+        re.MULTILINE,
+    )
+    missing = []
+    for source in PACKAGE_ROOT.rglob("*.mo"):
+        relative = source.relative_to(PACKAGE_ROOT)
+        if relative.name == "package.mo" or relative.parts[0] == "Tests":
+            continue
+        text = source.read_text(encoding="utf-8")
+        if re.search(r"^(?:block|function|model)\s+", text, re.MULTILINE):
+            if not declarations.search(text):
+                missing.append(str(relative))
+    assert not missing, f"public executable classes missing descriptions: {missing}"
+
+
+def test_examples_are_bounded_and_documented():
+    examples = PACKAGE_ROOT / "Examples"
+    for source in examples.glob("*.mo"):
+        if source.name == "package.mo":
+            continue
+        text = source.read_text(encoding="utf-8")
+        assert "experiment(" in text, f"{source.name} lacks an experiment annotation"
+        stop_time = re.search(r"StopTime\s*=\s*([0-9]+(?:\.[0-9]+)?)", text)
+        assert stop_time is not None, f"{source.name} lacks a numeric StopTime"
+        assert float(stop_time.group(1)) > 0, f"{source.name} has a non-positive StopTime"
+        assert "Documentation(info=" in text, f"{source.name} lacks documentation"
+
+
+def test_release_documentation_covers_usage_and_limits():
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    for heading in (
+        "## Package map",
+        "## Model selection",
+        "## Validity limits and unsupported workflows",
+        "## MSL reuse and backend compatibility",
+        "## Extension points",
+        "## Validation",
+    ):
+        assert heading in readme
+    assert "No continuous-integration workflow is included" in readme
+    assert "Modelica Standard Library 4.0.0" in readme
+
+
 def test_python_tooling_is_managed_by_uv():
     config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert config["project"]["name"] == "modelica-automotive"

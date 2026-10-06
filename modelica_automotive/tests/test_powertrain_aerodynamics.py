@@ -165,6 +165,9 @@ def test_powertrain_and_aerodynamics_declare_parameter_guards():
         PACKAGE_ROOT / "Powertrain" / "EnergyStorage.mo",
         PACKAGE_ROOT / "Powertrain" / "FixedRatio.mo",
         PACKAGE_ROOT / "Powertrain" / "FrictionClutch.mo",
+        PACKAGE_ROOT / "Powertrain" / "MappedTorqueSource.mo",
+        PACKAGE_ROOT / "Powertrain" / "TorqueDistributor.mo",
+        PACKAGE_ROOT / "Aerodynamics" / "MappedCoefficients.mo",
     ]
     text = "\n".join(path.read_text(encoding="utf-8") for path in sources)
     for guard in (
@@ -174,5 +177,8 @@ def test_powertrain_and_aerodynamics_declare_parameter_guards():
         "assert(capacity > 0,",
         "assert(ratio > 0,",
         "assert(slipRegularization > 0,",
+        "assert(size(torqueMap, 1) >= 2,",
+        "assert(frontFraction >= 0 and frontFraction <= 1,",
+        "assert(size(coefficientTable, 1) >= 2,",
     ):
         assert guard in text

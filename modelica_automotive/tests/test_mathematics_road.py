@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from polaris import Model, SimulationOptions
 
-from conftest import library_model_files
+from conftest import PACKAGE_ROOT, library_model_files
 
 pytestmark = pytest.mark.integration
 
@@ -54,3 +54,18 @@ def test_mathematics_and_road_queries_match_independent_references(
         [0, 0, 0],
         atol=1e-12,
     )
+
+
+def test_road_models_declare_singularity_and_friction_guards():
+    sources = [
+        PACKAGE_ROOT / "Road" / "roadHeight.mo",
+        PACKAGE_ROOT / "Road" / "ConstantRoad.mo",
+        PACKAGE_ROOT / "Road" / "FourCornerRoad.mo",
+    ]
+    text = "\n".join(path.read_text(encoding="utf-8") for path in sources)
+    for guard in (
+        "assert(abs(road.grade) < 1.5707963267948966,",
+        "assert(abs(road.bank) < 1.5707963267948966,",
+        "assert(road.frictionCoefficient >= 0,",
+    ):
+        assert guard in text
