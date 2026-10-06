@@ -20,3 +20,5 @@ FialaTireParameters
 MagicFormulaTireParameters
 PlanarInitialState
 PlanarVehicleParameters
+AerodynamicParameters
+MachineParameters

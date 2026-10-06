@@ -105,6 +105,22 @@ quaternion. Applied body forces exclude gravity; the plant adds world-down
 gravity internally. Suspension and tire forces remain external so full-body
 plants can be composed with different corner models.
 
+## Aerodynamics and powertrain
+
+`ModelicaAutomotive.Aerodynamics.BodyLoads` converts relative body-axis air
+velocity into drag, side force, lift, coefficient moments, and application-
+point moments. `MappedCoefficients` provides an optional MSL table interface;
+as with other MSL native table objects, its dedicated validation is
+OpenModelica-only.
+
+`ModelicaAutomotive.Powertrain` provides ideal and first-order torque sources,
+speed-dependent drive limits, regenerative power flow, energy storage,
+fixed/selectable gearing, open differentials, configurable front/rear torque
+distribution, driveshaft compliance, and a regularized friction clutch.
+Positive storage power discharges energy; negative storage power represents
+charging. Transmission efficiencies are applied in the current direction of
+power flow so losses remain non-negative.
+
 ## Validation
 
 The fast required checks do not need a Modelica compiler:

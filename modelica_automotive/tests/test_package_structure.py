@@ -70,6 +70,7 @@ def test_compiler_validation_models_are_packaged_by_domain():
         "Longitudinal",
         "MathematicsRoad",
         "Planar",
+        "PowertrainAerodynamics",
         "SuspensionRigidBody",
         "Tires",
         "WheelsBrakes",

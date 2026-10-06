@@ -193,3 +193,75 @@ def test_full_body_maneuver_is_bounded_and_normalized(modelica_backend: str):
     assert abs(angular_velocity[-1, 0]) < 2e-4
     assert result["positionWorld[1]"][-1] > 75
     assert np.all(np.isfinite(result["quaternion[1]"]))
+
+
+def test_grade_shift_acceleration_matches_independent_integration(
+    modelica_backend: str,
+):
+    model = Model(
+        "ModelicaAutomotive.Examples.GradeShiftAcceleration",
+        files=library_model_files(modelica_backend),
+        libraries=("Modelica",),
+    )
+    result = model.simulate(
+        SimulationOptions(stop_time=12, step_size=0.01, tolerance=1e-9),
+        backend=modelica_backend,
+    )
+    mass = 1500
+    wheel_radius = 0.32
+    drag_factor = 0.5 * 1.225 * 0.7
+    rolling_force = 0.012 * mass * 9.80665
+    grade_force = mass * 9.80665 * np.sin(0.05)
+
+    def dynamics(time: float, state: np.ndarray) -> list[float]:
+        position, speed, command_state, energy = state
+        del position, energy
+        ratio = 10 if time < 4 else 6
+        machine_speed = ratio * speed / wheel_radius
+        speed_factor = 1 if abs(machine_speed) <= 350 else max(0, (650 - abs(machine_speed)) / 300)
+        torque = 280 * command_state * speed_factor
+        drive_force = torque * ratio * 0.96 / wheel_radius
+        drag = drag_factor * speed * abs(speed)
+        rolling = rolling_force * speed / np.sqrt(speed * speed + 0.05**2)
+        acceleration = (drive_force - drag - rolling - grade_force) / mass
+        source_power = torque * machine_speed / 0.92
+        return [speed, acceleration, (1 - command_state) / 0.2, -source_power]
+
+    reference = solve_ivp(
+        dynamics,
+        (0, 12),
+        (0, 2, 0, 2e8 * 0.8),
+        rtol=1e-11,
+        atol=1e-12,
+        max_step=0.002,
+    )
+    expected_position, expected_speed, _, expected_energy = reference.y[:, -1]
+    assert result["position"][-1] == pytest.approx(expected_position, abs=0.02)
+    assert result["speed"][-1] == pytest.approx(expected_speed, abs=2e-3)
+    assert result["stateOfCharge"][-1] == pytest.approx(
+        expected_energy / 2e8,
+        abs=2e-6,
+    )
+    assert result["gear"][0] == pytest.approx(1)
+    assert result["gear"][-1] == pytest.approx(2)
+    assert result["speed"][-1] > result["speed"][0]
+
+
+def test_regenerative_braking_recovers_energy(modelica_backend: str):
+    model = Model(
+        "ModelicaAutomotive.Examples.RegenerativeBraking",
+        files=library_model_files(modelica_backend),
+        libraries=("Modelica",),
+    )
+    result = model.simulate(
+        SimulationOptions(stop_time=8, step_size=0.01, tolerance=1e-9),
+        backend=modelica_backend,
+    )
+    speed = np.asarray(result["speed"])
+    source_power = np.asarray(result["sourcePower"])
+    state_of_charge = np.asarray(result["stateOfCharge"])
+    assert speed[0] == pytest.approx(25)
+    assert 5 < speed[-1] < 25
+    assert np.min(source_power) < -10000
+    assert state_of_charge[-1] > state_of_charge[0]
+    assert result["machineTorque"][-1] < 0
