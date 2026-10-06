@@ -1,0 +1,8 @@
+rotationBodyToNED321
+bodyToNEDVector
+nedToBodyVector
+planarKinematics
+bodyRatesToEuler321Rates
+rigidBodyKinematics321
+depthFromPositionNED
+altitudeAboveSeafloor

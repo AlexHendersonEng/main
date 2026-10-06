@@ -55,6 +55,34 @@ guidance, navigation, control, utilities, examples, and packaged tests.
 - Signal connectors are library-owned aliases of built-in Modelica types to
   preserve portability while keeping MSL as the only declared dependency.
 
+## Mathematics and coordinates
+
+`ModelicaMaritime.Mathematics` provides the marine-specific cross-product
+matrix and heading wrapping. Heading wrapping uses the trigonometric principal
+angle because Rumoca does not currently resolve the equivalent MSL helper.
+
+`ModelicaMaritime.Coordinates` provides active 3-2-1 body-to-NED rotations,
+body/NED vector transformations, planar surge/sway/yaw kinematics, and 6-DoF
+Euler-angle kinematics. The Euler-rate transformation explicitly rejects
+pitch at plus or minus 90 degrees; quaternion-based vehicle dynamics will be
+used where global attitude coverage is required. Signed depth is the NED down
+coordinate, while altitude above seafloor is seafloor depth minus vehicle
+depth.
+
+## Basic ocean properties
+
+`ModelicaMaritime.Environment.Water` provides constant-property and linear
+temperature/salinity water columns. The linear density model is an engineering
+approximation around configurable reference conditions, not a TEOS-10
+implementation. Hydrostatic pressure requires non-negative depth and uses
+`p = p_surface + rho*g*depth` for constant density; `LinearWater` analytically
+integrates its linear density profile over depth.
+
+`ModelicaMaritime.Environment.Current` provides deterministic steady currents
+and linear depth profiles in NED coordinates. Horizontal current direction is
+the direction toward which the water flows, measured clockwise from north;
+vertical current is positive down.
+
 ## Validation
 
 Fast compiler-free checks:

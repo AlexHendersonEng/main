@@ -10,6 +10,7 @@ Temperature
 Torque
 Velocity
 Vector3
+Matrix3
 Vector6
 Matrix6
 Quaternion
