@@ -1,0 +1,31 @@
+within ModelicaAutomotive.Sensors;
+block IdealVehicleSensors "Expose ideal vehicle, wheel, suspension, and navigation signals"
+  ModelicaAutomotive.Interfaces.CornerInput wheelAngularVelocity(each unit="rad/s");
+  ModelicaAutomotive.Interfaces.Vector3Input accelerationBody(each unit="m/s2");
+  ModelicaAutomotive.Interfaces.Vector3Input angularVelocityBody(each unit="rad/s");
+  ModelicaAutomotive.Interfaces.RealInput steeringAngle(unit="rad");
+  ModelicaAutomotive.Interfaces.CornerInput suspensionTravel(each unit="m");
+  ModelicaAutomotive.Interfaces.Vector3Input positionWorld(each unit="m");
+  ModelicaAutomotive.Interfaces.Vector3Input velocityWorld(each unit="m/s");
+  ModelicaAutomotive.Interfaces.CornerInput slipRatio;
+  ModelicaAutomotive.Interfaces.CornerInput normalLoad(each unit="N");
+  ModelicaAutomotive.Interfaces.CornerOutput measuredWheelAngularVelocity(each unit="rad/s");
+  ModelicaAutomotive.Interfaces.Vector3Output measuredAccelerationBody(each unit="m/s2");
+  ModelicaAutomotive.Interfaces.Vector3Output measuredAngularVelocityBody(each unit="rad/s");
+  ModelicaAutomotive.Interfaces.RealOutput measuredSteeringAngle(unit="rad");
+  ModelicaAutomotive.Interfaces.CornerOutput measuredSuspensionTravel(each unit="m");
+  ModelicaAutomotive.Interfaces.Vector3Output measuredPositionWorld(each unit="m");
+  ModelicaAutomotive.Interfaces.Vector3Output measuredVelocityWorld(each unit="m/s");
+  ModelicaAutomotive.Interfaces.CornerOutput estimatedSlipRatio;
+  ModelicaAutomotive.Interfaces.CornerOutput estimatedNormalLoad(each unit="N");
+equation
+  measuredWheelAngularVelocity = wheelAngularVelocity;
+  measuredAccelerationBody = accelerationBody;
+  measuredAngularVelocityBody = angularVelocityBody;
+  measuredSteeringAngle = steeringAngle;
+  measuredSuspensionTravel = suspensionTravel;
+  measuredPositionWorld = positionWorld;
+  measuredVelocityWorld = velocityWorld;
+  estimatedSlipRatio = slipRatio;
+  estimatedNormalLoad = normalLoad;
+end IdealVehicleSensors;

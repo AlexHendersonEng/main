@@ -121,6 +121,24 @@ Positive storage power discharges energy; negative storage power represents
 charging. Transmission efficiencies are applied in the current direction of
 power flow so losses remain non-negative.
 
+## Drivers, sensors, and chassis controls
+
+`ModelicaAutomotive.Drivers` provides bounded open-loop maneuver commands, a
+PI speed controller with anti-windup and propulsion/brake splitting,
+look-ahead path steering, and manual/automated command arbitration with
+emergency-brake priority.
+
+`ModelicaAutomotive.Sensors.IdealVehicleSensors` exposes ideal wheel, body,
+steering, suspension, navigation, slip, and load signals.
+`DeterministicSensor` adds configurable gain, bias, first-order lag,
+deterministic sinusoidal error, and output limits without stochastic or
+backend-dependent behavior.
+
+`ModelicaAutomotive.Control` provides four-wheel anti-lock braking, driven-
+wheel traction control, saturated direct-yaw-moment stabilization, and
+regenerative/friction brake blending. All controllers use signal interfaces
+so they can be connected to reduced-order or full-body plants.
+
 ## Validation
 
 The fast required checks do not need a Modelica compiler:

@@ -1,0 +1,58 @@
+within ModelicaAutomotive.Tests.DriversSensorsControl;
+model ComponentValidation "Static validation of command, sensor, and blending blocks"
+  ModelicaAutomotive.Drivers.OpenLoopCommands openLoop(maximumSteeringAngle=0.5);
+  ModelicaAutomotive.Drivers.CommandArbitration arbitration(
+    maximumSteeringAngle=0.5);
+  ModelicaAutomotive.Sensors.IdealVehicleSensors sensors;
+  ModelicaAutomotive.Control.BrakeBlending blending(
+    maximumRegenerativeFraction=0.6);
+  output Real openPropulsion;
+  output Real openBrake;
+  output Real openSteering;
+  output Real propulsion;
+  output Real brake;
+  output Real steering;
+  output Real sensedWheelSpeed[4];
+  output Real sensedYawRate;
+  output Real regenerativeCommand;
+  output Real frictionCommand;
+  output Real achievedBrake;
+  output Real openSteeringIntegral(start=0, fixed=true);
+  output Real steeringIntegral(start=0, fixed=true);
+equation
+  openLoop.propulsionRequest = 1.2;
+  openLoop.brakeRequest = -0.2;
+  openLoop.steeringRequest = 0.8;
+  arbitration.manualPropulsion = 0.8;
+  arbitration.manualBrake = 0;
+  arbitration.manualSteering = -0.2;
+  arbitration.automatedPropulsion = 0.4;
+  arbitration.automatedBrake = 0.2;
+  arbitration.automatedSteering = 0.3;
+  arbitration.automationBlend = 0.5;
+  arbitration.emergencyBrake = 0.7;
+  sensors.wheelAngularVelocity = {10, 11, 12, 13};
+  sensors.accelerationBody = {1, 2, 3};
+  sensors.angularVelocityBody = {0.1, 0.2, 0.3};
+  sensors.steeringAngle = 0.15;
+  sensors.suspensionTravel = {0.01, 0.02, 0.03, 0.04};
+  sensors.positionWorld = {100, 20, 1};
+  sensors.velocityWorld = {15, 2, 0};
+  sensors.slipRatio = {0.01, 0.02, 0.03, 0.04};
+  sensors.normalLoad = {4000, 3900, 3500, 3400};
+  blending.brakeCommand = 0.8;
+  blending.regenerativeAvailability = 0.3;
+  openPropulsion = openLoop.propulsionCommand;
+  openBrake = openLoop.brakeCommand;
+  openSteering = openLoop.steeringCommand;
+  propulsion = arbitration.propulsionCommand;
+  brake = arbitration.brakeCommand;
+  steering = arbitration.steeringCommand;
+  sensedWheelSpeed = sensors.measuredWheelAngularVelocity;
+  sensedYawRate = sensors.measuredAngularVelocityBody[3];
+  regenerativeCommand = blending.regenerativeCommand;
+  frictionCommand = blending.frictionBrakeCommand;
+  achievedBrake = blending.achievedBrakeCommand;
+  der(openSteeringIntegral) = openLoop.steeringCommand;
+  der(steeringIntegral) = arbitration.steeringCommand;
+end ComponentValidation;
