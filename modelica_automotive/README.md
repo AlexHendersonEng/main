@@ -36,7 +36,8 @@ omc
   upward.
 - Yaw and steering angles are positive counter-clockwise when viewed from
   above.
-- Roll is positive left-side-up and pitch is positive nose-up.
+- Roll is positive left-side-up and pitch is positive nose-down, following
+  right-handed rotation about the positive body y-axis.
 - Quaternions are scalar-first `{w, x, y, z}` active body-to-world rotations.
 - Body angular velocity is ordered `{p, q, r}` about body `{x, y, z}`.
 - Wheel-corner arrays are ordered `{frontLeft, frontRight, rearLeft,
@@ -89,6 +90,20 @@ through its steering angle, integrates body translation and yaw, accepts
 separate external body loads, and reports quasi-static longitudinal and
 lateral corner-load transfer. Its load approximation is intended for
 maneuvers where all four reported normal loads remain positive.
+
+## Suspension and full-body dynamics
+
+`ModelicaAutomotive.Suspension` provides corner spring-dampers, progressive
+travel stops, anti-roll bars, unilateral vertical tire contact, a reduced
+heave/roll/pitch body, and a four-corner sprung-body assembly. Positive corner
+force is upward, positive roll raises the left side, and positive pitch lowers
+the nose.
+
+`VehicleDynamics.RigidBody.FullBody` integrates body-axis translation,
+angular velocity, world position, and a scalar-first active body-to-world
+quaternion. Applied body forces exclude gravity; the plant adds world-down
+gravity internally. Suspension and tire forces remain external so full-body
+plants can be composed with different corner models.
 
 ## Validation
 

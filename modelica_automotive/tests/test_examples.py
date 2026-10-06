@@ -149,3 +149,47 @@ def test_planar_maneuver_response_is_bounded(modelica_backend: str):
     assert np.max(np.abs(lateral_acceleration)) < 8
     assert np.all(np.isfinite(result["position[1]"]))
     assert np.all(np.isfinite(result["position[2]"]))
+
+
+def test_suspension_bump_response_is_damped_and_bounded(modelica_backend: str):
+    model = Model(
+        "ModelicaAutomotive.Examples.SuspensionBumpResponse",
+        files=library_model_files(modelica_backend),
+        libraries=("Modelica",),
+    )
+    result = model.simulate(
+        SimulationOptions(stop_time=5, step_size=0.005, tolerance=1e-8),
+        backend=modelica_backend,
+    )
+    heave = np.asarray(result["heave"])
+    roll = np.asarray(result["roll"])
+    pitch = np.asarray(result["pitch"])
+    assert np.max(np.abs(heave)) < 0.03
+    assert np.max(np.abs(roll)) < 0.03
+    assert np.max(np.abs(pitch)) < 0.02
+    assert abs(heave[-1]) < 5e-4
+    assert abs(roll[-1]) < 5e-4
+    assert abs(pitch[-1]) < 5e-4
+    for index in range(1, 5):
+        assert np.min(result[f"suspensionForce[{index}]"]) > 0
+
+
+def test_full_body_maneuver_is_bounded_and_normalized(modelica_backend: str):
+    model = Model(
+        "ModelicaAutomotive.Examples.FullBodyManeuver",
+        files=library_model_files(modelica_backend),
+        libraries=("Modelica",),
+    )
+    result = model.simulate(
+        SimulationOptions(stop_time=5, step_size=0.01, tolerance=1e-9),
+        backend=modelica_backend,
+    )
+    quaternion_norm = np.asarray(result["quaternionNorm"])
+    angular_velocity = np.vstack(
+        [result[f"angularVelocityBody[{index}]"] for index in range(1, 4)]
+    ).T
+    assert np.max(np.abs(quaternion_norm - 1)) < 4e-7
+    assert np.max(np.abs(angular_velocity[:, 0])) < 0.35
+    assert abs(angular_velocity[-1, 0]) < 2e-4
+    assert result["positionWorld[1]"][-1] > 75
+    assert np.all(np.isfinite(result["quaternion[1]"]))

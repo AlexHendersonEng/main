@@ -3,3 +3,9 @@ wrapAngle
 roadToWorldMatrix
 transformVector
 aggregateForcesMoments
+cross3
+quaternionMultiply
+normalizeQuaternion
+quaternionDerivative
+quaternionToDCM
+solveLinear3
