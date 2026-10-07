@@ -11,8 +11,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 
 from polaris.result import Result
 
@@ -32,7 +32,7 @@ def plot(
     separate: bool = False,
     title: str | None = None,
     save_to: str | Path | None = None,
-) -> Figure:
+) -> plt.Figure:
     """Plot variables against time.
 
     Args:
@@ -47,7 +47,7 @@ def plot(
     if not names:
         raise ValueError("Nothing to plot: the result has no variables")
 
-    fig = Figure(figsize=(8, 2.5 * len(names) if separate else 5), layout="constrained")
+    fig = plt.figure(figsize=(8, 2.5 * len(names) if separate else 5), layout="constrained")
     if separate:
         axes = fig.subplots(len(names), 1, sharex=True, squeeze=False)[:, 0]
         for ax, name in zip(axes, names, strict=True):
@@ -75,7 +75,7 @@ def compare(
     *,
     title: str | None = None,
     save_to: str | Path | None = None,
-) -> Figure:
+) -> plt.Figure:
     """Overlay one variable from several results, e.g. different backends or parameter values.
 
     Args:
@@ -85,7 +85,7 @@ def compare(
     """
     if not results:
         raise ValueError("compare() needs at least one result")
-    fig = Figure(figsize=(8, 5), layout="constrained")
+    fig = plt.figure(figsize=(8, 5), layout="constrained")
     ax: Axes = fig.subplots()
     for label, result in results.items():
         ax.plot(result.time, result[variable], label=label)
