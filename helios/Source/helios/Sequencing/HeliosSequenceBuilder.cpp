@@ -17,6 +17,7 @@
 #include "Vehicles/HeliosBoat.h"
 #include "Vehicles/HeliosUnderwaterVessel.h"
 #include "Trajectory/HeliosTrajectoryCsv.h"
+#include "Environment/HeliosEnvironmentBuilder.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogHeliosSequence, Log, All);
 
@@ -32,6 +33,8 @@ FHeliosBuiltScenario FHeliosSequenceBuilder::BuildFromScenario(
   if (!World) {
     return Result;
   }
+
+  FHeliosEnvironmentBuilder::Build(World, Scenario);
 
   // Keep generated bindings scoped to this runtime scenario, not a saved asset.
   ULevelSequence* Sequence =
@@ -123,6 +126,22 @@ ACameraActor* FHeliosSequenceBuilder::SpawnCamera(
   }
 
   Camera->GetCameraComponent()->SetFieldOfView(Config.FieldOfView);
+
+  if (Config.Location.Z < 0.f ||
+      (AttachParent &&
+       AttachParent->VehicleType == EHeliosVehicleType::UnderwaterVessel)) {
+    // Underwater cameras keep the blue, low-saturation grade in preview and
+    // MRQ.
+    FPostProcessSettings& PostProcess =
+        Camera->GetCameraComponent()->PostProcessSettings;
+    PostProcess.bOverride_ColorSaturation = true;
+    PostProcess.ColorSaturation = FVector4(0.65f, 0.85f, 1.1f, 1.f);
+    PostProcess.bOverride_ColorGain = true;
+    PostProcess.ColorGain = FVector4(0.7f, 0.9f, 1.1f, 1.f);
+    PostProcess.bOverride_VignetteIntensity = true;
+    PostProcess.VignetteIntensity = 0.25f;
+    Camera->GetCameraComponent()->PostProcessBlendWeight = 1.f;
+  }
 
   if (AttachParent) {
     // Plain actor attachment: the camera then moves with its parent for free,

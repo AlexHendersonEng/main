@@ -13,8 +13,8 @@ public class helios : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "ProceduralMeshComponent", "UMG" });
 
-		// Movie Render Queue plus Epic's built-in PNG and MP4 output modules.
-		PrivateDependencyModuleNames.AddRange(new string[] { "Json", "JsonUtilities", "LevelSequence", "MovieScene", "MovieSceneTracks", "MovieRenderPipelineCore", "MovieRenderPipelineRenderPasses", "MovieRenderPipelineMP4Encoder" });
+		// Water supplies the ocean surface material; MRQ provides built-in PNG/MP4 output.
+		PrivateDependencyModuleNames.AddRange(new string[] { "Json", "JsonUtilities", "LevelSequence", "MovieScene", "MovieSceneTracks", "MovieRenderPipelineCore", "MovieRenderPipelineRenderPasses", "MovieRenderPipelineMP4Encoder", "Water" });
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
