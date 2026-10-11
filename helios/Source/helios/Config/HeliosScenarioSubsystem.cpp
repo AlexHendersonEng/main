@@ -277,7 +277,9 @@ EHeliosCameraExportMode UHeliosScenarioSubsystem::ExportModeFromString(
   if (InString.Equals(TEXT("Video"), ESearchCase::IgnoreCase)) {
     return EHeliosCameraExportMode::Video;
   }
-  if (InString.Equals(TEXT("ImageSequence"), ESearchCase::IgnoreCase)) {
+  // Accept the sample JSON's snake_case spelling as well as the struct name.
+  if (InString.Equals(TEXT("ImageSequence"), ESearchCase::IgnoreCase) ||
+      InString.Equals(TEXT("image_sequence"), ESearchCase::IgnoreCase)) {
     return EHeliosCameraExportMode::ImageSequence;
   }
   return EHeliosCameraExportMode::None;
