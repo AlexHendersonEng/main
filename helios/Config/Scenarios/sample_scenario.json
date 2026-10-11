@@ -1,42 +1,42 @@
 {
-  "scenario_name": "Helios Sample Scenario",
+  "scenario_name": "Helios All-Domains Sample",
   "vehicles": [
     {
       "id": "aircraft_1",
       "type": "Aircraft",
-      "model_path": "Models/aircraft_1.obj",
-      "trajectory_csv": "Trajectories/aircraft_1.csv",
+      "model_path": "SampleAssets/Models/aircraft.obj",
+      "trajectory_csv": "SampleAssets/Trajectories/aircraft.csv",
       "scale": 1.0,
       "visible": true
     },
     {
       "id": "truck_1",
       "type": "GroundVehicle",
-      "model_path": "Models/truck_1.obj",
-      "trajectory_csv": "Trajectories/truck_1.csv",
+      "model_path": "SampleAssets/Models/truck.obj",
+      "trajectory_csv": "SampleAssets/Trajectories/truck.csv",
       "scale": 1.0,
       "visible": true
     },
     {
       "id": "boat_1",
       "type": "Boat",
-      "model_path": "Models/boat_1.stl",
-      "trajectory_csv": "Trajectories/boat_1.csv",
+      "model_path": "SampleAssets/Models/boat.stl",
+      "trajectory_csv": "SampleAssets/Trajectories/boat.csv",
       "scale": 1.0,
       "visible": true
     },
     {
       "id": "sub_1",
       "type": "UnderwaterVessel",
-      "model_path": "Models/sub_1.stl",
-      "trajectory_csv": "Trajectories/sub_1.csv",
+      "model_path": "SampleAssets/Models/submarine.stl",
+      "trajectory_csv": "SampleAssets/Trajectories/submarine.csv",
       "scale": 1.0,
       "visible": true
     }
   ],
   "cameras": [
     {
-      "id": "chase_cam",
+      "id": "aircraft_chase",
       "attached_to": "aircraft_1",
       "location": { "x": -800.0, "y": 0.0, "z": 200.0 },
       "rotation": { "pitch": -5.0, "yaw": 0.0, "roll": 0.0 },
@@ -44,26 +44,42 @@
       "export": {
         "enabled": true,
         "mode": "video",
-        "resolution_x": 1920,
-        "resolution_y": 1080,
-        "frame_rate": 30,
-        "output_directory": "Renders/chase_cam",
-        "output_name": "chase_cam"
+        "resolution_x": 640,
+        "resolution_y": 360,
+        "frame_rate": 24,
+        "output_directory": "Renders/aircraft_chase",
+        "output_name": "aircraft_chase"
       }
     },
     {
       "id": "world_overview",
       "attached_to": "",
-      "location": { "x": 0.0, "y": 0.0, "z": 5000.0 },
+      "location": { "x": 2000.0, "y": 0.0, "z": 5000.0 },
       "rotation": { "pitch": -90.0, "yaw": 0.0, "roll": 0.0 },
-      "fov": 60.0,
+      "fov": 70.0,
       "export": {
         "enabled": true,
         "mode": "image_sequence",
-        "resolution_x": 1280,
-        "resolution_y": 720,
-        "frame_rate": 24,
+        "resolution_x": 640,
+        "resolution_y": 360,
+        "frame_rate": 12,
         "output_directory": "Renders/world_overview",
+        "output_name": "frame"
+      }
+    },
+    {
+      "id": "underwater_chase",
+      "attached_to": "sub_1",
+      "location": { "x": -600.0, "y": 0.0, "z": 120.0 },
+      "rotation": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+      "fov": 80.0,
+      "export": {
+        "enabled": false,
+        "mode": "image_sequence",
+        "resolution_x": 640,
+        "resolution_y": 360,
+        "frame_rate": 12,
+        "output_directory": "Renders/underwater_chase",
         "output_name": "frame"
       }
     }
