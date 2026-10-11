@@ -8,6 +8,8 @@ model ProjectileMotion
   parameter Real navigationGain = 4 "True proportional navigation gain N'";
   parameter ModelicaAerospace.Types.Length captureRadius = 5
     "Range below which the target is considered intercepted";
+  parameter ModelicaAerospace.Types.Acceleration maxAcceleration = 300
+    "Interceptor actuator limit; also bounds the LOS-rate singularity as range to 0";
   parameter ModelicaAerospace.Types.Acceleration gravityNED[3] = {0, 0, 9.80665};
   parameter ModelicaAerospace.Types.PointMassInitialState targetInitialState(
     positionNED={0, 0, 0},
@@ -39,6 +41,8 @@ protected
   Real relativeVelocity[3];
   Real rangeSquared;
   Real losRate[3] "Line-of-sight angular velocity vector";
+  Real rawCommand[3] "Unsaturated proportional navigation command";
+  Real rawCommandMagnitude(unit="m/s2");
 equation
   // The target falls freely; only the interceptor is powered and guided.
   target.forceNED = {0, 0, 0};
@@ -55,8 +59,15 @@ equation
 
   // True proportional navigation: commanded acceleration is normal to the
   // interceptor's velocity, proportional to closing speed and LOS rotation.
-  commandedAcceleration =
+  rawCommand =
     navigationGain * ModelicaAerospace.Mathematics.cross3(losRate, interceptor.velocityNED);
+  rawCommandMagnitude = ModelicaAerospace.Mathematics.norm3(rawCommand);
+
+  // Saturating to a realistic actuator limit also removes the unbounded spike that
+  // the LOS-rate singularity would otherwise produce as range approaches zero, which
+  // keeps fixed-step (co-simulation) integration stable near intercept.
+  commandedAcceleration =
+    rawCommand * (min(rawCommandMagnitude, maxAcceleration) / max(rawCommandMagnitude, 1e-6));
 
   // Thrust vector control cancels gravity and supplies the guidance command.
   interceptor.forceNED = interceptorMass * (commandedAcceleration - gravityNED);
