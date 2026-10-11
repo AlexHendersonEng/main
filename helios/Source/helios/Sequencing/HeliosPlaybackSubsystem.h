@@ -11,6 +11,7 @@ class ULevelSequencePlayer;
 class ALevelSequenceActor;
 class AHeliosVehicleActor;
 class ACameraActor;
+class UHeliosPlaybackWidget;
 
 /**
  * Builds the scenario (vehicles/cameras/sequence) when the world starts playing
@@ -37,7 +38,31 @@ class HELIOS_API UHeliosPlaybackSubsystem : public UWorldSubsystem {
   UFUNCTION(BlueprintCallable, Category = "Helios|Playback")
   void SetPlayRate(float Rate);
 
+  UFUNCTION(BlueprintCallable, Category = "Helios|Playback")
+  float GetCurrentTimeSeconds() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Helios|Playback")
+  float GetDurationSeconds() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Helios|Playback")
+  float GetPlayRate() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Helios|Playback")
+  bool IsPlaying() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Helios|Playback")
+  void SetVehicleVisible(const FString& VehicleId, bool bVisible);
+
+  UFUNCTION(BlueprintCallable, Category = "Helios|Export")
+  bool RenderConfiguredCameras();
+
+  const TArray<TObjectPtr<AHeliosVehicleActor>>& GetSpawnedVehicles() const {
+    return SpawnedVehicles;
+  }
+
  private:
+  void CreatePlaybackWidget(UWorld& World);
+
   UPROPERTY()
   TObjectPtr<ULevelSequence> Sequence;
 
@@ -52,4 +77,15 @@ class HELIOS_API UHeliosPlaybackSubsystem : public UWorldSubsystem {
 
   UPROPERTY()
   TArray<TObjectPtr<ACameraActor>> SpawnedCameras;
+
+  UPROPERTY()
+  TMap<FString, FGuid> CameraBindings;
+
+  // Keep transient camera-specific sequences alive while jobs reference them by
+  // soft path.
+  UPROPERTY()
+  TArray<TObjectPtr<ULevelSequence>> ExportSequences;
+
+  UPROPERTY()
+  TObjectPtr<UHeliosPlaybackWidget> PlaybackWidget;
 };

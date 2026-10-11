@@ -17,6 +17,9 @@ struct FHeliosBuiltScenario {
   TObjectPtr<ULevelSequence> Sequence;
   TArray<TObjectPtr<AHeliosVehicleActor>> Vehicles;
   TArray<TObjectPtr<ACameraActor>> Cameras;
+  // Stores each camera's binding so export jobs can select an isolated camera
+  // cut.
+  TMap<FString, FGuid> CameraBindings;
 };
 
 /**

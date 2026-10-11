@@ -63,9 +63,9 @@ FHeliosBuiltScenario FHeliosSequenceBuilder::BuildFromScenario(
                                        AttachParent ? *AttachParent : nullptr);
     if (Camera) {
       Result.Cameras.Add(Camera);
-      // Bind (no keyframes yet) so Movie Render Queue camera-cut setup in
-      // Checkpoint 5 has a binding to use.
-      AddPossessableBinding(Sequence, World, Camera);
+      // Export jobs use this possessable binding for camera cuts.
+      Result.CameraBindings.Add(CameraConfig.Id,
+                                AddPossessableBinding(Sequence, World, Camera));
     }
   }
 
