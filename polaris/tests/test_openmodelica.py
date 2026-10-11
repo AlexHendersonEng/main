@@ -62,6 +62,20 @@ def test_export_fmu(backend, tmp_path):
 
 @pytest.mark.integration
 @needs_omc
+def test_export_fmu_with_cs_solver(backend, tmp_path):
+    # "cvode" is the solver name confirmed to be accepted by the installed omc build;
+    # unsupported names (e.g. "dassl" on some builds) raise BackendError instead.
+    fmu = backend.export_fmu(MODEL, FmuKind.CO_SIMULATION, "2.0", tmp_path, cs_solver="cvode")
+    assert fmu.suffix == ".fmu" and fmu.stat().st_size > 0
+
+
+def test_cs_solver_rejected_for_model_exchange(backend, tmp_path):
+    with pytest.raises(Exception, match="cs_solver only applies"):
+        backend.export_fmu(MODEL, FmuKind.MODEL_EXCHANGE, "2.0", tmp_path, cs_solver="cvode")
+
+
+@pytest.mark.integration
+@needs_omc
 def test_failure_reports_log(backend, tmp_path):
     with pytest.raises(Exception, match="Nope"):
         backend.simulate(ModelSource("Nope"), SimulationOptions(), tmp_path)

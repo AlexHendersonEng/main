@@ -29,7 +29,7 @@ class FakeBackend(Backend):
         path.write_text('"time","x"\n0,1\n1,2\n')
         return path
 
-    def export_fmu(self, source, kind, fmi_version, work_dir):
+    def export_fmu(self, source, kind, fmi_version, work_dir, *, cs_solver=None):
         path = work_dir / "m.fmu"
         path.write_bytes(b"fmu")
         return path

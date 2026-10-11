@@ -145,16 +145,54 @@ class OpenModelicaBackend(Backend):
         return result
 
     def export_fmu(
-        self, source: ModelSource, kind: FmuKind, fmi_version: str, work_dir: Path
+        self,
+        source: ModelSource,
+        kind: FmuKind,
+        fmi_version: str,
+        work_dir: Path,
+        *,
+        cs_solver: str | None = None,
     ) -> Path:
+        # Check the class name and FMI version before running omc
         cls = _check_ident(source.class_name, "class name")
+
+        # Check that the FMI version is a valid format (e.g., "2.0" or "3.0")
         if not re.fullmatch(r"\d+\.\d+", fmi_version):
             raise BackendError(f"Invalid FMI version: {fmi_version!r}")
+
         # FMI version and kind come from enums/regex-checked strings, so f-string use is safe.
-        call = f'buildModelFMU({cls}, version="{fmi_version}", fmuType="{kind.value}");'
-        log = self._run([*self._load(source), call], work_dir)
+        args = [f'version="{fmi_version}"', f'fmuType="{kind.value}"']
+
+        # Check cs_solver provided
+        prelude: list[str] = []
+        if cs_solver is not None:
+            if kind is not FmuKind.CO_SIMULATION:
+                raise BackendError("cs_solver only applies to Co-Simulation FMUs")
+
+            # buildModelFMU has no solver argument; the embedded CS integrator is instead
+            # selected via the "--fmiFlags=s:<solver>" runtime flag (set before the build
+            # call), which writes a <Class>_flags.json consumed at simulation time. Only a
+            # subset of solver names are accepted here (e.g. "euler", "cvode") -- others are
+            # silently rejected by omc with a warning rather than an error, so the resulting
+            # FMU still builds but keeps the default fixed-step Euler integrator.
+            _check_ident(cs_solver, "cs_solver")
+            prelude.append(f'setCommandLineOptions("--fmiFlags=s:{cs_solver}");')
+
+        call = f"buildModelFMU({cls}, {', '.join(args)});"
+        log = self._run([*prelude, *self._load(source), call], work_dir)
         fmu = work_dir / f"{cls}.fmu"
         self._require(fmu, "FMU export", log)
+
+        if cs_solver is not None and re.search(
+            rf'Unknown value "{re.escape(cs_solver)}" for flag "s"', log
+        ):
+            # omc accepts unrecognised solver names at build time (and still writes them into
+            # <Class>_flags.json), but the embedded FMU runtime then fails every fmi2DoStep
+            # with "Unknown solver method". Fail fast here instead of returning a broken FMU.
+            raise BackendError(
+                f"OpenModelica rejected cs_solver={cs_solver!r} "
+                f"(unsupported by this omc build); the FMU would fail at runtime.\n{log}"
+            )
         return fmu
 
     def _run(self, commands: list[str], work_dir: Path) -> str:

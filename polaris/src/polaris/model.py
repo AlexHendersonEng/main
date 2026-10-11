@@ -96,8 +96,16 @@ class Model:
         fmi_version: str = "2.0",
         backend: str | Backend | None = None,
         work_dir: str | Path | None = None,
+        cs_solver: str | None = None,
     ) -> Path:
-        """Export an FMU and copy it to ``destination`` (a file path or existing directory)."""
+        """Export an FMU and copy it to ``destination`` (a file path or existing directory).
+
+        Args:
+            cs_solver: Integration method embedded in a Co-Simulation FMU, e.g.
+                ``"cvode"``, overriding the backend's default (often a fixed-step
+                forward Euler). Support/valid names depend on the backend's compiler
+                build; see ``Backend.export_fmu``.
+        """
         be = resolve_backend(backend or self.backend)
         if not be.supports(Capability.EXPORT_FMU):
             raise NotImplementedError(f"Backend '{be.name}' cannot export FMUs")
@@ -106,7 +114,7 @@ class Model:
             dest = dest / f"{self.class_name}.fmu"
 
         def run(directory: Path) -> Path:
-            built = be.export_fmu(self.source(), kind, fmi_version, directory)
+            built = be.export_fmu(self.source(), kind, fmi_version, directory, cs_solver=cs_solver)
             dest.parent.mkdir(parents=True, exist_ok=True)
             return Path(shutil.copyfile(built, dest))
 

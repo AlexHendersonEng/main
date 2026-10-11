@@ -99,10 +99,20 @@ class RumocaBackend(Backend):
         return result
 
     def export_fmu(
-        self, source: ModelSource, kind: FmuKind, fmi_version: str, work_dir: Path
+        self,
+        source: ModelSource,
+        kind: FmuKind,
+        fmi_version: str,
+        work_dir: Path,
+        *,
+        cs_solver: str | None = None,
     ) -> Path:
         # Rumoca always produces a combined ME+CS archive, so ``kind`` is accepted for
-        # interface compatibility but does not change the output.
+        # interface compatibility but does not change the output. It generates its own
+        # fixed-step C integrator for Co-Simulation and has no equivalent solver choice.
+        if cs_solver is not None:
+            raise BackendError("rumoca does not support choosing a Co-Simulation integrator")
+
         try:
             target = _FMI_TARGETS[fmi_version]
         except KeyError:

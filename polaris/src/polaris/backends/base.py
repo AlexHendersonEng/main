@@ -69,8 +69,18 @@ class Backend(ABC):
         kind: FmuKind,
         fmi_version: str,
         work_dir: Path,
+        *,
+        cs_solver: str | None = None,
     ) -> Path:
-        """Export an FMU, returning its path."""
+        """Export an FMU, returning its path.
+
+        Args:
+            cs_solver: Integration method embedded in a Co-Simulation FMU (e.g.
+                ``"cvode"``, in place of the backend's default, often fixed-step forward
+                Euler). Ignored for Model-Exchange FMUs. Backends that do not support
+                choosing an internal solver, or are given a value their build does not
+                recognise, raise ``BackendError``.
+        """
         raise self._unsupported(Capability.EXPORT_FMU)
 
     def jacobian(

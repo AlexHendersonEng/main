@@ -75,6 +75,14 @@ def _parser() -> argparse.ArgumentParser:
         "--kind", choices=[kind.value for kind in FmuKind], default=FmuKind.CO_SIMULATION.value
     )
     export.add_argument("--fmi-version", default="2.0")
+    export.add_argument(
+        "--cs-solver",
+        help=(
+            "Integration method embedded in a Co-Simulation FMU (e.g. 'cvode'); "
+            "overrides the backend's default, which is often a "
+            "fixed-step forward Euler. Supported names depend on the backend build"
+        ),
+    )
 
     for action in ("inspect", "validate"):
         sub = fmu_commands.add_parser(action, help=f"{action} an FMU")
@@ -265,6 +273,7 @@ def _dispatch(args: argparse.Namespace) -> int:
                 kind=FmuKind(args.kind),
                 fmi_version=args.fmi_version,
                 backend=args.backend,
+                cs_solver=args.cs_solver,
             )
             print(path)
         elif args.fmu_command == "inspect":
