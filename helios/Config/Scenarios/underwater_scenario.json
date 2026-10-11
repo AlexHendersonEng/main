@@ -1,0 +1,35 @@
+{
+  "scenario_name": "Helios Underwater Sample",
+  "vehicles": [
+    {
+      "id": "sub_1",
+      "type": "UnderwaterVessel",
+      "model_path": "SampleAssets/Models/submarine.stl",
+      "trajectory_csv": "SampleAssets/Trajectories/submarine.csv",
+      "scale": 1.0,
+      "visible": true
+    }
+  ],
+  "cameras": [
+    {
+      "id": "underwater_chase",
+      "attached_to": "sub_1",
+      "location": { "x": -600.0, "y": 0.0, "z": 120.0 },
+      "rotation": { "pitch": 0.0, "yaw": 0.0, "roll": 0.0 },
+      "fov": 80.0,
+      "export": {
+        "enabled": true,
+        "mode": "image_sequence",
+        "resolution_x": 640,
+        "resolution_y": 360,
+        "frame_rate": 12,
+        "output_directory": "Renders/underwater_chase",
+        "output_name": "frame"
+      }
+    }
+  ],
+  "playback": {
+    "default_speed": 0.75,
+    "loop": false
+  }
+}

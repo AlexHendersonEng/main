@@ -1,3 +1,2 @@
-# Models
-*.obj
-*.stl
+!*.stl
+!*.obj
