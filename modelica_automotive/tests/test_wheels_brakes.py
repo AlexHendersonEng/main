@@ -60,16 +60,14 @@ def test_brake_models_match_static_and_first_order_references(
     )
 
 
-def test_mapped_brake_interpolates_with_msl_table(modelica_backend: str):
-    if modelica_backend == "rumoca":
-        pytest.skip("Rumoca 0.10 cannot lower the MSL native table constructor")
-    result = _model(modelica_backend, "MappedBrakeEvaluation").simulate(
+def test_mapped_brake_interpolates_with_msl_table(openmodelica_backend: str):
+    result = _model(openmodelica_backend, "MappedBrakeEvaluation").simulate(
         SimulationOptions(
             stop_time=0.1,
             step_size=0.1,
             outputs=("brakeTorque", "appliedMagnitude"),
         ),
-        backend=modelica_backend,
+        backend=openmodelica_backend,
     )
     direction = 20 / math.sqrt(20**2 + 0.1**2)
     assert result["brakeTorque"][-1] == pytest.approx(-2100 * direction, abs=1e-8)

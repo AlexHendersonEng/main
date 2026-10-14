@@ -101,8 +101,8 @@ normal load and road friction.
 `ModelicaAutomotive.Wheels.RotationalDynamics` integrates wheel speed from hub,
 signed brake, and tire reaction torques. Brake models include ideal commanded
 torque, first-order actuation, clamp-force friction limiting, and an MSL
-table-mapped option. The mapped brake is validated only with OpenModelica
-because Rumoca 0.10 cannot lower the MSL native table constructor.
+table-mapped option. The mapped brake is validated explicitly with
+OpenModelica because Rumoca 0.10 cannot lower the MSL native table constructor.
 
 ## Steering and planar handling
 
@@ -174,13 +174,26 @@ criteria. Metric accumulation uses explicit integral states because Rumoca
 0.10 cannot resolve `Modelica.Blocks.Continuous.Integrator`; the equations
 retain the same standard continuous-integration behavior.
 
-The example suite covers acceleration and coastdown, steady and transient
-handling, swept steering, double-lane-change tracking, split-friction braking
-with ABS, a traction-controlled launch, stability-controlled turning, single-
-bump and rough-road ride, graded operation, and a closed-loop drive cycle with
-regenerative energy recovery. Examples expose consistent pose, wheel, force,
-suspension, command, energy, and scenario outputs for external plotting or
-animation.
+The example suite covers acceleration and coastdown, tire-family behavior,
+steady and transient handling, double-lane-change tracking, split-friction
+braking with ABS, a traction-controlled launch, stability-controlled turning,
+single-bump and rough-road ride, road geometry and grade, four-corner load
+transfer, and a closed-loop drive cycle with regenerative energy recovery.
+Examples expose consistent pose, wheel, force, suspension, command, energy,
+and scenario outputs for external plotting or animation.
+
+Every model under `ModelicaAutomotive\Examples` has a matching runner in
+`scripts`. Each runner simulates the model with Polaris and saves a plot under
+`scripts\plots`:
+
+```powershell
+uv run python scripts\integrated_drive_cycle.py
+uv run python scripts\double_track_cornering.py --backend rumoca
+uv run python scripts\road_grade_drive.py --show
+```
+
+Use `--output-dir` to choose another image directory. OpenModelica is the
+default compiler; `--show` opens the saved plot in a GUI.
 
 ## Validity limits and unsupported workflows
 
@@ -217,7 +230,7 @@ does not provide the behavior or a backend cannot lower the MSL class.
 | Capability | OpenModelica | Rumoca 0.10 |
 | --- | --- | --- |
 | Core dynamics, tires, suspension, powertrain, controls, scenarios | Supported | Supported |
-| MSL `CombiTable1Ds` mapped brake, aerodynamic, and torque models | Supported | Not lowered; dedicated tests skip |
+| MSL `CombiTable1Ds` mapped brake, aerodynamic, and torque models | Supported | Not lowered; dedicated tests run on OpenModelica |
 | MSL `Blocks.Continuous.Integrator` in scenario metrics | Supported | Not resolved; equivalent explicit states used |
 | Strict requested-backend behavior | Missing executable fails | Missing executable fails |
 
@@ -251,8 +264,9 @@ Run all available compiler integrations:
 uv run pytest -m integration
 ```
 
-Set `MODELICA_AUTOMOTIVE_BACKENDS` for strict backend selection. A requested
-compiler that is unavailable fails rather than skips:
+The full suite uses both compilers by default and fails if either is missing,
+so an unavailable backend cannot produce skipped integration tests. Set
+`MODELICA_AUTOMOTIVE_BACKENDS` to choose a strict subset:
 
 ```powershell
 $env:MODELICA_AUTOMOTIVE_BACKENDS = "openmodelica,rumoca"

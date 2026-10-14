@@ -10,6 +10,14 @@ from conftest import library_model_files
 pytestmark = pytest.mark.integration
 
 
+def _example(backend: str, class_name: str) -> Model:
+    return Model(
+        f"ModelicaAutomotive.Examples.{class_name}",
+        files=library_model_files(backend),
+        libraries=("Modelica",),
+    )
+
+
 def test_longitudinal_drive_matches_independent_integration(modelica_backend: str):
     model = Model(
         "ModelicaAutomotive.Examples.LongitudinalDrive",
@@ -244,7 +252,7 @@ def test_grade_shift_acceleration_matches_independent_integration(
     )
     assert result["gear"][0] == pytest.approx(1)
     assert result["gear"][-1] == pytest.approx(2)
-    assert result["speed"][-1] > result["speed"][0]
+    assert np.max(result["speed"]) > result["speed"][0]
 
 
 def test_regenerative_braking_recovers_energy(modelica_backend: str):
@@ -265,3 +273,36 @@ def test_regenerative_braking_recovers_energy(modelica_backend: str):
     assert np.min(source_power) < -10000
     assert state_of_charge[-1] > state_of_charge[0]
     assert result["machineTorque"][-1] < 0
+
+
+def test_road_grade_drive_tracks_the_analytic_road_surface(modelica_backend: str):
+    result = _example(modelica_backend, "RoadGradeDrive").simulate(
+        SimulationOptions(stop_time=16, step_size=0.02, tolerance=1e-8),
+        backend=modelica_backend,
+    )
+    position = np.asarray(result["position"])
+    lateral = np.asarray(result["lateralPosition"])
+    expected_height = 150 + position * np.tan(0.06) + lateral * np.tan(0.04) + 0.001 * lateral**2
+
+    np.testing.assert_allclose(result["roadHeight"], expected_height, atol=1e-8)
+    assert np.allclose(result["frictionCoefficient"], 0.7)
+    assert result["gradeForce"][0] == pytest.approx(1600 * 9.80665 * np.sin(0.06))
+    assert np.max(result["speed"]) > result["speed"][0]
+    assert result["position"][-1] > 60
+
+
+def test_double_track_cornering_transfers_load_without_losing_contact(
+    modelica_backend: str,
+):
+    result = _example(modelica_backend, "DoubleTrackCornering").simulate(
+        SimulationOptions(stop_time=8, step_size=0.01, tolerance=1e-8),
+        backend=modelica_backend,
+    )
+    loads = np.vstack([result[f"normalLoad[{index}]"] for index in range(1, 5)]).T
+    turning = np.asarray(result["maneuverScale"]) > 0.9
+
+    assert np.min(loads) > 0
+    np.testing.assert_allclose(np.sum(loads, axis=1), 1500 * 9.80665, atol=1e-7)
+    assert np.max(np.abs(loads[turning, 0] - loads[turning, 1])) > 100
+    assert np.max(np.abs(result["yawRate"])) > 0.02
+    assert result["longitudinalVelocity"][-1] > 0

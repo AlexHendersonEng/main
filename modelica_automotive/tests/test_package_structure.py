@@ -160,7 +160,9 @@ def test_python_tooling_is_managed_by_uv():
     config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert config["project"]["name"] == "modelica-automotive"
     assert config["project"]["requires-python"] == ">=3.14"
-    assert config["project"]["dependencies"] == ["polaris"]
+    assert {"matplotlib", "polaris"} <= {
+        dependency.split(">=")[0] for dependency in config["project"]["dependencies"]
+    }
     assert config["tool"]["uv"]["sources"]["polaris"] == {
         "git": "https://github.com/AlexHendersonEng/main.git",
         "rev": "ccb9e096d9d070d19552abdaa2b7f3fefe161c87",

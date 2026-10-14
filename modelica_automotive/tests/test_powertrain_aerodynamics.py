@@ -130,12 +130,10 @@ def test_top_speed_force_balance_preserves_target_speed(modelica_backend: str):
     assert result["driveForce"][-1] > 500
 
 
-def test_mapped_components_interpolate_with_msl_tables(modelica_backend: str):
-    if modelica_backend == "rumoca":
-        pytest.skip("Rumoca 0.10 cannot lower the MSL native table constructor")
-    result = _model(modelica_backend, "MappedComponents").simulate(
+def test_mapped_components_interpolate_with_msl_tables(openmodelica_backend: str):
+    result = _model(openmodelica_backend, "MappedComponents").simulate(
         SimulationOptions(stop_time=0.1, step_size=0.1),
-        backend=modelica_backend,
+        backend=openmodelica_backend,
     )
     assert result["torque"][-1] == pytest.approx(120, abs=1e-10)
     drag = (
