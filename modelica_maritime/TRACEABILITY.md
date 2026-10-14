@@ -59,6 +59,7 @@ metadata are validated by `tests\test_package_structure.py`.
 | `ModelicaMaritime.Examples.UnderwaterDepthHeadingHold` | Closed-loop underwater depth, heading, and through-water speed hold | Integrated Fossen propulsion and limited-controller regression | `tests\test_examples.py` |
 | `ModelicaMaritime.Examples.UnderwaterWaypointBathymetry` | Underwater waypoint following at commanded altitude over sloped terrain | Integrated guidance, bathymetry, depth conversion, and Fossen regression | `tests\test_examples.py` |
 | `ModelicaMaritime.Examples.PropulsionFailureResponse` | Bounded degraded surface response after a propulsion failure | Twin-thruster allocation and explicit failure-mode regression | `tests\test_examples.py` |
+| `ModelicaMaritime.Examples.SurfaceCurrentCompensation` | Surface route tracking with current-compensated desired ground track and speed | Integrated guidance/control/dynamics regression and independent current-vector reference | `tests\test_examples.py` |
 
 The structural test derives public executable classes from the Modelica source
 tree and fails if a future class is not named in this matrix.

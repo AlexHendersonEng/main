@@ -137,7 +137,7 @@ Coriolis, damping, and coefficient-scaling models. Coefficient loads use
 yaw moment. `TablePlanarCoefficients` wraps the MSL `CombiTable1Ds` object for
 linear interpolation and configurable extrapolation. Rumoca 0.10 does not
 lower that MSL native table constructor, so the dedicated interpolation test
-is OpenModelica-only.
+runs explicitly on OpenModelica.
 
 ## Integrated examples
 
@@ -153,6 +153,19 @@ All examples have finite experiment annotations and direct regression tests.
 | `UnderwaterDepthHeadingHold` | Closed-loop depth, heading, and surge hold | Final tracking errors and bounded translational/rotational rates |
 | `UnderwaterWaypointBathymetry` | Waypoint following at fixed altitude over slope | Waypoint distance, altitude/depth agreement, and quaternion bound |
 | `PropulsionFailureResponse` | Twin-thruster path response after one failure | Failure activation, forward progress, and bounded degraded motion |
+| `SurfaceCurrentCompensation` | Cross-current route tracking with compensated heading and speed | Ground-track errors and independent current-vector velocity reference |
+
+Each example has a Python runner under `scripts`, with saved plots in
+`scripts\plots`. For example:
+
+```powershell
+uv run python scripts\surface_wave_response.py
+uv run python scripts\underwater_waypoint_bathymetry.py --backend rumoca
+uv run python scripts\surface_current_compensation.py --show
+```
+
+Use `--output-dir` to choose another image directory. OpenModelica is the
+default compiler.
 
 ## MMG-style maneuvering
 
@@ -306,14 +319,16 @@ uv run python scripts\check_package.py
 uv run pytest -m "not integration"
 ```
 
-Run integrations for installed compilers:
+Run the complete integration suite on both compilers:
 
 ```powershell
 uv run pytest -m integration
 ```
 
-Set `MODELICA_MARITIME_BACKENDS` to require specific backends. A requested
-backend that is not installed fails instead of skipping:
+The test fixture requires both backends by default and fails when either
+compiler is missing. This prevents missing integrations from being reported
+as skips. Set `MODELICA_MARITIME_BACKENDS` only when intentionally running a
+strict subset:
 
 ```powershell
 $env:MODELICA_MARITIME_BACKENDS = "openmodelica,rumoca"

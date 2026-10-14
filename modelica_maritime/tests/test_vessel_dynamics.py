@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import math
-import shutil
 
 import numpy as np
 import pytest
@@ -107,12 +106,10 @@ def test_linear_damping_dissipates_energy(modelica_backend: str):
     assert energy[-1] < energy[0]
 
 
-def test_msl_coefficient_table_interpolation():
-    if shutil.which("omc") is None:
-        pytest.skip("omc not installed")
-    result = _vessel_model("openmodelica", "CoefficientTableValidation").simulate(
+def test_msl_coefficient_table_interpolation(openmodelica_backend: str):
+    result = _vessel_model(openmodelica_backend, "CoefficientTableValidation").simulate(
         SimulationOptions(stop_time=0.1, step_size=0.1),
-        backend="openmodelica",
+        backend=openmodelica_backend,
     )
     np.testing.assert_allclose(
         _array(result, "interpolated", 3),

@@ -30,7 +30,6 @@ def _requested_backends() -> tuple[str, ...]:
 
 
 REQUESTED_BACKENDS = _requested_backends()
-STRICT_BACKEND_SELECTION = "MODELICA_MARITIME_BACKENDS" in os.environ
 
 
 def library_model_files(backend: str) -> tuple[Path, ...]:
@@ -43,10 +42,18 @@ def library_model_files(backend: str) -> tuple[Path, ...]:
 def modelica_backend(request: pytest.FixtureRequest) -> str:
     executable = BACKEND_EXECUTABLES[request.param]
     if shutil.which(executable) is None:
-        if STRICT_BACKEND_SELECTION:
-            pytest.fail(
-                f"required backend {request.param!r} is unavailable: "
-                f"{executable!r} was not found on PATH"
-            )
-        pytest.skip(f"{executable} not installed")
+        pytest.fail(
+            f"required backend {request.param!r} is unavailable: "
+            f"{executable!r} was not found on PATH"
+        )
     return str(request.param)
+
+
+@pytest.fixture
+def openmodelica_backend() -> str:
+    if shutil.which(BACKEND_EXECUTABLES["openmodelica"]) is None:
+        pytest.fail(
+            "this validation requires OpenModelica: "
+            f"{BACKEND_EXECUTABLES['openmodelica']!r} was not found on PATH"
+        )
+    return "openmodelica"

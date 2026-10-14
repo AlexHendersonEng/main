@@ -113,14 +113,32 @@ def test_every_example_has_finite_experiment_and_documentation():
         text = source.read_text(encoding="utf-8")
         assert "experiment(" in text, f"{source.name} lacks an experiment annotation"
         assert re.search(r"StopTime\s*=\s*[0-9]", text), f"{source.name} lacks a finite StopTime"
-        assert "Documentation(info=" in text, f"{source.name} lacks documentation"
+        assert "Documentation(info=" in text
+
+
+def test_every_example_has_a_python_runner():
+    examples = PACKAGE_ROOT / "Examples"
+    model_names = {path.stem for path in examples.glob("*.mo") if path.name != "package.mo"}
+    runner_names = {
+        path.stem
+        for path in (PROJECT_ROOT / "scripts").glob("*.py")
+        if path.name not in {"_example_runner.py", "check_package.py"}
+    }
+    expected = set()
+    for model_name in model_names:
+        name = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", "_", model_name)
+        name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name)
+        expected.add(name.lower())
+    assert runner_names == expected
 
 
 def test_python_tooling_is_managed_by_uv():
     config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert config["project"]["name"] == "modelica-maritime"
     assert config["project"]["requires-python"] == ">=3.14"
-    assert config["project"]["dependencies"] == ["polaris"]
+    assert {"matplotlib", "polaris"} <= {
+        dependency.split(">=")[0] for dependency in config["project"]["dependencies"]
+    }
     assert {"pytest", "ruff"} <= set(config["dependency-groups"]["dev"])
 
     lock = tomllib.loads((PROJECT_ROOT / "uv.lock").read_text(encoding="utf-8"))

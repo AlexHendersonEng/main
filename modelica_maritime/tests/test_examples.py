@@ -11,6 +11,14 @@ from conftest import library_model_files
 pytestmark = pytest.mark.integration
 
 
+def _example(backend: str, class_name: str) -> Model:
+    return Model(
+        f"ModelicaMaritime.Examples.{class_name}",
+        files=library_model_files(backend),
+        libraries=("Modelica",),
+    )
+
+
 def test_surface_maneuvering_example_is_bounded(modelica_backend: str):
     model = Model(
         "ModelicaMaritime.Examples.SurfaceManeuvering",
@@ -178,3 +186,22 @@ def test_propulsion_failure_response_example_is_bounded(modelica_backend: str):
     assert np.max(np.abs(surge)) < 6
     assert np.max(np.abs(sway)) < 4
     assert np.max(np.abs(yaw_rate)) < 2
+
+
+def test_surface_current_compensation_tracks_ground_route(modelica_backend: str):
+    result = _example(modelica_backend, "SurfaceCurrentCompensation").simulate(
+        SimulationOptions(stop_time=80, step_size=0.1, tolerance=1e-8),
+        backend=modelica_backend,
+    )
+    expected_water_speed = np.hypot(
+        2 * np.cos(result["commandedGroundTrack"][-1]),
+        2 * np.sin(result["commandedGroundTrack"][-1]) - 0.5,
+    )
+    assert abs(result["crossTrackError"][-1]) < 2
+    assert result["poseNED[1]"][-1] > 100
+    assert result["requiredWaterSpeed"][-1] == pytest.approx(
+        expected_water_speed,
+        abs=1e-8,
+    )
+    assert result["commandedHeading"][-1] > 0
+    assert abs(result["headingError"][-1]) < 0.1

@@ -6,3 +6,4 @@ SurfaceWaveResponse
 UnderwaterDepthHeadingHold
 UnderwaterWaypointBathymetry
 PropulsionFailureResponse
+SurfaceCurrentCompensation
