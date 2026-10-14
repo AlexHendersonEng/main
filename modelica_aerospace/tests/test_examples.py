@@ -172,3 +172,23 @@ def test_waypoint_following_example_enters_acceptance_sphere(
     closest = position[np.argmin(distance)]
     np.testing.assert_allclose(closest[:2], [1000, 500], atol=2)
     assert np.max(np.abs(position[:, 2])) < 1e-9
+
+
+def test_spherical_orbit_example_preserves_orbit_and_invariants(modelica_backend: str):
+    result = _example(modelica_backend, "SphericalOrbit").simulate(
+        SimulationOptions(stop_time=6000, step_size=5, tolerance=1e-8),
+        backend=modelica_backend,
+    )
+    position = _array(result, "positionECEF", 3, final=False)
+    orbital_radius = np.linalg.norm(position, axis=1)
+    energy = np.asarray(result["specificMechanicalEnergy"])
+    momentum = _array(result, "specificAngularMomentum", 3, final=False)
+    altitude = np.asarray(result["altitude"])
+
+    assert np.max(np.abs(orbital_radius - 6_778_137)) < 12
+    assert np.max(np.abs(energy - energy[0])) < 2e-6 * abs(energy[0])
+    assert np.max(np.linalg.norm(momentum - momentum[0], axis=1)) < (
+        1e-4 * np.linalg.norm(momentum[0])
+    )
+    assert altitude[0] == pytest.approx(400_000, abs=1e-5)
+    assert result["quaternionNorm"][-1] == pytest.approx(1, abs=2e-7)

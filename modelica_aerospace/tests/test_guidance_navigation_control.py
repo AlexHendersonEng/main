@@ -64,14 +64,10 @@ def test_complementary_filter_response_and_angle_wrapping(modelica_backend: str)
     assert result["angleEstimate"][-1] == pytest.approx(expected_angle, abs=2e-5)
 
 
-def test_msl_control_wrappers_and_closed_loop(modelica_backend: str):
-    if modelica_backend == "rumoca":
-        pytest.skip(
-            "Rumoca does not yet support the MSL native table constructor used by the gain schedule"
-        )
-    result = _gnc_model(modelica_backend, "ControlValidation").simulate(
+def test_msl_control_wrappers_and_closed_loop(openmodelica_backend: str):
+    result = _gnc_model(openmodelica_backend, "ControlValidation").simulate(
         SimulationOptions(stop_time=6, step_size=0.01, tolerance=1e-8),
-        backend=modelica_backend,
+        backend=openmodelica_backend,
     )
     assert _at_time(result, "pidCommand", 1) == pytest.approx(1, abs=2e-3)
     assert _at_time(result, "response", 2.9) > 0.98

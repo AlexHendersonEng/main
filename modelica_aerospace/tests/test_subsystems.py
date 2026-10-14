@@ -48,12 +48,10 @@ def test_aerodynamic_scaling_and_derivatives(modelica_backend: str):
     np.testing.assert_allclose(_array(result, "derivativeMoment", 3), expected_moment)
 
 
-def test_msl_aerodynamic_tables(modelica_backend: str):
-    if modelica_backend == "rumoca":
-        pytest.skip("Rumoca does not yet support the MSL native table constructor")
-    result = _subsystem_model(modelica_backend, "AerodynamicTableValidation").simulate(
+def test_msl_aerodynamic_tables(openmodelica_backend: str):
+    result = _subsystem_model(openmodelica_backend, "AerodynamicTableValidation").simulate(
         SimulationOptions(stop_time=0.1, step_size=0.1),
-        backend=modelica_backend,
+        backend=openmodelica_backend,
     )
     probe = 1e-7
     assert result["clampedLift"][-1] == pytest.approx(0.8 + probe)

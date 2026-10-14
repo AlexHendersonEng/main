@@ -8,11 +8,13 @@ model BallisticTrajectory "Analytic flat-Earth ballistic trajectory"
       velocityNED={50, 0, -100}));
   output Real positionNED[3](each unit="m");
   output Real velocityNED[3](each unit="m/s");
+  output Real altitude(unit="m");
   output Real specificMechanicalEnergy(unit="m2/s2");
 equation
   vehicle.forceNED = {0, 0, 0};
   positionNED = vehicle.positionNED;
   velocityNED = vehicle.velocityNED;
+  altitude = -vehicle.positionNED[3];
   specificMechanicalEnergy =
     0.5 * vehicle.speed * vehicle.speed - 9.80665 * vehicle.positionNED[3];
   annotation (

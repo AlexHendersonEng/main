@@ -85,7 +85,7 @@ utilities, and examples.
   are deliberately low-order building blocks, not certified vehicle data.
 - Table aerodynamics and gain scheduling use MSL native table objects. Rumoca
   0.10 does not lower that constructor, so their dedicated tests are
-  OpenModelica-only.
+  explicitly run on OpenModelica rather than skipped under Rumoca.
 
 ## Attitude mathematics
 
@@ -210,8 +210,9 @@ heading wraparound, cross-track correction, kinematic signs, scalar and angular
 navigation fusion, gain interpolation and endpoint clamping, mode transitions,
 command limits, PID saturation, anti-windup recovery, and closed-loop response.
 Rumoca currently cannot lower the MSL native table constructor used by
-`GainSchedule`, so the combined MSL control scenario is OpenModelica-only;
-the aerospace-specific guidance and navigation scenarios run on both backends.
+`GainSchedule`, so the combined MSL control scenario runs explicitly on
+OpenModelica; the aerospace-specific guidance and navigation scenarios run on
+both backends.
 
 ## Integrated examples
 
@@ -226,6 +227,7 @@ regression-tested through Polaris on OpenModelica and Rumoca:
 | `SixDegreeOfFreedomAircraft` | 1000 kg, 80 m/s flat-Earth trim; 0.5 s aileron pulse | Rate damping, bounded airspeed, normalized quaternion, and final position |
 | `DrydenGustResponse` | 60 m/s at 100 m with seed 23 and 12 m/s reference wind | Deterministic response extrema and bounded turbulence components |
 | `WaypointFollowing` | 50 m/s toward `{1000, 500, 0}` NED with a 25 m acceptance radius | Initial geometry, closest approach, and acceptance-sphere entry |
+| `SphericalOrbit` | 400 km circular orbit using rotating-Earth six-degree-of-freedom dynamics | Orbital radius, geodetic altitude, energy, angular momentum, and attitude norm |
 
 Each example declares an `experiment` annotation with a finite stop time,
 tolerance, and output interval. Run all example regressions with:
@@ -234,6 +236,19 @@ tolerance, and output interval. Run all example regressions with:
 Set-Location modelica_aerospace
 uv run pytest tests\test_examples.py
 ```
+
+Each example has a matching runner under `scripts\run_<ExampleName>.py`.
+The scripts simulate the model with Polaris and save a multi-panel PNG under
+`plots\`; OpenModelica is the default backend. For example:
+
+```powershell
+uv run python scripts\run_SphericalOrbit.py
+uv run python scripts\run_WaypointFollowing.py --backend rumoca
+uv run python scripts\run_BallisticTrajectory.py --show
+```
+
+Use `--output-dir` to select another image directory. `PackageSmoke` also has
+a runner to keep the scripts one-to-one with all models in `Examples`.
 
 ## Validation
 

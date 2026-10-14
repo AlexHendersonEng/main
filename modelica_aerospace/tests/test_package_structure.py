@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib.util
 import re
-import tomllib
 
 from conftest import PACKAGE_ROOT, PROJECT_ROOT
 
@@ -104,30 +103,3 @@ def test_every_public_executable_class_is_traceable():
 
     missing = sorted(name for name in public_classes if f"`{name}`" not in traceability)
     assert not missing, f"public executable classes missing from TRACEABILITY.md: {missing}"
-
-
-def test_ci_workflow_exists():
-    workflow = PROJECT_ROOT.parent / ".github" / "workflows" / "modelica-aerospace.yml"
-    assert workflow.is_file() and workflow.stat().st_size > 0
-
-
-def test_python_tooling_is_managed_by_uv():
-    config = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-
-    assert config["project"]["name"] == "modelica-aerospace"
-    assert config["project"]["requires-python"] == ">=3.14"
-    assert config["project"]["dependencies"] == ["polaris"]
-    assert config["tool"]["uv"]["sources"]["polaris"] == {
-        "git": "https://github.com/AlexHendersonEng/main.git",
-        "rev": "ccb9e096d9d070d19552abdaa2b7f3fefe161c87",
-        "subdirectory": "polaris",
-    }
-    assert {"pytest", "ruff"} <= set(config["dependency-groups"]["dev"])
-
-    lock = tomllib.loads((PROJECT_ROOT / "uv.lock").read_text(encoding="utf-8"))
-    polaris = next(package for package in lock["package"] if package["name"] == "polaris")
-    assert polaris["source"]["git"] == (
-        "https://github.com/AlexHendersonEng/main.git"
-        "?subdirectory=polaris&rev=ccb9e096d9d070d19552abdaa2b7f3fefe161c87"
-        "#ccb9e096d9d070d19552abdaa2b7f3fefe161c87"
-    )

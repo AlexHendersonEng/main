@@ -51,3 +51,13 @@ def modelica_backend(request: pytest.FixtureRequest) -> str:
             )
         pytest.skip(f"{executable} not installed")
     return str(request.param)
+
+
+@pytest.fixture
+def openmodelica_backend() -> str:
+    if shutil.which(BACKEND_EXECUTABLES["openmodelica"]) is None:
+        pytest.fail(
+            "this validation requires OpenModelica: "
+            f"{BACKEND_EXECUTABLES['openmodelica']!r} was not found on PATH"
+        )
+    return "openmodelica"
