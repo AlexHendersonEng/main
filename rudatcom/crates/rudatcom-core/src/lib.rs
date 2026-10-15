@@ -3,10 +3,19 @@
 //! Modules are added as the Fortran source (`datcom.f`) is ported; see `docs/architecture.md`.
 
 pub mod compare;
+pub mod input;
 
 /// Errors returned by the library.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Fatal input syntax error (the original prints it and stops).
+    #[error("line {line}: {message}\n    {card}")]
+    Parse {
+        line: usize,
+        message: String,
+        card: String,
+    },
+
     /// The requested functionality has not been ported yet.
     #[error("not implemented yet")]
     NotImplemented,
