@@ -1,0 +1,17 @@
+[package]
+name = "rudatcom-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Command line interface for rudatcom"
+
+[[bin]]
+name = "rudatcom"
+path = "src/main.rs"
+
+[dependencies]
+rudatcom-core = { path = "../rudatcom-core" }
+clap = { workspace = true }
+
+[lints]
+workspace = true

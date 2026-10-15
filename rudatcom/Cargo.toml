@@ -1,0 +1,19 @@
+[workspace]
+resolver = "2"
+members = ["crates/rudatcom-core", "crates/rudatcom-cli", "crates/rudatcom-py"]
+# The Python crate needs a Python toolchain (use maturin), so it is not built by default.
+default-members = ["crates/rudatcom-core", "crates/rudatcom-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Rust rewrite of the USAF Digital DATCOM"
+
+[workspace.dependencies]
+clap = { version = "4", features = ["derive"] }
+thiserror = "2"
+pyo3 = { version = "0.30", features = ["extension-module"] }
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }

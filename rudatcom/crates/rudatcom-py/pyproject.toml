@@ -1,0 +1,13 @@
+[build-system]
+requires = ["maturin>=1.5,<2"]
+build-backend = "maturin"
+
+[project]
+name = "rudatcom"
+dynamic = ["version"]
+requires-python = ">=3.9"
+description = "Python bindings for rudatcom, a Rust rewrite of USAF Digital DATCOM"
+
+[tool.maturin]
+python-source = "python"
+module-name = "rudatcom._rudatcom"
