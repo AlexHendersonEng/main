@@ -1,0 +1,12 @@
+[package]
+name = "rudatcom-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core library for rudatcom: input parsing, aerodynamic methods and output writing"
+
+[dependencies]
+thiserror = { workspace = true }
+
+[lints]
+workspace = true
