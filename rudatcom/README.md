@@ -17,7 +17,12 @@ cd crates/rudatcom-py && maturin develop   # Python bindings
 ```
 
 ## Testing
-`cargo test` compares against golden outputs in `tests/golden/` and does NOT need the original DATCOM.
-Maintainers regenerate goldens from the original (`gfortran datcom.f -o datcom`) with
-`RUDATCOM_REFERENCE_BIN=/path/to/datcom` (script added with the test harness).
+Tests compare rudatcom against the ORIGINAL Digital DATCOM, which developers must build locally:
+```sh
+gfortran datcom.f -o datcom
+export RUDATCOM_REFERENCE_BIN=/path/to/datcom
+cargo test
+```
+Without `RUDATCOM_REFERENCE_BIN` the reference tests fail with a clear message. No reference
+outputs are stored in the repo; only input decks (`tests/cases/`).
 Naming: `rudatcom` is this project; bare `datcom` always means the original program.

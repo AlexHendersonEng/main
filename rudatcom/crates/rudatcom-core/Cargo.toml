@@ -8,5 +8,8 @@ description = "Core library for rudatcom: input parsing, aerodynamic methods and
 [dependencies]
 thiserror = { workspace = true }
 
+[dev-dependencies]
+tempfile = "3"
+
 [lints]
 workspace = true
