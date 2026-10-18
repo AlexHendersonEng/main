@@ -818,7 +818,7 @@ impl WingCase {
     /// SUPLAT's wing-alone part: CYbeta/CNbeta for rectangular (closed form)
     /// or subsonic-edge triangular wings (FIG 5.1.1.1-6, 7.1.1.1-8), and
     /// CLbeta from FIG 7.1.2.2-25. Straight tapered wings only; the
-    /// wing-body terms that follow need a body (later checkpoint).
+    /// wing-body terms that follow need a body.
     fn suplat(&mut self) -> Result<()> {
         let mach = self.mach;
         let beta = (mach.powi(2) - 1.).sqrt();

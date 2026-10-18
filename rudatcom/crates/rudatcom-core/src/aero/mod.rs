@@ -3,8 +3,8 @@
 //! Ported so far: body-alone aerodynamics in every regime (MAIN01's
 //! M04O04/M06O06, MAIN03's transonic body path and MAIN04's M19O23/M26O32)
 //! and the wing alone in every regime but hypersonic (MAIN01's, MAIN03's
-//! and MAIN04's wing overlays, [`wing`]). The other lifting-surface methods
-//! follow in later checkpoints.
+//! and MAIN04's wing overlays, [`wing`]), plus the subsonic horizontal
+//! tail, vertical tail, ventral fin and twin vertical panels without a body.
 
 pub mod body;
 pub mod supersonic;
@@ -18,7 +18,7 @@ use crate::{
 };
 pub use body::{BodyAero, BodyMethod, SlenderBody};
 pub use supersonic::{HypersonicBody, SupersonicBody};
-pub use wing::{WingAero, WingWork};
+pub use wing::{FinAero, FinWork, WingAero, WingWork};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AeroError {
@@ -48,6 +48,16 @@ pub struct PointAero {
     /// or a subsonic point following a transonic or supersonic one, whose
     /// persistent wing state is then unknown).
     pub wing_deferred: bool,
+    /// Horizontal-tail-alone coefficients (subsonic, without a body).
+    pub horizontal_tail: Option<WingAero>,
+    /// Vertical tail (VTPLNF and/or TVTPAN) and ventral fin (subsonic,
+    /// without a body).
+    pub vertical_tail: Option<FinAero>,
+    pub ventral_fin: Option<FinAero>,
+    /// The original computes tail results here with methods not yet ported
+    /// (a body, a transonic or supersonic point, a later point, or a failed
+    /// HT CLMCH0 pre-pass).
+    pub tails_deferred: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -94,6 +104,27 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
         Err(AeroError::Numerical(_)) => (None, true),
         Err(e) => return Err(e),
     };
+    // Tails: only without a body and through the leading run of
+    // subsonic points. The HT runs its own CLMCH0 pre-pass; a numerical
+    // failure there defers all tails for the case.
+    let tails_present = geometry.horizontal_tail.is_some()
+        || geometry.vertical_tail.is_some()
+        || geometry.ventral_fin.is_some()
+        || present("TVTPAN");
+    let mut tails_ok = tails_present && geometry.body.is_none();
+    let mut ht_state = None;
+    if tails_ok {
+        match wing::WingCase::horizontal_tail(geometry, &flights) {
+            Ok(state) => ht_state = state,
+            Err(AeroError::Numerical(_)) => tails_ok = false,
+            Err(e) => return Err(e),
+        }
+    }
+    let mut fins = if tails_ok {
+        wing::Fins::new(geometry)?
+    } else {
+        None
+    };
     let mut points = Vec::new();
     let mut seen_high = false;
     for flight in flights {
@@ -133,6 +164,23 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
             (None, _) => None,
         };
         let wing_deferred = wing_present && wing.is_none() && !bypass;
+        // MAIN01 order: HT overlays, then M08O10 and SUBLAT's fin sections
+        // (which read the HT's AHT/HTIN for the endplate effect).
+        tails_ok &= !bypass && flight.regime == Regime::Subsonic;
+        let (horizontal_tail, vertical_tail, ventral_fin) = if tails_ok {
+            let ht = ht_state
+                .as_mut()
+                .map(|s| s.subsonic(&flight, experimental))
+                .transpose()?;
+            let (vt, vf) = match fins.as_mut() {
+                Some(f) => f.subsonic(&flight, experimental, ht_state.as_ref())?,
+                None => (None, None),
+            };
+            (ht, vt, vf)
+        } else {
+            (None, None, None)
+        };
+        let tails_deferred = tails_present && !tails_ok && !bypass;
         let body = if geometry.body.is_none() || bypass || deferred {
             None
         } else {
@@ -141,8 +189,7 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
                 Regime::Transonic => {
                     // Without lifting surfaces the pre-pass only leaves B(1)
                     // = TRAH(6) = UNUSED; with them it runs whole subsonic
-                    // and supersonic analyses at substitute Mach numbers,
-                    // which await the wing checkpoints (`deferred`).
+                    // and supersonic analyses at substitute Mach numbers
                     let b1 = if prepass { UNUSED } else { flight.mach };
                     Some(body::transonic(geometry, &flight, experimental, b1)?)
                 }
@@ -161,6 +208,10 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
             deferred,
             wing,
             wing_deferred,
+            horizontal_tail,
+            vertical_tail,
+            ventral_fin,
+            tails_deferred,
         });
     }
     Ok(CaseAero { points })

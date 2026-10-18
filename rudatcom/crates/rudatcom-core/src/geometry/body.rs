@@ -1,5 +1,4 @@
 //! Body station geometry: EQSPCE/GETMAX and geometric integrals from BODYJM.
-//! Aerodynamic nose/afterbody corrections remain with BODYRT in checkpoint 7.
 
 use super::{GeometryError, Result};
 use crate::{

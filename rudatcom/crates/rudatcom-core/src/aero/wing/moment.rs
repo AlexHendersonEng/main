@@ -3,9 +3,10 @@
 //! Aerodynamic centre: high aspect ratio from XAC/A(30); otherwise FIG
 //! 4.1.4.2-22A/B (FWDXAC for forward sweep), area-weighted over the inboard
 //! and outboard panels of non-straight planforms. Above CLmax the
-//! nonlinear 4.1.4.3 method uses FIG 4.1.4.3-11/12/13.
+//! nonlinear 4.1.4.3 method uses FIG 4.1.4.3-11/12/13. The horizontal tail
+//! runs the same code as M33O41, whose slope pass differs slightly.
 
-use super::{data::cmalph as t, data::fwdxac as x, tb, tl, WingCase, STRA};
+use super::{data::cmalph as t, data::fwdxac as x, tb, tl, Surface, WingCase, STRA};
 use crate::{
     aero::Result,
     input::UNUSED,
@@ -260,7 +261,27 @@ impl WingCase {
             cla = slope(w, 21, 0.)?;
             cma = slope(w, 41, 0.)?;
         }
-        if !((self.a[7] <= 6. / self.a[124] && self.kind == STRA) || kwing) {
+        let skip = (self.a[7] <= 6. / self.a[124] && self.kind == STRA) || kwing;
+        if self.surface == Surface::HorizontalTail {
+            // M33O41: a 7.5% change against HT(101) as the loop left it
+            // (the slope at the first alpha), and the skip branch jumps past
+            // the restore, keeping that first-alpha slope in HT(101)/(121).
+            if !skip {
+                let mut flag = false;
+                for j in 2..=n {
+                    let del = 100. * (w[j + 100] / w[101] - 1.0).abs();
+                    flag |= del > 7.5;
+                    if flag {
+                        w[j + 40] = 2.0 * UNUSED;
+                        w[j + 120] = 2.0 * UNUSED;
+                    }
+                }
+                w[101] = cla;
+                w[121] = cma;
+            }
+            return Ok(());
+        }
+        if !skip {
             let mut flag = false;
             for j in 2..=n {
                 let del = 100. * (w[j + 100] / cla - 1.0).abs();

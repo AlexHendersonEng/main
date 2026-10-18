@@ -151,7 +151,7 @@ intermediates for some wings (alpha 0 beyond a negative pre-pass
 alpha(CLmax)) and then discards them. Only there does rudatcom relax its
 non-finite checks, so that it reproduces the same values.
 The wing-body overlay (M07O07), body terms in SUBLAT/M29O35/SUPLAT and
-the DWASH downwash quantities are left to later checkpoints.
+the DWASH downwash quantities are not implemented yet.
 
 `tests/wing.rs` instruments the original after `M17O21`, after MAIN04's
 `M23O27` and before MAIN03's `M49O61`. It compares the WING results and the
@@ -165,3 +165,24 @@ runs the 7 samples with wings plus the decks in `tests/cases/wing/`:
   cranked;
 - transonic: thin and thick, unswept, low and high aspect ratio, high
   taper, non-straight and experimental ALPOW/ALPLW decks.
+
+Subsonic tails without a body are ported into `PointAero::horizontal_tail`,
+`vertical_tail` and `ventral_fin`:
+- **Horizontal tail**: the wing-alone path run on AHT/BHT/HTIN (CLMCH0
+  ITTY=1, M16O20, M05O05 and M33O41's slope pass), plus SUBLAT's HT part.
+- **Vertical tail and ventral fin** (M08O10): VTDRAG/VFDRAG zero-lift drag,
+  and SUBLAT's tail section for CYbeta, Cnbeta and Clbeta, including the
+  T-tail endplate effect, twin fins (PHIV/PHIF) and `$TVTPAN` twin panels.
+  As in the original, the fin section runs only without a wing (vertical
+  tail) or without a horizontal tail (ventral fin). Without a body the fin's
+  span ratio is infinite, and the original holds both figure lookups at
+  their table ends; rudatcom does the same.
+
+Tails with a body, transonic and supersonic tails, points after them and
+cases whose HT CLMCH0 pre-pass fails are marked `tails_deferred`.
+`tests/tail.rs` instruments the original after MAIN01's `M17O21`. It
+compares HT, VT and VF and their work arrays (AHT/BHT/CHT/DHT/STBH/HTIN,
+AVT/VTIN/DVT/STB and AVF/VFIN/DVF/STBH) for the decks in
+`tests/cases/tail/`: straight, swept and cranked HTs with measured data,
+straight and cranked VTs, ventral fins, twin panels, measured CDV, T- and
+low tails, and a wing with all tails.

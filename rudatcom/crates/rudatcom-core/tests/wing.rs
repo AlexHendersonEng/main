@@ -1,4 +1,4 @@
-//! Live differential test of the wing-alone methods (checkpoints 7d-7f).
+//! Live differential test of the wing-alone methods.
 //! The original is rebuilt with control-flow hooks only (no formulas
 //! changed) that record its wing COMMON blocks after MAIN01's and MAIN04's
 //! lateral derivatives and before MAIN03's M49O61; nothing from the
@@ -200,8 +200,8 @@ fn wing_matches_original() {
                             }
                             continue;
                         }
-                        // DWASH (M09O11, wing-body-tail downwash; a later
-                        // checkpoint) overwrites A(20) before the probe.
+                        // DWASH (M09O11, wing-body-tail downwash; which still needs to implemented)
+                        // overwrites A(20) before the probe.
                         if name == "A" && k == 19 && !wing_alone {
                             continue;
                         }

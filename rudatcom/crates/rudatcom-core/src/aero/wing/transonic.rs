@@ -1,4 +1,4 @@
-//! Transonic wing-alone path (checkpoint 7f): MAIN03's once-per-case DOL2
+//! Transonic wing-alone path: MAIN03's once-per-case DOL2
 //! pre-pass (SETUP2 states that rerun MAIN01 at Mach 0.6 and MAIN04 at
 //! Mach 1.4), then per point M18O22's geometry restore, M24O30 (TRANWB ->
 //! TRSONI with TRANWG and CLMXB1), M25O31 (TRANCM), M35O43 (WBTRA's

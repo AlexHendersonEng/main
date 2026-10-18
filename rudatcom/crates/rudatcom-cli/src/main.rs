@@ -1,4 +1,4 @@
-//! `rudatcom` command line entry point. Subcommands (`run`, `check`) arrive in a later checkpoint.
+//! `rudatcom` command line entry point.
 
 use clap::Parser;
 

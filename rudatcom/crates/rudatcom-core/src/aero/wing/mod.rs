@@ -1,4 +1,4 @@
-//! Wing-alone aerodynamics. Checkpoint 7d ports the subsonic path of MAIN01:
+//! Wing-alone aerodynamics. Ports the subsonic path of MAIN01:
 //! M15O17 (CALCA0, WTLIFT, LIFTCF, CLMXBS), M03O03 (CDRAG, FIG53A), M31O37
 //! (CMALPH, FWDXAC, CACALC and the slope pass), M29O35's wing part and
 //! M17O21's SUBLAT, plus the main program's once-per-case CLMCH0 pre-pass.
@@ -11,9 +11,16 @@
 //! does. Index 0 of every array is unused so subscripts read like the
 //! Fortran. The supersonic (MAIN04) and transonic (MAIN03) paths live in
 //! [`supersonic`] and [`transonic`].
+//!
+//! Reuses [`WingCase`] for the subsonic horizontal tail: the
+//! original calls the same routines with AHT/BHT/HTIN/HT (CLMCH0 ITTY=1,
+//! M16O20, M05O05, M33O41, M29O35's HT part, SUBLAT's second call), so a
+//! [`Surface`] tag selects the few tail-specific differences. The vertical
+//! tail, ventral fin and twin vertical panels are in [`fin`].
 
 mod data;
 mod drag;
+mod fin;
 mod lateral;
 mod lift;
 mod moment;
@@ -35,6 +42,35 @@ const DOUB: u8 = 2;
 const CRAN: u8 = 3;
 const CURV: u8 = 4;
 
+pub use fin::{FinAero, FinWork, Fins};
+
+/// Which lifting surface a [`WingCase`] models: the wing (A, B, WINGIN,
+/// WING, STB) or the horizontal tail (AHT, BHT, HTIN, HT, STBH).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Surface {
+    Wing,
+    HorizontalTail,
+}
+
+impl Surface {
+    /// (section namelist, SYNTHS incidence index: ALIW or ALIH).
+    fn names(self) -> (&'static str, usize) {
+        match self {
+            Surface::Wing => ("WGSCHR", 3),
+            Surface::HorizontalTail => ("HTSCHR", 7),
+        }
+    }
+
+    /// EXPR value slots (0-based XNAM23 AH indices): CD, CL, CM, CLA and CMA
+    /// tables, ALPO/ALPL and ACLM/CLM (stored in TRA(37)/(38) or TRAH).
+    fn expr_slots(self) -> ([usize; 5], [usize; 4]) {
+        match self {
+            Surface::Wing => ([100, 120, 140, 160, 180], [461, 462, 465, 466]),
+            Surface::HorizontalTail => ([200, 220, 240, 260, 280], [463, 464, 467, 468]),
+        }
+    }
+}
+
 /// Wing-alone results for one flight point: the WING(1..200) blocks, one
 /// value per angle of attack, plus the work arrays for traceability.
 #[derive(Debug, Clone)]
@@ -54,7 +90,8 @@ pub struct WingAero {
     /// Method messages the original prints (e.g. "NO CLALPHA COMPUTATION").
     pub messages: Vec<String>,
     /// COMMON-block work arrays after the point, 0-based copies of
-    /// A(1..195), B(1..49), C(1..51), D(1..55), STB(1..135), WINGIN(1..91).
+    /// A(1..195), B(1..49), C(1..51), D(1..55), STB(1..135), WINGIN(1..91)
+    /// (AHT, BHT, CHT, DHT, STBH and HTIN(1..154) for the horizontal tail).
     pub work: WingWork,
 }
 
@@ -76,11 +113,15 @@ pub struct WingWork {
 }
 
 /// Per-case wing state (COMMON /WINGD/, /WINGI/, /IWING/, /WHAERO/ C and
-/// D, /SBETA/ STB) plus the case constants the routines read.
+/// D, /SBETA/ STB) plus the case constants the routines read; for the
+/// horizontal tail the same fields hold AHT, BHT, HTIN, HT, CHT, DHT, STBH
+/// and TRAH.
 pub struct WingCase {
+    surface: Surface,
     a: [f32; 196],
     b: [f32; 50],
-    ain: [f32; 92],
+    /// WINGIN(1..91) or HTIN(1..154).
+    ain: [f32; 155],
     wing: [f32; 401],
     c: [f32; 52],
     d: [f32; 56],
@@ -161,46 +202,73 @@ fn angles(block: &mut [f32]) -> Result<()> {
     })
 }
 
+/// WINGIN/HTIN/VTIN/VFIN(1..15) after WTGEOM (converted units, CHRDBP =
+/// tip chord for a single panel). The planform XNAMs never store SWAFP, so
+/// slot 10 is left for the section namelist's ALPHAO.
+fn planform_inputs(p: &surface::Planform) -> [f32; 15] {
+    [
+        p.tip_chord,
+        p.outboard_semispan,
+        p.exposed_semispan,
+        p.semispan,
+        p.break_chord,
+        p.root_chord,
+        p.inboard_sweep,
+        p.outboard_sweep,
+        p.chord_station,
+        UNUSED,
+        p.twist,
+        p.dihedral_break,
+        p.inboard_dihedral,
+        p.outboard_dihedral,
+        f32::from(p.kind),
+    ]
+}
+
 impl WingCase {
     /// Build the case state (WINGIN, A after M02O02, B after SETUP1) and run
     /// the main program's CLMCH0 pre-pass when the case has subsonic or
     /// transonic Mach numbers. `None` without a wing.
     pub fn new(geometry: &Geometry, points: &[FlightPoint]) -> Result<Option<Self>> {
-        let Some(surface) = &geometry.wing else {
+        Self::build(geometry, points, Surface::Wing)
+    }
+
+    /// The horizontal tail's case state (AHT, BHT after SETUP1 with ALIH,
+    /// HTIN) after the main program's CLMCH0 ITTY=1 pre-pass (M16O20).
+    /// `None` without HTPLNF.
+    pub fn horizontal_tail(geometry: &Geometry, points: &[FlightPoint]) -> Result<Option<Self>> {
+        Self::build(geometry, points, Surface::HorizontalTail)
+    }
+
+    fn build(
+        geometry: &Geometry,
+        points: &[FlightPoint],
+        kind_of: Surface,
+    ) -> Result<Option<Self>> {
+        let planform_surface = match kind_of {
+            Surface::Wing => &geometry.wing,
+            Surface::HorizontalTail => &geometry.horizontal_tail,
+        };
+        let Some(surface) = planform_surface else {
             return Ok(None);
         };
+        let (section, incidence) = kind_of.names();
         let case = &geometry.inputs.case;
-        let sc = case.namelist("WGSCHR").expect("WGSCHR schema");
+        let sc = case.namelist(section).expect("section schema");
         let fl = case.namelist("FLTCON").expect("FLTCON schema");
         let syn = case.namelist("SYNTHS").expect("SYNTHS schema");
         let p = &surface.planform;
         let kind = p.kind;
-        let mut ain = [UNUSED; 92];
-        // WINGIN(1..15) after WTGEOM (converted units, CHRDBP = tip chord
-        // for a single panel). XNAM4 never stores SWAFP: WINGIN(10) is
-        // WGSCHR's ALPHAO, so it is filled from the WGSCHR block below.
-        let planform = [
-            p.tip_chord,
-            p.outboard_semispan,
-            p.exposed_semispan,
-            p.semispan,
-            p.break_chord,
-            p.root_chord,
-            p.inboard_sweep,
-            p.outboard_sweep,
-            p.chord_station,
-            UNUSED,
-            p.twist,
-            p.dihedral_break,
-            p.inboard_dihedral,
-            p.outboard_dihedral,
-            f32::from(kind),
-        ];
-        ain[1..16].copy_from_slice(&planform);
+        let mut ain = [UNUSED; 155];
+        ain[1..16].copy_from_slice(&planform_inputs(p));
         // WINGIN(10) and WINGIN(16..91) are the WGSCHR block in namelist
-        // location order.
+        // location order (XNAM8 copies HTIN(16..154) from HTSCHR alike).
         ain[10] = sc.values[9];
-        ain[16..92].copy_from_slice(&sc.values[15..91]);
+        let last = match kind_of {
+            Surface::Wing => 92,
+            Surface::HorizontalTail => 155,
+        };
+        ain[16..last].copy_from_slice(&sc.values[15..last - 1]);
         // CAMBER is LOGICAL in WINGIN(64): unset reads as .FALSE. (0).
         let camber = ain[64] == 1.0;
         ain[64] = if camber { 1.0 } else { 0.0 };
@@ -208,13 +276,15 @@ impl WingCase {
         a[1..].copy_from_slice(&surface.coefficients[..195]);
         let nalpha = ((fl.values[1] + 0.5) as i32).clamp(0, 20) as usize;
         let alphas = fl.values[22..22 + nalpha].to_vec();
-        // SETUP1: B(J+22) = alpha + ALIW (UNUSED incidence adds 1e-30).
+        // SETUP1: B(J+22) = alpha + ALIW (BHT with ALIH; an UNUSED
+        // incidence adds 1e-30).
         let mut b = [UNUSED; 50];
         for (j, &alpha) in alphas.iter().enumerate() {
-            b[j + 23] = alpha + syn.values[3];
+            b[j + 23] = alpha + syn.values[incidence];
         }
         let reference = &geometry.reference;
         let mut state = WingCase {
+            surface: kind_of,
             a,
             b,
             ain,
@@ -234,6 +304,7 @@ impl WingCase {
             alpow: UNUSED,
             alplw: UNUSED,
             a_geometry: a,
+            // Read only by the supersonic/transonic wing paths.
             syna: (syn.values[0], syn.values[1], syn.values[3]),
             kind,
             camber,
@@ -291,22 +362,23 @@ impl WingCase {
         self.liftcf()
     }
 
-    /// EXSUBT for the wing: given EXPR values replace WING's CD, CL, CM,
-    /// CLA and CMA entries (EXPR slots 100/120/140/160/180), ALPOW/ALPLW
-    /// and TRA(37)/TRA(38) (ACLMW/CLMW). Returns KWING, true when any of
-    /// the five first entries is given.
+    /// EXSUBT for this surface: given EXPR values replace the CD, CL, CM,
+    /// CLA and CMA entries (wing slots 100..180, HT slots 200..280),
+    /// ALPO/ALPL and TRA(37)/TRA(38) (ACLM/CLM). Returns KWING (KHT), true
+    /// when any of the five first entries is given.
     fn exsubt(&mut self, experimental: Option<&Namelist>) -> bool {
         let Some(data) = experimental else {
             return false;
         };
         let v = &data.values;
+        let (tables, [alpo, alpl, aclm, clm]) = self.surface.expr_slots();
         let given = |slot: usize, current: f32| if v[slot] != UNUSED { v[slot] } else { current };
-        self.alpow = given(461, self.alpow);
-        self.alplw = given(462, self.alplw);
-        self.tra[37] = given(465, self.tra[37]);
-        self.tra[38] = given(466, self.tra[38]);
+        self.alpow = given(alpo, self.alpow);
+        self.alplw = given(alpl, self.alplw);
+        self.tra[37] = given(aclm, self.tra[37]);
+        self.tra[38] = given(clm, self.tra[38]);
         let mut kwing = false;
-        for (slot, base) in [(100, 1), (120, 21), (140, 41), (160, 101), (180, 121)] {
+        for (slot, base) in tables.into_iter().zip([1, 21, 41, 101, 121]) {
             kwing |= v[slot] != UNUSED;
             for j in 0..self.alphas.len() {
                 if v[slot + j] != UNUSED {
@@ -319,7 +391,7 @@ impl WingCase {
 
     /// MAIN01's wing sequence for one subsonic point (MAIN00 has set B(1) =
     /// Mach, B(2) = beta and A(129) = Reynolds number per unit length).
-    /// The wing-body overlay M07O07 follows in a later checkpoint.
+    /// The wing-body overlay M07O07 is still not implemented.
     pub fn subsonic(
         &mut self,
         point: &FlightPoint,
@@ -373,6 +445,10 @@ impl WingCase {
 
     fn result(&mut self) -> Result<WingAero> {
         let n = self.alphas.len();
+        let inputs = match self.surface {
+            Surface::Wing => 92,
+            Surface::HorizontalTail => 155,
+        };
         let take = |base: usize| -> Result<Vec<f32>> {
             let v = self.wing[base..base + n].to_vec();
             finite(&v)?;
@@ -396,7 +472,7 @@ impl WingCase {
                 c: self.c[1..].to_vec(),
                 d: self.d[1..].to_vec(),
                 stb: self.stb[1..].to_vec(),
-                wingin: self.ain[1..].to_vec(),
+                wingin: self.ain[1..inputs].to_vec(),
                 slg: self.slg[1..].to_vec(),
                 tra: self.tra[1..].to_vec(),
                 second: self.second[1..].to_vec(),

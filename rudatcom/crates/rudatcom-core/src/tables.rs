@@ -1,6 +1,5 @@
 //! Shared DATA tables from AGENR/GDELTA and constants from BLOCKD.
 //!
-//! Method-specific figure tables live with their consumers in later checkpoints.
 //! Decimal literals and flat, Fortran storage order are retained for traceability.
 #![allow(clippy::excessive_precision, clippy::approx_constant)]
 

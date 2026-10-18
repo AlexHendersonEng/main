@@ -2,7 +2,9 @@
 //! sideslip derivatives (DATCOM 5.1.1/5.1.2). WING(141..160) and
 //! WING(161..180) scale with CL and CL^2; WING(181..200) is the dihedral
 //! effect from FIG 5.1.2.1-27..31 (TLIN4X for partial-span dihedral).
-//! The wing-body (BO) and tail parts follow in later checkpoints.
+//! M29O35 and M17O21 also run these routines unchanged on the horizontal
+//! tail (STBH/HTIN). The vertical tail and ventral fin sections are in
+//! `fin.rs`; the wing-body (BO) parts are to follow.
 
 use super::{data::sublat as t, tl, WingCase, STRA};
 use crate::{

@@ -111,7 +111,7 @@ fn reference_is_deterministic() {
     .expect("original output differs between runs");
 }
 
-/// Enabled once the port can produce full reports (Checkpoint 8).
+/// Enabled once the port can produce full reports.
 #[test]
 #[ignore = "output writer not ported yet"]
 fn rudatcom_matches_reference() {
