@@ -2,6 +2,7 @@
 //! Keeping this separate from parsing prevents double conversion of SAVE cases.
 
 use super::{GeometryError, Result};
+use crate::flight::atmos;
 use crate::input::{Case, Diagnostic, DimUnit, Namelist, UNUSED};
 use crate::math::finite;
 
@@ -103,8 +104,8 @@ fn warn(case: &mut Case, message: String) {
 }
 
 /// The FLC checks INPUTB applies right after CONV (speed reference, default
-/// Reynolds number, LOOP/NALT consistency). FLTCON locations equal FLC indices.
-/// The ATMOS pressure/temperature fill is not ported yet.
+/// Reynolds number, LOOP/NALT consistency) and CHECK's ATMOS fill. FLTCON
+/// locations equal FLC indices.
 fn flight_conditions(case: &mut Case) -> Result<()> {
     let n = case
         .namelists
@@ -160,6 +161,19 @@ fn flight_conditions(case: &mut Case) -> Result<()> {
     flc[159] = lp as f32;
     flc[0] = nmach as f32;
     flc[158] = nalt as f32;
+    // CHECK fills TINF/PINF from ATMOS only when ALT is input and PINF/TINF
+    // are not both input; an unset ALT(i) within NALT means sea level.
+    let ipt = used(flc[116]) && used(flc[73]);
+    if ialt && !ipt {
+        for i in 0..nalt.clamp(0, 20) as usize {
+            if flc[i + 96].abs() <= UNUSED {
+                flc[i + 96] = 0.0;
+            }
+            let state = atmos(flc[i + 96])?;
+            flc[i + 116] = state.temperature;
+            flc[i + 73] = state.pressure;
+        }
+    }
     for m in messages {
         warn(case, m);
     }

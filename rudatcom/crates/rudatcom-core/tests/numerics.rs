@@ -345,10 +345,9 @@ fn sample_geometry_matches_original_common_blocks() {
         geometry::Geometry,
         input::{parse_deck, UNUSED},
     };
-    use std::io::Write as IoWrite;
-    let source = support::original_source();
-    // Hook after CHECK's flight-condition fixes (before ATMOS, not ported).
-    let flc = "      FLC(159) = NALT";
+    let source = support::original_source().replace('\r', "");
+    // Hook after CHECK's flight-condition fixes and ATMOS fill.
+    let flc = support::CHECK_END;
     let body = "      XC = 2.0*XC/SP";
     assert_eq!(source.matches(flc).count(), 1);
     assert_eq!(source.matches(body).count(), 1);
@@ -382,28 +381,7 @@ fn sample_geometry_matches_original_common_blocks() {
     for (sample, input) in decks {
         let input = input.replace('\r', "");
         let parsed = parse_deck(&input).unwrap();
-        let scratch = tempfile::tempdir_in(reference.dir.path()).unwrap();
-        fs::write(scratch.path().join("case.inp"), &input).unwrap();
-        let mut child = Command::new(&reference.binary)
-            .current_dir(scratch.path())
-            .stdin(Stdio::piped())
-            .stdout(Stdio::null())
-            .stderr(Stdio::piped())
-            .spawn()
-            .unwrap();
-        child
-            .stdin
-            .take()
-            .unwrap()
-            .write_all(b"case.inp\n")
-            .unwrap();
-        let output = child.wait_with_output().unwrap();
-        assert!(
-            output.status.success(),
-            "ex{sample}: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-        let text = fs::read_to_string(scratch.path().join("geometry.txt")).unwrap();
+        let text = support::run_original(&reference, &input, "geometry.txt");
         let cases: Vec<_> = text
             .split("CASE\n")
             .filter(|s| !s.trim().is_empty())

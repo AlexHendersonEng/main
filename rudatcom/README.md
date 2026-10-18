@@ -83,3 +83,21 @@ Inputs on which the original hangs or divides by zero produce an explicit error.
 The live geometry test also compares every filled section slot, using all 11
 samples plus `airfoil/sections.inp` (every NACA family, `TYPEIN` input, VF
 cards, cranked/double-delta wings, high/low tails and a saved case).
+
+### Flight conditions and subsonic body
+`rudatcom_core::flight` ports ATMOS (the 1962 US Standard Atmosphere) and the
+main program's LOOP 1/2/3 Mach/altitude sweep. It produces one `FlightPoint`
+per analysed condition, with velocity, Reynolds number and speed regime.
+`rudatcom_core::aero::analyze` then computes subsonic body-alone coefficients
+(M04O04/M06O06): BODYRT slender-body plus crossflow, BODYJM (`METHOD=2`), and
+BODOPT for cambered/asymmetric bodies, followed by the alpha derivatives.
+`$EXPRnn` experimental body data replaces computed values, as in the original.
+The original resets its body arrays at the start of every case, and so does
+rudatcom.
+Transonic, supersonic and hypersonic body points are not computed yet
+(`body` is `None`).
+
+`tests/aero.rs` compares every subsonic body point live against the original,
+which is instrumented after M04O04/M06O06. It runs all 11 samples plus the decks in `tests/cases/body/`:
+boat tails, Jorgensen with elliptic sections, rough/blunt bodies, asymmetric
+bodies, LOOP/altitude/VINF sweeps, and experimental data carried by `SAVE`.

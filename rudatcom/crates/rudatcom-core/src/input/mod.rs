@@ -152,6 +152,29 @@ impl Case {
     pub fn is_runnable(&self) -> bool {
         self.diagnostics.is_empty()
     }
+
+    /// EXPDAT/EXSUBT/XNAM23: the `$EXPRnn` groups for one-based Mach index
+    /// `mach`, read in input order into one EXPR namelist (entries no group
+    /// sets stay UNUSED). Only the first 100 groups count, like the original.
+    pub fn experimental(&self, mach: usize) -> Result<Option<Namelist>, Error> {
+        let def = namelist_def("EXPR").expect("EXPR schema");
+        let mut data = Namelist::new(def);
+        let mut found = false;
+        for group in self
+            .expr
+            .iter()
+            .take(100)
+            .filter(|g| g.index as usize == mach)
+        {
+            let mut cards: Vec<Card> = group.cards.iter().map(|t| Card::new(0, t)).collect();
+            // INPUT blanks the Mach digits so NAMER sees `$EXPR`.
+            cards[0].b[6] = b' ';
+            cards[0].b[7] = b' ';
+            namelist::read_namelist(&mut namelist::Cursor::new(&cards), &mut data)?;
+            found = true;
+        }
+        Ok(found.then_some(data))
+    }
 }
 
 /// A whole input deck.

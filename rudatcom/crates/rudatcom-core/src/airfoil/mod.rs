@@ -20,7 +20,7 @@ mod decode;
 use crate::{
     input::{Case, Diagnostic, UNUSED},
     interp::{tbfunx_unordered, Limits},
-    math::{finite, MathError},
+    math::{finite, powr, MathError},
     tables::RAD,
 };
 
@@ -37,13 +37,6 @@ pub type Result<T> = std::result::Result<T, AirfoilError>;
 const NP: usize = 60;
 /// Weber collocation points (XN = 32 in IDEAL/SLOPE).
 const NW: usize = 32;
-
-/// Raise `x` to a real power through libm `powf`, as gfortran -O0 does.
-/// `black_box` stops LLVM rewriting e.g. `powf(x, 0.5)` as `sqrt(x)`, which
-/// can differ in the last bit.
-fn powr(x: f32, e: f32) -> f32 {
-    x.powf(std::hint::black_box(e))
-}
 
 /// Weber thickness/camber terms (/IBV/), indexed 1-based like the Fortran
 /// (element 0 unused) so the IDEAL/SLOPE formulas read like the source.

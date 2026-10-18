@@ -51,6 +51,23 @@ pub(super) fn station_count(body: &Namelist) -> Result<usize> {
 }
 
 fn validate(stations: &BodyStations) -> Result<()> {
+    validate_shape(stations)?;
+    if stations
+        .radius
+        .iter()
+        .chain(&stations.perimeter)
+        .chain(&stations.area)
+        .any(|&v| v < 0.0)
+    {
+        return Err(GeometryError::Invalid(
+            "body X must increase and R/S/P must be nonnegative".into(),
+        ));
+    }
+    Ok(())
+}
+
+/// Equal lengths, finite/complete data and strictly increasing X.
+fn validate_shape(stations: &BodyStations) -> Result<()> {
     let n = stations.x.len();
     if n == 0
         || stations.radius.len() != n
@@ -74,14 +91,7 @@ fn validate(stations: &BodyStations) -> Result<()> {
             ));
         }
     }
-    if stations.x.windows(2).any(|w| w[1] <= w[0])
-        || stations
-            .radius
-            .iter()
-            .chain(&stations.perimeter)
-            .chain(&stations.area)
-            .any(|&v| v < 0.0)
-    {
+    if stations.x.windows(2).any(|w| w[1] <= w[0]) {
         return Err(GeometryError::Invalid(
             "body X must increase and R/S/P must be nonnegative".into(),
         ));
@@ -92,6 +102,17 @@ fn validate(stations: &BodyStations) -> Result<()> {
 /// EQSPCE: linear interpolation with GLOOK knot snapping, then TBFUNX slopes.
 pub fn eqspce(stations: &BodyStations, count: usize) -> Result<EquallySpacedBody> {
     validate(stations)?;
+    space(stations, count)
+}
+
+/// EQSPCE for arrays that may be negative: BODOPT passes camber-line
+/// offsets and X/L ratios through the radius/perimeter slots.
+pub fn eqspce_signed(stations: &BodyStations, count: usize) -> Result<EquallySpacedBody> {
+    validate_shape(stations)?;
+    space(stations, count)
+}
+
+fn space(stations: &BodyStations, count: usize) -> Result<EquallySpacedBody> {
     if !(2..=20).contains(&count) {
         return Err(GeometryError::Invalid(
             "EQSPCE requires 2..20 output stations".into(),

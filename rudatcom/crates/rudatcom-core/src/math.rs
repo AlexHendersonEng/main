@@ -17,6 +17,13 @@ pub(crate) fn finite(values: &[f32]) -> Result<(), MathError> {
     }
 }
 
+/// Raise `x` to a real power through libm `powf`, as gfortran -O0 does.
+/// `black_box` stops LLVM rewriting e.g. `powf(x, 0.5)` as `sqrt(x)`, which
+/// can differ in the last bit.
+pub(crate) fn powr(x: f32, e: f32) -> f32 {
+    x.powf(std::hint::black_box(e))
+}
+
 /// QUAD: quadratic value and derivative using the original determinant expansion.
 pub fn quad(x: &[f32; 3], y: &[f32; 3], at: f32) -> Result<(f32, f32), MathError> {
     finite(x)?;

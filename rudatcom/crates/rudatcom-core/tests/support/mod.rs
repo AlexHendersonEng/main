@@ -1,4 +1,6 @@
 //! Shared live-Fortran probe build support; all generated sources/results are temporary.
+// Each test binary uses a different subset of these helpers.
+#![allow(dead_code)]
 
 use rudatcom_core::compare::Tolerance;
 use std::{fmt::Write, fs, path::PathBuf, process::Command};
@@ -84,6 +86,40 @@ pub fn compile(source: &str, driver: &str) -> Reference {
         String::from_utf8_lossy(&output.stderr)
     );
     Reference { dir, binary }
+}
+
+/// End of CHECK's ATMOS fill (LF-normalized source): the point where the
+/// original's flight conditions match rudatcom's converted FLTCON.
+pub const CHECK_END: &str =
+    "          CALL ATMOS(FLC(I+96), FLC(I+116), FLC(I+73))\n 1220   CONTINUE\n 1230 CONTINUE";
+
+/// Run a (probe-instrumented) original on `input` in a scratch directory
+/// inside the probe build and return the text of `result`.
+pub fn run_original(reference: &Reference, input: &str, result: &str) -> String {
+    use std::io::Write as _;
+    use std::process::Stdio;
+    let scratch = tempfile::tempdir_in(reference.dir.path()).unwrap();
+    fs::write(scratch.path().join("case.inp"), input).unwrap();
+    let mut child = Command::new(&reference.binary)
+        .current_dir(scratch.path())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(b"case.inp\n")
+        .unwrap();
+    let output = child.wait_with_output().unwrap();
+    assert!(
+        output.status.success(),
+        "original failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    fs::read_to_string(scratch.path().join(result)).unwrap_or_default()
 }
 
 pub fn assert_close(original: f32, rust: f32, context: &str) {

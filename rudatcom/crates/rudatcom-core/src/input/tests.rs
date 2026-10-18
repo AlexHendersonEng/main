@@ -161,3 +161,20 @@ fn every_sample_deck_parses_cleanly() {
     }
     assert!(n >= 11);
 }
+
+#[test]
+fn experimental_groups_merge_per_mach_index() {
+    let case = one_case(
+        " $FLTCON NMACH=2.,MACH(1)=0.2,0.4,NALPHA=2.,ALSCHD(1)=0.,5.$\n \
+         $EXPR01 CLB(1)=0.1,0.2$\n $EXPR02 CDB(1)=0.3$\n $EXPR01 CMB(2)=-0.5$\n",
+    );
+    let first = case.experimental(1).unwrap().unwrap();
+    assert_eq!(first.get("CLB").unwrap()[..2], [0.1, 0.2]);
+    assert_eq!(first.get("CMB").unwrap()[..2], [UNUSED, -0.5]);
+    assert_eq!(first.get("CDB").unwrap()[0], UNUSED);
+    assert_eq!(
+        case.experimental(2).unwrap().unwrap().get("CDB").unwrap()[0],
+        0.3
+    );
+    assert!(case.experimental(3).unwrap().is_none());
+}
