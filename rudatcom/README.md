@@ -27,7 +27,7 @@ Without `RUDATCOM_REFERENCE_BIN` the reference tests fail with a clear message. 
 outputs are stored in the repo; only input decks (`tests/cases/`).
 Naming: `rudatcom` is this project; bare `datcom` always means the original program.
 
-### Numerical foundation (checkpoint 5)
+### Numerical foundation
 `rudatcom-core::interp` ports GLOOK/SWITCH, TBFUNX, the TLIN family and INTERX;
 `rudatcom-core::math` ports QUAD, QUADIN, TRAPZ, DET4, SIMUL4 and AGENR/GDELTA.
 Their shared DATA tables are in `tables`; method-specific figure tables will be
@@ -49,7 +49,7 @@ knots, singular systems and non-finite results return errors rather than legacy
 NaNs or undefined memory accesses.
 GDELTA's safe API requires normalized, ordered flap spans (`0 <= EFI <= EFO <= 1`).
 
-### Geometry (checkpoint 6)
+### Geometry
 `rudatcom_core::geometry::Geometry::from_case(&case)` computes reference quantities,
 wing/tail/fin planforms (SETUP1/WTGEOM/ARCLSS), synthesis dimensions and hinge
 rotation (SYNDIM/INFTGM), and body station resampling, maxima and integrals
@@ -69,3 +69,17 @@ CONV and M02O02 and to stop BODYJM before its aerodynamic calculations; the
 original calculation statements and installed source/binary are not changed.
 These tests use the same compiler/source prerequisites and numeric tolerance as
 the numerical probes, and leave no reference outputs in the repository.
+
+### Airfoil sections
+`rudatcom_core::airfoil` ports M50O62: NACA card decoding (4/5-digit, modified,
+1-series, 6-series and supersonic S-1/S-2/S-3), user coordinates (`TYPEIN` 1/2),
+Weber thickness/camber terms, lift-curve slope, CLMAX and the wing CSLOPE
+slopes. `Geometry::from_case` runs it after CONV, before WTGEOM, filling only
+the `xxSCHR` section inputs the user left unset. As in the original, a missing
+speed reference (FLTCON) is an error, and an HT/VT/VF without `TYPE` is not
+treated as straight tapered (the original reads outside its type-name table).
+Inputs on which the original hangs or divides by zero produce an explicit error.
+
+The live geometry test also compares every filled section slot, using all 11
+samples plus `airfoil/sections.inp` (every NACA family, `TYPEIN` input, VF
+cards, cranked/double-delta wings, high/low tails and a saved case).

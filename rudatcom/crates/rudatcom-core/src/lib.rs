@@ -2,6 +2,7 @@
 //!
 //! Modules are added as the Fortran source (`datcom.f`) is ported; see `docs/architecture.md`.
 
+pub mod airfoil;
 pub mod compare;
 pub mod geometry;
 pub mod input;

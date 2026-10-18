@@ -347,16 +347,17 @@ fn sample_geometry_matches_original_common_blocks() {
     };
     use std::io::Write as IoWrite;
     let source = support::original_source();
-    let conv = "      CALL CONV(IDIM,SCALE)";
+    // Hook after CHECK's flight-condition fixes (before ATMOS, not ported).
+    let flc = "      FLC(159) = NALT";
     let body = "      XC = 2.0*XC/SP";
-    assert_eq!(source.matches(conv).count(), 1);
+    assert_eq!(source.matches(flc).count(), 1);
     assert_eq!(source.matches(body).count(), 1);
-    // CHECK skips aerodynamic execution and proceeds to the next saved input
-    // case. NACA-generated section characteristics remain checkpoint 7 work.
+    // CHECK then skips aerodynamic execution and proceeds to the next saved
+    // input case; the probe itself runs M50O62 before the geometry.
     let source = source
         .replace(
-            conv,
-            &format!("{conv}\n      CALL RUDATCOM_GEOMETRY_PROBE\n      IERR=.TRUE.\n      RETURN"),
+            flc,
+            &format!("{flc}\n      CALL RUDATCOM_GEOMETRY_PROBE\n      IERR=.TRUE.\n      RETURN"),
         )
         .replace(body, &format!("{body}\n      RETURN"));
     let reference = support::compile(&source, include_str!("geometry_driver.f90"));
@@ -372,6 +373,11 @@ fn sample_geometry_matches_original_common_blocks() {
     decks.push((
         "geometry-edges".into(),
         include_str!("../../../tests/cases/geometry/edges.inp").into(),
+    ));
+    // NACA families, TYPEIN coordinates, VF cards and saved-case sections.
+    decks.push((
+        "airfoil-sections".into(),
+        include_str!("../../../tests/cases/airfoil/sections.inp").into(),
     ));
     for (sample, input) in decks {
         let input = input.replace('\r', "");
@@ -453,6 +459,30 @@ fn sample_geometry_matches_original_common_blocks() {
                     .collect::<Vec<_>>(),
             );
             check("TVT", &get("TVTPAN").values[154..162]);
+            // M50O62 section characteristics, by xxIN slot (VFIN(k) is
+            // VFSCHR location 162 + k in the shared /VTI/ block).
+            let slots: Vec<usize> = std::iter::once(10)
+                .chain(16..=69)
+                .chain(72..=91)
+                .chain([93])
+                .collect();
+            for (row, plnf, list, offset, cslope) in [
+                ("WSCHR", "WGPLNF", "WGSCHR", 0, true),
+                ("HSCHR", "HTPLNF", "HTSCHR", 0, false),
+                ("VSCHR", "VTPLNF", "VTSCHR", 0, false),
+                ("FSCHR", "VFPLNF", "VFSCHR", 162, false),
+            ] {
+                if !get(plnf).present {
+                    assert!(!rows.contains_key(row), "missing Rust surface {row}");
+                    continue;
+                }
+                let v = &get(list).values;
+                let mut values: Vec<f32> = slots.iter().map(|s| v[s - 1 + offset]).collect();
+                if cslope {
+                    values.extend_from_slice(&v[94..100]);
+                }
+                check(row, &values);
+            }
             let syn = &get("SYNTHS").values;
             check(
                 "POSTSYN",

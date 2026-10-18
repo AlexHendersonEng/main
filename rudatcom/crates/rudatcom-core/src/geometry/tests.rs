@@ -1,11 +1,12 @@
 //! Focused geometry safety and ownership checks; live parity is in numerics.rs.
+//! Decks carry a FLTCON speed reference because INPUTB skips cases without one.
 
 use super::*;
 use crate::input::{parse_deck, DimUnit};
 
 #[test]
 fn geometry_converts_a_copy_and_defaults_wing_references() {
-    let deck = parse_deck("DIM IN\n $SYNTHS XCG=24., XW=12., SCALE=2.$\n $WGPLNF CHRDR=24., CHRDTP=12., SSPNE=36., SSPN=48., CHSTAT=0.$\n").unwrap();
+    let deck = parse_deck("DIM IN\n $FLTCON MACH=.2$\n $SYNTHS XCG=24., XW=12., SCALE=2.$\n $WGPLNF CHRDR=24., CHRDTP=12., SSPNE=36., SSPN=48., CHSTAT=0.$\n").unwrap();
     let case = &deck.cases[0];
     let g = Geometry::from_case(case).unwrap();
     assert_eq!(case.dim, DimUnit::Inches);
@@ -37,7 +38,7 @@ fn rejects_invalid_geometry_instead_of_nan_results() {
 
 #[test]
 fn save_cases_are_not_scaled_twice() {
-    let d = parse_deck("DIM M\n $SYNTHS SCALE=0.5$\n $WGPLNF CHRDR=3., CHRDTP=1., SSPNE=2., SSPN=2.$\nSAVE\nNEXT CASE\n $SYNTHS XCG=1.$\nNEXT CASE\n").unwrap();
+    let d = parse_deck("DIM M\n $FLTCON MACH=.2$\n $SYNTHS SCALE=0.5$\n $WGPLNF CHRDR=3., CHRDTP=1., SSPNE=2., SSPN=2.$\nSAVE\nNEXT CASE\n $SYNTHS XCG=1.$\nNEXT CASE\n").unwrap();
     let first = Geometry::from_case(&d.cases[0]).unwrap();
     let second = Geometry::from_case(&d.cases[1]).unwrap();
     assert_eq!(first.wing.unwrap().area(), second.wing.unwrap().area());
@@ -57,11 +58,18 @@ fn single_station_eqspce_repeats_the_station() {
 }
 
 #[test]
-fn naca_section_work_is_explicitly_pending() {
-    let deck =
-        parse_deck("NACA-W-4-0012\n $WGPLNF CHRDR=3.,CHRDTP=1.,SSPN=2.,SSPNE=2.$\n").unwrap();
+fn naca_sections_feed_geometry_thickness_inputs() {
+    let deck = parse_deck(
+        " $FLTCON NMACH=1.,MACH=.2$\nNACA-W-4-0012\n $WGPLNF CHRDR=3.,CHRDTP=1.,SSPN=2.,SSPNE=2.$\n",
+    )
+    .unwrap();
     let geometry = Geometry::from_case(&deck.cases[0]).unwrap();
-    assert_eq!(geometry.pending_airfoils, ['W']);
+    let tovc = list(&geometry.inputs.case, "WGSCHR")
+        .scalar("TOVC")
+        .unwrap();
+    assert!((tovc - 0.12).abs() < 1e-4);
+    // The parsed deck itself is untouched.
+    assert_eq!(list(&deck.cases[0], "WGSCHR").scalar("TOVC"), None);
 }
 
 #[test]
@@ -76,7 +84,7 @@ fn larwb_reference_overrides_follow_input_order_and_scale() {
             (36., 16.),
         ),
     ] {
-        let deck = parse_deck(&format!(" $SYNTHS SCALE=2.$\n{input}")).unwrap();
+        let deck = parse_deck(&format!(" $FLTCON MACH=.2$\n $SYNTHS SCALE=2.$\n{input}")).unwrap();
         let geometry = Geometry::from_case(&deck.cases[0]).unwrap();
         assert_eq!(geometry.reference.area, Some(expected.0));
         assert_eq!(geometry.reference.chord, Some(expected.1));
@@ -86,7 +94,7 @@ fn larwb_reference_overrides_follow_input_order_and_scale() {
 #[test]
 fn flap_span_correction_is_visible_and_leaves_parsed_input_alone() {
     let deck = parse_deck(
-        "DIM IN\n $WGPLNF CHRDR=3.,CHRDTP=1.,SSPN=24.,SSPNE=12.$\n $SYMFLP SPANFI=6.$\n",
+        "DIM IN\n $FLTCON MACH=.2$\n $WGPLNF CHRDR=3.,CHRDTP=1.,SSPN=24.,SSPNE=12.$\n $SYMFLP SPANFI=6.$\n",
     )
     .unwrap();
     let converted = convert_case(&deck.cases[0]).unwrap();

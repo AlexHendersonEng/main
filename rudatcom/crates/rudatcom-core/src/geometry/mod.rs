@@ -8,6 +8,7 @@ pub mod convert;
 pub mod surface;
 
 use crate::{
+    airfoil::{apply_sections, AirfoilError},
     input::{Case, Namelist, UNUSED},
     math::{finite, MathError},
     tables::RAD,
@@ -22,6 +23,8 @@ pub enum GeometryError {
     Invalid(String),
     #[error("geometry calculation: {0}")]
     Numerical(#[from] MathError),
+    #[error(transparent)]
+    Airfoil(#[from] AirfoilError),
 }
 pub type Result<T> = std::result::Result<T, GeometryError>;
 
@@ -56,9 +59,6 @@ pub struct Geometry {
     pub ventral_fin: Option<SurfaceGeometry>,
     pub body: Option<BodyGeometry>,
     pub synthesis: Option<SynthesisDimensions>,
-    /// NACA section generation belongs to the aerodynamic/airfoil checkpoint.
-    /// Its thickness-dependent coefficients must be recomputed after that stage.
-    pub pending_airfoils: Vec<char>,
 }
 
 fn list<'a>(case: &'a Case, name: &str) -> &'a Namelist {
@@ -106,6 +106,9 @@ fn surface(case: &Case, prefix: &str) -> Result<Option<SurfaceGeometry>> {
 impl Geometry {
     pub fn from_case(case: &Case) -> Result<Self> {
         let mut inputs = convert_case(case)?;
+        // M50O62 runs between CONV and M02O02, filling UNUSED xxSCHR section
+        // inputs (e.g. thickness used by WTGEOM) from NACA cards/coordinates.
+        apply_sections(&mut inputs.case)?;
         let normalized = &inputs.case;
         // M02O02 bypasses the ordinary lifting-surface path for LARWB.
         let lifting_surface = |prefix| {
@@ -186,7 +189,6 @@ impl Geometry {
             ventral_fin,
             body,
             synthesis,
-            pending_airfoils: case.naca.iter().map(|n| n.surface).collect(),
         })
     }
 }

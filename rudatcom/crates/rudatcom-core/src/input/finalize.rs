@@ -71,6 +71,16 @@ pub(super) fn on_namelist_read(namelists: &mut [Namelist], idx: usize) {
             set(&mut namelists[options], "SREF", area);
             set(&mut namelists[options], "CBARR", chord);
         }
+        "VFSCHR" => {
+            // VFSCHR's ALPHAO is declared at VTIN(10) (not VFIN(10)), so it
+            // lands in the vertical tail's section storage.
+            let alphao = namelists[idx].values[9];
+            if alphao != UNUSED {
+                let vt = index(namelists, "VTSCHR");
+                namelists[vt].values[9] = alphao;
+                namelists[idx].values[9] = UNUSED;
+            }
+        }
         _ => {}
     }
 }
@@ -93,6 +103,17 @@ fn planform_type(raw: Option<f32>) -> (u8, bool) {
     }
 }
 
+/// Tail/fin TYPE as CHECK resolves it: XTYPE(INT(TYPE+.5)) with no default
+/// and no range check, so a missing or out-of-range TYPE reads outside the
+/// four names. Such a surface matches none of them (in particular it is not
+/// straight tapered); rudatcom represents that as 0.
+fn tail_type(raw: Option<f32>) -> u8 {
+    match raw.map(|t| (t + 0.5) as i32) {
+        Some(t @ 1..=4) => t as u8,
+        _ => 0,
+    }
+}
+
 /// Whole-case checks after all namelists are read.
 pub fn finalize_case(case: &mut Case) {
     let mut warnings = Vec::new();
@@ -103,6 +124,11 @@ pub fn finalize_case(case: &mut Case) {
             continue;
         }
         let raw = case.namelists[i].scalar("TYPE");
+        if name != "WGPLNF" {
+            // Only the wing gets CHECK's default and range message.
+            set(&mut case.namelists[i], "TYPE", f32::from(tail_type(raw)));
+            continue;
+        }
         let (t, bad) = planform_type(raw);
         if bad {
             warnings.push(Diagnostic {

@@ -143,9 +143,28 @@ pub fn tbfunx(
     limits: Limits,
 ) -> Result<CurvePoint, MathError> {
     validate_axis(axis)?;
+    if axis.windows(2).any(|w| w[0] >= w[1]) {
+        return Err(MathError(
+            "TBFUNX requires equal lengths and an ascending axis",
+        ));
+    }
+    tbfunx_unordered(axis, values, at, limits)
+}
+
+/// TBFUNX without the ascending-axis check, for curves the original feeds
+/// with locally reversed abscissae (airfoil surface x near a cambered
+/// leading edge). Like the original it brackets with the last knot <= `at`;
+/// coincident knots make QUAD singular and are reported as non-finite.
+pub fn tbfunx_unordered(
+    axis: &[f32],
+    values: &[f32],
+    at: f32,
+    limits: Limits,
+) -> Result<CurvePoint, MathError> {
+    finite(axis)?;
     finite(values)?;
     finite(&[at])?;
-    if values.len() != axis.len() || axis.windows(2).any(|w| w[0] >= w[1]) {
+    if axis.is_empty() || values.len() != axis.len() {
         return Err(MathError(
             "TBFUNX requires equal lengths and an ascending axis",
         ));

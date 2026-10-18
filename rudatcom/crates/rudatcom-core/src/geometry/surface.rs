@@ -198,7 +198,8 @@ pub fn wtgeom(planform: &Planform) -> Result<SurfaceGeometry> {
         p.aspect_ratio_class,
     ])?;
     let no_outer = p.outboard_semispan < 10.0 * UNUSED;
-    if !(1..=4).contains(&p.kind)
+    // TYPE 0 is a tail/fin whose TYPE resolved outside the four names.
+    if p.kind > 4
         || p.root_chord <= UNUSED
         || p.tip_chord < 0.0
         || p.outboard_semispan < 0.0
@@ -207,7 +208,7 @@ pub fn wtgeom(planform: &Planform) -> Result<SurfaceGeometry> {
         || (!no_outer && p.break_chord <= UNUSED)
     {
         return Err(GeometryError::Invalid(
-            "WTGEOM requires TYPE 1..4, positive chords and 0 <= SSPNOP < SSPNE <= SSPN".into(),
+            "WTGEOM requires TYPE 0..4, positive chords and 0 <= SSPNOP < SSPNE <= SSPN".into(),
         ));
     }
     if no_outer {

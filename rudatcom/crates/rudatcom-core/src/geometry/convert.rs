@@ -94,6 +94,78 @@ fn check_geometry(case: &mut Case) {
     }
 }
 
+fn warn(case: &mut Case, message: String) {
+    case.warnings.push(Diagnostic {
+        line: 0,
+        message,
+        card: String::new(),
+    });
+}
+
+/// The FLC checks INPUTB applies right after CONV (speed reference, default
+/// Reynolds number, LOOP/NALT consistency). FLTCON locations equal FLC indices.
+/// The ATMOS pressure/temperature fill is not ported yet.
+fn flight_conditions(case: &mut Case) -> Result<()> {
+    let n = case
+        .namelists
+        .iter()
+        .position(|n| n.def.name == "FLTCON")
+        .expect("FLTCON schema");
+    let mut messages = Vec::new();
+    let flc = &mut case.namelists[n].values;
+    let used = |v: f32| v != UNUSED;
+    flc[159] = flc[159].clamp(1.0, 3.0);
+    let mut lp = (flc[159] + 0.5) as i32;
+    let mut nmach = (flc[0] + 0.5) as i32;
+    let mut nalt = (flc[158] + 0.5) as i32;
+    let (imach, irn, ivel, ialt) = (used(flc[2]), used(flc[42]), used(flc[136]), used(flc[96]));
+    let iatm = ialt || (used(flc[116]) && used(flc[73]));
+    let count = nmach.clamp(0, 20) as usize;
+    if !imach {
+        if !ivel {
+            // The original prints this and skips the case (IERR).
+            return Err(GeometryError::Invalid(
+                "NO SPEED REFERENCE IS INPUT MACH(1) = VINF(1) = UNUSED".into(),
+            ));
+        }
+        if !iatm {
+            messages.push("VELOCITY IS INPUT AND ATMOSPHERIC DATA ARE NOT DEFINED; MACH WILL BE CALCULATED USING A SPEED-OF-SOUND OF 1000 FPS".to_string());
+            for i in 0..count {
+                flc[i + 2] = flc[i + 136] / 1000.0;
+            }
+        }
+    }
+    if !irn && !iatm {
+        messages.push("REYNOLDS NUMBER IS NOT INPUT AND ATMOSPHERIC DATA ARE NOT DEFINED; REYNOLDS NUMBER WILL BE SET TO 5*10**6".to_string());
+        flc[42..42 + count].fill(5.0e6);
+    }
+    if lp == 1 && iatm {
+        if flc[158] == UNUSED {
+            nalt = nmach;
+        }
+        if nalt != nmach {
+            let i = nalt.min(nmach);
+            // FORMAT 1170 labels its NMACH/NALT arguments the wrong way round.
+            messages.push(format!("LOOP = 1 AND NALT IS NOT EQUAL TO NMACH (NALT = {nmach}, NMACH = {nalt}); NMACH AND NALT ARE BOTH SET TO {i}"));
+            nmach = i;
+            nalt = i;
+        }
+    }
+    if lp > 1 && !iatm {
+        messages.push(format!(
+            "LOOP = {lp} AND ATMOSPHERIC DATA ARE NOT DEFINED, SET LOOP = 1"
+        ));
+        lp = 1;
+    }
+    flc[159] = lp as f32;
+    flc[0] = nmach as f32;
+    flc[158] = nalt as f32;
+    for m in messages {
+        warn(case, m);
+    }
+    Ok(())
+}
+
 /// CONV plus CHECK's SCALE default; angles and dimensionless inputs are untouched.
 pub fn convert_case(input: &Case) -> Result<ConvertedCase> {
     if !input.is_runnable() {
@@ -247,6 +319,7 @@ pub fn convert_case(input: &Case) -> Result<ConvertedCase> {
     // A converted copy is explicitly feet; SCALE is report metadata, not a
     // request to convert it again. Consumers should use Geometry::from_case.
     case.dim = DimUnit::Feet;
+    flight_conditions(&mut case)?;
     for n in &case.namelists {
         finite(&n.values)?;
     }
