@@ -3,103 +3,27 @@
 //! A probe links unmodified routines extracted from the developer's datcom.f.
 //! It complements the whole-program tests before rudatcom can emit reports.
 
+mod support;
+
 use rudatcom_core::{
-    compare::Tolerance,
     interp::{self, Extrapolation, Limits},
     math,
 };
 use std::{
     fmt::Write,
     fs,
-    path::PathBuf,
     process::{Command, Stdio},
 };
-
-struct Reference {
-    dir: tempfile::TempDir,
-    binary: PathBuf,
-}
-
-fn reference() -> Reference {
-    let binary = PathBuf::from(
-        std::env::var_os("RUDATCOM_REFERENCE_BIN")
-            .expect("set RUDATCOM_REFERENCE_BIN to the built original DATCOM; see README.md"),
-    );
-    assert!(
-        binary.is_file(),
-        "original DATCOM binary not found: {}",
-        binary.display()
-    );
-    let source = std::env::var_os("RUDATCOM_REFERENCE_SOURCE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| binary.with_file_name("datcom.f"));
-    // The source contains Hollerith data: preserve significant blanks and
-    // continuation markers rather than translating or regenerating routines.
-    let bytes = fs::read(&source).unwrap_or_else(|e| {
-        panic!(
-            "cannot read {}: {e}; set RUDATCOM_REFERENCE_SOURCE to the original datcom.f",
-            source.display()
-        )
-    });
-    let source = String::from_utf8(bytes).expect("datcom.f must be UTF-8/ASCII");
+fn reference() -> support::Reference {
     let routines = [
         "QUAD", "QUADIN", "TRAPZ", "DET4", "SIMUL4", "AGENR", "GDELTA", "GLOOK", "SWITCH",
         "TBFUNX", "TLIN1X", "TLINEX", "TLIN3X", "TLIN4X", "INTERX", "MESSGE",
     ];
-    let mut extracted = String::new();
-    for name in routines {
-        let mut found = false;
-        let mut ended = false;
-        for line in source.lines() {
-            let s = line.trim_start().to_ascii_uppercase();
-            if !found {
-                if s.strip_prefix("SUBROUTINE ")
-                    .is_some_and(|s| s.split(['(', ' ']).next() == Some(name))
-                {
-                    found = true;
-                } else {
-                    continue;
-                }
-            }
-            writeln!(extracted, "{line}").unwrap();
-            if s.trim() == "END" {
-                ended = true;
-                break;
-            }
-        }
-        assert!(found && ended, "cannot extract {name} from original source");
-    }
-    let dir = tempfile::tempdir().unwrap();
-    fs::write(dir.path().join("original.f"), extracted).unwrap();
-    fs::write(
-        dir.path().join("probe.f90"),
+    let source = support::original_source();
+    support::compile(
+        &support::extract(&source, &routines),
         include_str!("numerics_driver.f90"),
     )
-    .unwrap();
-    let binary = dir.path().join(format!(
-        "rudatcom-numerics-probe{}",
-        std::env::consts::EXE_SUFFIX
-    ));
-    let output = Command::new("gfortran")
-        .args([
-            "-std=legacy",
-            "-fallow-argument-mismatch",
-            "-ffree-form",
-            "-ffree-line-length-none",
-            "original.f",
-            "probe.f90",
-            "-o",
-        ])
-        .arg(&binary)
-        .current_dir(dir.path())
-        .output()
-        .expect("gfortran is required for live numerical comparisons; see README.md");
-    assert!(
-        output.status.success(),
-        "cannot build original numerical probe:\n{}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    Reference { dir, binary }
 }
 
 /// File-backed stdin avoids a pipe deadlock when a batch contains many results.
@@ -131,17 +55,10 @@ fn compare(requests: &str, expected: &[Vec<f32>]) {
         })
         .collect();
     assert_eq!(actual.len(), expected.len(), "original output:\n{stdout}");
-    let tolerance = Tolerance::default();
     for (row, (actual, expected)) in actual.iter().zip(expected).enumerate() {
         assert_eq!(actual.len(), expected.len(), "row {row}");
         for (col, (&original, &rust)) in actual.iter().zip(expected).enumerate() {
-            assert!(
-                original.is_finite() && rust.is_finite(),
-                "non-finite at {row}:{col}"
-            );
-            let error = (f64::from(original) - f64::from(rust)).abs();
-            assert!(error <= tolerance.abs + tolerance.rel * f64::from(original.abs().max(rust.abs())),
-                "row {row}, col {col}: original={original:e}, rudatcom={rust:e}, difference={error:e}");
+            support::assert_close(original, rust, &format!("row {row}, col {col}"));
         }
     }
 }
@@ -418,4 +335,230 @@ fn degenerate_math_fails_instead_of_propagating_nans() {
     assert!(math::quadin(&[1.0], -1.0).is_err());
     assert!(math::trapz(&[1.0], &[]).is_err());
     assert!(math::trapz(&[0.0, 1.0], &[0.0, f32::NAN]).is_err());
+}
+
+/// End-to-end parser -> CONV -> geometry comparison. Only control-flow hooks
+/// change in the temporary Fortran source; no original formulas are replaced.
+#[test]
+fn sample_geometry_matches_original_common_blocks() {
+    use rudatcom_core::{
+        geometry::Geometry,
+        input::{parse_deck, UNUSED},
+    };
+    use std::io::Write as IoWrite;
+    let source = support::original_source();
+    let conv = "      CALL CONV(IDIM,SCALE)";
+    let body = "      XC = 2.0*XC/SP";
+    assert_eq!(source.matches(conv).count(), 1);
+    assert_eq!(source.matches(body).count(), 1);
+    // CHECK skips aerodynamic execution and proceeds to the next saved input
+    // case. NACA-generated section characteristics remain checkpoint 7 work.
+    let source = source
+        .replace(
+            conv,
+            &format!("{conv}\n      CALL RUDATCOM_GEOMETRY_PROBE\n      IERR=.TRUE.\n      RETURN"),
+        )
+        .replace(body, &format!("{body}\n      RETURN"));
+    let reference = support::compile(&source, include_str!("geometry_driver.f90"));
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/cases");
+    let mut decks: Vec<(String, String)> = (1..=11)
+        .map(|sample| {
+            (
+                format!("ex{sample}"),
+                fs::read_to_string(dir.join(format!("ex{sample}.inp"))).unwrap(),
+            )
+        })
+        .collect();
+    decks.push((
+        "geometry-edges".into(),
+        include_str!("../../../tests/cases/geometry/edges.inp").into(),
+    ));
+    for (sample, input) in decks {
+        let input = input.replace('\r', "");
+        let parsed = parse_deck(&input).unwrap();
+        let scratch = tempfile::tempdir_in(reference.dir.path()).unwrap();
+        fs::write(scratch.path().join("case.inp"), &input).unwrap();
+        let mut child = Command::new(&reference.binary)
+            .current_dir(scratch.path())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(b"case.inp\n")
+            .unwrap();
+        let output = child.wait_with_output().unwrap();
+        assert!(
+            output.status.success(),
+            "ex{sample}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let text = fs::read_to_string(scratch.path().join("geometry.txt")).unwrap();
+        let cases: Vec<_> = text
+            .split("CASE\n")
+            .filter(|s| !s.trim().is_empty())
+            .collect();
+        assert_eq!(
+            cases.len(),
+            parsed.cases.len(),
+            "ex{sample}: missing original cases"
+        );
+        for (index, (case, snapshot)) in parsed.cases.iter().zip(cases).enumerate() {
+            let geometry = Geometry::from_case(case)
+                .unwrap_or_else(|e| panic!("ex{sample} case {index}: {e}"));
+            let rows: std::collections::HashMap<&str, Vec<f32>> = snapshot
+                .lines()
+                .map(|line| {
+                    let mut words = line.split_whitespace();
+                    let name = words.next().unwrap();
+                    (name, words.map(|s| s.parse::<f32>().unwrap()).collect())
+                })
+                .collect();
+            let check = |name: &str, values: &[f32]| {
+                let original = rows
+                    .get(name)
+                    .unwrap_or_else(|| panic!("ex{sample}: missing {name}"));
+                assert_eq!(original.len(), values.len(), "{name}");
+                for (col, (&o, &r)) in original.iter().zip(values).enumerate() {
+                    support::assert_close(
+                        o,
+                        r,
+                        &format!("ex{sample}, case {index}, {name}({})", col + 1),
+                    );
+                }
+            };
+            let get = |name| geometry.inputs.case.namelist(name).unwrap();
+            // INFTGM rotates XH/ZH after the CONV snapshot; compare with the
+            // independent normalized input, before the hinge rotation.
+            let converted = rudatcom_core::geometry::convert_case(case).unwrap();
+            let syn0 = &converted.case.namelist("SYNTHS").unwrap().values;
+            check(
+                "SYN",
+                &syn0[..9]
+                    .iter()
+                    .chain(&syn0[10..])
+                    .copied()
+                    .collect::<Vec<_>>(),
+            );
+            let f = get("FLTCON");
+            check(
+                "FLC",
+                &["RNNUB", "ALT", "PINF", "TINF", "VINF", "WT"]
+                    .iter()
+                    .flat_map(|name| f.get(name).unwrap().iter().copied())
+                    .collect::<Vec<_>>(),
+            );
+            check("TVT", &get("TVTPAN").values[154..162]);
+            let syn = &get("SYNTHS").values;
+            check(
+                "POSTSYN",
+                &syn[..9]
+                    .iter()
+                    .chain(&syn[10..])
+                    .copied()
+                    .collect::<Vec<_>>(),
+            );
+            check("GROUND", get("GRNDEF").get("GRDHT").unwrap());
+            for (group, row) in [
+                ("PROPWR", "POWER"),
+                ("JETPWR", "POWER"),
+                ("LARWB", "POWER"),
+                ("SYMFLP", "FLAP"),
+                ("ASYFLP", "FLAP"),
+                ("TRNJET", "FLAP"),
+                ("HYPEFF", "FLAP"),
+            ] {
+                let n = get(group);
+                if !n.present {
+                    continue;
+                }
+                for var in n.def.vars.iter().filter(|v| !v.logical && v.loc > 0) {
+                    for (i, &r) in n.get(var.name).unwrap().iter().enumerate() {
+                        // Separate Rust namelists intentionally do not expose
+                        // unrelated values left in overlaid Fortran COMMONs.
+                        if r != UNUSED {
+                            support::assert_close(
+                                rows[row][var.loc - 1 + i],
+                                r,
+                                &format!("{sample}, case {index}, {group}.{}({i})", var.name),
+                            );
+                        }
+                    }
+                }
+            }
+            check(
+                "REF",
+                &[
+                    geometry.reference.area.unwrap_or(UNUSED),
+                    geometry.reference.chord.unwrap_or(UNUSED),
+                    geometry.reference.roughness,
+                    geometry.reference.span.unwrap_or(UNUSED),
+                ],
+            );
+            for (name, surface) in [
+                ("WG", &geometry.wing),
+                ("HT", &geometry.horizontal_tail),
+                ("VT", &geometry.vertical_tail),
+                ("VF", &geometry.ventral_fin),
+            ] {
+                if let Some(s) = surface {
+                    check(name, &s.coefficients);
+                } else {
+                    assert!(!rows.contains_key(name), "missing Rust surface {name}");
+                }
+            }
+            if let Some(s) = geometry.synthesis {
+                check(
+                    "SYNGEOM",
+                    &[
+                        s.wing_body_le_offset,
+                        s.cg_from_wing_body_le,
+                        s.wing_height_intercept,
+                        s.incidence_sine,
+                        s.incidence_cosine,
+                        s.incidence_tangent,
+                        s.body_width_at_wing,
+                    ],
+                );
+            }
+            if let Some(b) = geometry.body {
+                let bi = get("BODY");
+                check(
+                    "BODY",
+                    &bi.values[..126]
+                        .iter()
+                        .chain(&bi.values[128..129])
+                        .copied()
+                        .collect::<Vec<_>>(),
+                );
+                let e = b.equally_spaced;
+                check(
+                    "EQUAL",
+                    &e.stations
+                        .x
+                        .into_iter()
+                        .chain(e.stations.radius)
+                        .chain(e.stations.perimeter)
+                        .chain(e.stations.area)
+                        .chain(e.area_derivative)
+                        .collect::<Vec<_>>(),
+                );
+                let mut stats = vec![
+                    b.length,
+                    b.base_area,
+                    b.maximum_area,
+                    b.maximum_area_station as f32,
+                    b.volume,
+                    b.projected_area,
+                    b.projected_centroid,
+                ];
+                stats.extend(b.equivalent_radius);
+                check("BODYSTATS", &stats);
+            }
+        }
+    }
 }

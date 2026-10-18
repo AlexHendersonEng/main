@@ -48,3 +48,24 @@ returned as metadata for later report formatting. Invalid dimensions, duplicate
 knots, singular systems and non-finite results return errors rather than legacy
 NaNs or undefined memory accesses.
 GDELTA's safe API requires normalized, ordered flap spans (`0 <= EFI <= EFO <= 1`).
+
+### Geometry (checkpoint 6)
+`rudatcom_core::geometry::Geometry::from_case(&case)` computes reference quantities,
+wing/tail/fin planforms (SETUP1/WTGEOM/ARCLSS), synthesis dimensions and hinge
+rotation (SYNDIM/INFTGM), and body station resampling, maxima and integrals
+(EQSPCE/GETMAX and BODYJM's geometric prefix). Named accessors accompany the
+original 195-slot surface coefficient layout for downstream aerodynamic ports.
+CONV normalizes an owned input copy to feet, applies model scaling and translates
+the body nose; use parsed cases as inputs, not already converted copies.
+Missing wing-derived reference quantities are `None`; invalid or degenerate
+geometry produces an explicit error. Original flap-span corrections are retained
+as warnings on the converted case.
+
+Live geometry tests use all 11 sample decks plus `geometry/edges.inp` (all four
+unit systems, scaling, nonzero nose offsets, negative sweeps, multi-panel wings,
+single fins, hinge rotation and LARWB reference overrides). A temporary copy of
+the original source receives control-flow hooks to snapshot COMMON blocks after
+CONV and M02O02 and to stop BODYJM before its aerodynamic calculations; the
+original calculation statements and installed source/binary are not changed.
+These tests use the same compiler/source prerequisites and numeric tolerance as
+the numerical probes, and leave no reference outputs in the repository.

@@ -62,6 +62,15 @@ pub(super) fn on_namelist_read(namelists: &mut [Namelist], idx: usize) {
         "ASYFLP" => reset_other(namelists, "SYMFLP"),
         "PROPWR" => namelists[index(namelists, "JETPWR")].present = false,
         "JETPWR" => namelists[index(namelists, "PROPWR")].present = false,
+        "LARWB" => {
+            // XNAM13 copies these into OPTION immediately, so a later OPTINS
+            // can override them and CONV applies the model scale only once.
+            let area = namelists[idx].get("SREF").expect("LARWB SREF")[0];
+            let chord = namelists[idx].get("L").expect("LARWB L")[0];
+            let options = index(namelists, "OPTINS");
+            set(&mut namelists[options], "SREF", area);
+            set(&mut namelists[options], "CBARR", chord);
+        }
         _ => {}
     }
 }

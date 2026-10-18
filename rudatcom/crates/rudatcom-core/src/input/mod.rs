@@ -137,6 +137,9 @@ pub struct Case {
     pub warnings: Vec<Diagnostic>,
     /// Speed regimes implied by the Mach numbers (INPUTB).
     pub regimes: Regimes,
+    /// XNAM4/7/9/20 angle-cache inputs for WG/HT/VT/VF, in input order.
+    /// XNAM20 reads the current VT sweeps when filling the VF cache.
+    pub geometry_sweeps: [[f32; 2]; 4],
 }
 
 impl Case {
@@ -309,6 +312,7 @@ fn finish_case(b: CaseBuilder, dim: DimUnit) -> Result<Case, Error> {
     let mut namelists: Vec<Namelist> = NAMELISTS.iter().map(Namelist::new).collect();
     let mut cursor = namelist::Cursor::new(&b.cards);
     let mut naca = Vec::new();
+    let mut geometry_sweeps = [[0.0; 2]; 4];
     for slot in &b.order {
         match slot {
             Slot::Namelist(idx) => {
@@ -316,6 +320,26 @@ fn finish_case(b: CaseBuilder, dim: DimUnit) -> Result<Case, Error> {
                 namelist::read_namelist(&mut cursor, &mut namelists[*idx])?;
                 namelists[*idx].present = true;
                 finalize::on_namelist_read(&mut namelists, *idx);
+                let name = namelists[*idx].def.name;
+                if let Some(surface) = ["WGPLNF", "HTPLNF", "VTPLNF", "VFPLNF"]
+                    .iter()
+                    .position(|&n| n == name)
+                {
+                    // Preserve XNAM20's cross-COMMON lookup, including cases
+                    // where another VTPLNF is read later in the input stream.
+                    let source = if surface == 3 {
+                        namelists
+                            .iter()
+                            .find(|n| n.def.name == "VTPLNF")
+                            .expect("VTPLNF schema")
+                    } else {
+                        &namelists[*idx]
+                    };
+                    geometry_sweeps[surface] = [
+                        source.scalar("SAVSI").unwrap_or(0.0),
+                        source.scalar("SAVSO").unwrap_or(0.0),
+                    ];
+                }
             }
             Slot::Naca => {
                 if let Some(card) = cursor.next_card() {
@@ -337,6 +361,7 @@ fn finish_case(b: CaseBuilder, dim: DimUnit) -> Result<Case, Error> {
         diagnostics: b.diagnostics,
         warnings: Vec::new(),
         regimes: Regimes::default(),
+        geometry_sweeps,
     };
     finalize_case(&mut case);
     Ok(case)
