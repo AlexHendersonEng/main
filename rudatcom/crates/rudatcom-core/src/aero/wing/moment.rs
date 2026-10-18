@@ -36,7 +36,7 @@ fn fig22(atn: f32, factor: f32, taper: f32, b: bool) -> Result<f32> {
 
 /// FWDXAC: aerodynamic centre of forward-swept panels; the four tables
 /// are chosen by Mach and |factor| (factor or its inverse as the axis).
-fn fwdxac(atnswp: f32, taper: f32, factor: f32, mach: f32) -> Result<f32> {
+pub(super) fn fwdxac(atnswp: f32, taper: f32, factor: f32, mach: f32) -> Result<f32> {
     let afact = factor.abs();
     let facti = if afact != 0. { 1. / afact } else { 1.0e10 };
     let (table, x2): (&[f32], f32) = match (mach < 1., afact <= 1.) {

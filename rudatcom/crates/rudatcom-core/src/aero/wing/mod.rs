@@ -15,6 +15,7 @@ mod drag;
 mod lateral;
 mod lift;
 mod moment;
+mod supersonic;
 
 use super::{AeroError, Result};
 use crate::{
@@ -62,6 +63,8 @@ pub struct WingWork {
     pub d: Vec<f32>,
     pub stb: Vec<f32>,
     pub wingin: Vec<f32>,
+    /// SLG(1..141); all UNUSED at subsonic points.
+    pub slg: Vec<f32>,
 }
 
 /// Per-case wing state (COMMON /WINGD/, /WINGI/, /IWING/, /WHAERO/ C and
@@ -74,6 +77,12 @@ pub struct WingCase {
     c: [f32; 52],
     d: [f32; 56],
     stb: [f32; 136],
+    /// COMMON /SUPWH/ SLG(141): supersonic work slots (see `supersonic`).
+    slg: [f32; 142],
+    /// A as WTGEOM leaves it, which M18O22 restores per supersonic point.
+    a_geometry: [f32; 196],
+    /// SYNTHS XCG, XW and ALIW (SYNA(1), SYNA(2), SYNA(4)).
+    syna: (f32, f32, f32),
     kind: u8,
     /// WGSCHR CAMBER (WINGIN(64) as a LOGICAL: true only when 1.0).
     camber: bool,
@@ -197,6 +206,9 @@ impl WingCase {
             c: [UNUSED; 52],
             d: [UNUSED; 56],
             stb: [UNUSED; 136],
+            slg: [UNUSED; 142],
+            a_geometry: a,
+            syna: (syn.values[0], syn.values[1], syn.values[3]),
             kind,
             camber,
             body: geometry.body.is_some(),
@@ -331,6 +343,7 @@ impl WingCase {
                 d: self.d[1..].to_vec(),
                 stb: self.stb[1..].to_vec(),
                 wingin: self.ain[1..].to_vec(),
+                slg: self.slg[1..].to_vec(),
             },
         })
     }

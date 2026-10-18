@@ -128,16 +128,21 @@ transonic and supersonic speeds, and hypersonic bodies.
   then normal/axial force and the alpha slopes.
 - **Lateral** (M29O35/M17O21): SUBLAT wing CYbeta, Cnbeta and Clbeta,
   including partial-span dihedral.
+- **Supersonic** (MAIN04's M18O22/M27O33/M23O27): SUPDRG skin-friction and
+  wave drag, SUPLNG normal force (subsonic/supersonic leading edges, shock
+  detachment, FIG60B), pitching moment and FWDXAC centre, and SUPLAT wing
+  lateral derivatives.
 
 The Mach-zero CLMCH0 pre-pass runs once per case, and `$EXPRnn` wing data
 replaces computed values, as in the original. Wing results cover the case's
-leading run of subsonic points; later points are marked `wing_deferred`
-until the transonic (7e) and supersonic (7f) wing ports land. The wing-body
-overlay (M07O07), body terms in SUBLAT/M29O35 and the DWASH downwash
-quantities are left to later checkpoints.
+leading run of subsonic points followed by supersonic points without a body
+or power; other points are marked `wing_deferred`.
+The wing-body overlay (M07O07), body terms in SUBLAT/M29O35/SUPLAT and
+the DWASH downwash quantities are left to later checkpoints.
 
-`tests/wing.rs` instruments the original after `M17O21` and compares the
-WING results and the A/B/C/D/STB/WINGIN work arrays for every recorded
-point. It runs the 7 samples with wings plus `tests/cases/wing/`: straight,
+`tests/wing.rs` instruments the original after `M17O21` and MAIN04's `M23O27`
+and compares the WING results and the A/B/C/D/STB/WINGIN (plus supersonic
+SLG) work arrays for every recorded point. It runs the 7 samples with wings plus `tests/cases/wing/`: straight,
 double-delta, cranked and curved planforms, twist, experimental data,
-forward sweep, partial dihedral and wing-body decks.
+forward sweep, partial dihedral, wing-body and supersonic (round/sharp
+edges, rectangular, delta, double-delta and cranked) decks.
