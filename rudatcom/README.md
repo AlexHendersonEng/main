@@ -84,20 +84,36 @@ The live geometry test also compares every filled section slot, using all 11
 samples plus `airfoil/sections.inp` (every NACA family, `TYPEIN` input, VF
 cards, cranked/double-delta wings, high/low tails and a saved case).
 
-### Flight conditions and subsonic body
+### Flight conditions and body alone
 `rudatcom_core::flight` ports ATMOS (the 1962 US Standard Atmosphere) and the
 main program's LOOP 1/2/3 Mach/altitude sweep. It produces one `FlightPoint`
 per analysed condition, with velocity, Reynolds number and speed regime.
-`rudatcom_core::aero::analyze` then computes subsonic body-alone coefficients
-(M04O04/M06O06): BODYRT slender-body plus crossflow, BODYJM (`METHOD=2`), and
-BODOPT for cambered/asymmetric bodies, followed by the alpha derivatives.
+`rudatcom_core::aero::analyze` then computes body-alone coefficients in every
+regime:
+- **Subsonic** (M04O04/M06O06): BODYRT slender-body plus crossflow, BODYJM
+  (`METHOD=2`) and BODOPT for cambered/asymmetric bodies, followed by the
+  alpha derivatives.
+- **Transonic** (MAIN03): BODYRT slopes and drag at the first alpha, and
+  SYPBOD at Mach 1.4 for its work values. Later alphas are not computed. As
+  in the original, the case's first transonic point evaluates the cutoff
+  Reynolds number at B(1) = UNUSED, a side effect of SETUP2's pre-pass.
+- **Supersonic** (M19O23): SYPBOD. With `HYPERS` and `METHOD=1` it is
+  replaced by **hypersonic** HYPBOD (M26O32).
+
 `$EXPRnn` experimental body data replaces computed values, as in the original.
 The original resets its body arrays at the start of every case, and so does
-rudatcom.
-Transonic, supersonic and hypersonic body points are not computed yet
-(`body` is `None`).
+rudatcom. There are three gaps:
+- No body is computed when the original skips it: ground effect, power, or
+  the LARWB/TRNJET/hypersonic-flap paths.
+- A transonic point whose pre-pass involves wing or horizontal-tail analyses
+  is marked `deferred` until those methods are ported.
+- Without BLN, the original's transonic SYPBOD values are NaN and never
+  used, so rudatcom omits them.
 
-`tests/aero.rs` compares every subsonic body point live against the original,
-which is instrumented after M04O04/M06O06. It runs all 11 samples plus the decks in `tests/cases/body/`:
+`tests/aero.rs` compares every body point live against the original,
+which is instrumented after M04O04/M06O06, before MAIN03's M12O14 and at the
+end of MAIN04. It runs all 11 samples plus the decks in `tests/cases/body/`:
 boat tails, Jorgensen with elliptic sections, rough/blunt bodies, asymmetric
-bodies, LOOP/altitude/VINF sweeps, and experimental data carried by `SAVE`.
+bodies, LOOP/altitude/VINF sweeps, experimental data carried by `SAVE`,
+custom STMACH/TSMACH, cone/ogive noses and boat-tail/flare tails at
+transonic and supersonic speeds, and hypersonic bodies.

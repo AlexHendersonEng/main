@@ -1,19 +1,27 @@
-//! Subsonic body-alone aerodynamics: MAIN01's body overlays.
+//! Body-alone aerodynamics for every speed regime.
 //!
+//! Subsonic (MAIN01's overlays):
 //! * M06O06 -> BODYRT (axisymmetric, DATCOM 4.2.1.1/4.2.1.2 slender-body
 //!   lift with Allen-Perkins crossflow) and, for METHOD = 2, BODYJM
 //!   (Jorgensen's method).
 //! * M04O04 -> BODOPT (asymmetric/cambered bodies, used when ZL is input
 //!   and METHOD = 1).
 //!
-//! Both overlays then form the alpha derivatives. BODY(n)/BD(n) in comments
-//! are the original COMMON slots, to trace results against the Fortran.
+//! Transonic (MAIN03): BODYRT's slopes only, then the M24O30/CNCA slot
+//! clean-up. Supersonic (MAIN04): SYPBOD via M19O23, or HYPBOD via M26O32
+//! for HYPERS with METHOD = 1 (see [`super::supersonic`]).
+//!
+//! BODY(n)/BD(n) in comments are the original COMMON slots, to trace results
+//! against the Fortran.
 // Figure data are copied digit-for-digit from the original DATA statements.
 #![allow(clippy::excessive_precision, clippy::approx_constant)]
 
-use super::{AeroError, Result};
+use super::{
+    supersonic::{self, ellipse_factors, HypersonicBody, SupersonicBody},
+    AeroError, Result,
+};
 use crate::{
-    flight::FlightPoint,
+    flight::{FlightPoint, Regime},
     geometry::{
         body::{eqspce, eqspce_signed},
         BodyStations, Geometry,
@@ -33,9 +41,19 @@ pub enum BodyMethod {
     Jorgensen,
     /// BODOPT (ZL input, METHOD = 1).
     Asymmetric,
+    /// MAIN03: BODYRT slopes at alpha(1) only (any METHOD).
+    Transonic,
+    /// MAIN04 -> M19O23 -> SYPBOD.
+    Supersonic,
+    /// MAIN04 -> M26O32 -> HYPBOD (FLTCON HYPERS with METHOD = 1).
+    Hypersonic,
 }
 
 /// Body-alone results at one flight point; per-alpha vectors follow ALSCHD.
+///
+/// Values the original leaves unset keep its markers: `UNUSED` (INITZ1's
+/// fill) or `-UNUSED` (M24O30's "not computed" mark at transonic points).
+/// Test with `v.abs() == UNUSED`, like the original's printing code.
 #[derive(Debug, Clone)]
 pub struct BodyAero {
     pub method: BodyMethod,
@@ -51,6 +69,20 @@ pub struct BodyAero {
     pub cyb: Vec<f32>,
     pub cnb: Vec<f32>,
     pub clb: Vec<f32>,
+    /// BODYRT/BODOPT work values (subsonic and transonic points).
+    pub slender: Option<SlenderBody>,
+    /// SYPBOD work values (supersonic points; transonic points too unless
+    /// the original's would be non-finite, e.g. without BLN).
+    pub supersonic: Option<SupersonicBody>,
+    /// HYPBOD work values (hypersonic points).
+    pub hypersonic: Option<HypersonicBody>,
+}
+
+/// BODYRT/BODOPT drag and method values (COMMON /BDATA/). At transonic
+/// points BODYRT stops after the drag, so only `apparent_mass_factor` of the
+/// method values is set.
+#[derive(Debug, Clone)]
+pub struct SlenderBody {
     /// BD(1): body length.
     pub length: f32,
     /// BD(56): maximum cross-section area.
@@ -126,21 +158,75 @@ const YBA3: [f32; 60] = [
 ];
 
 /// Body inputs (BODYI after CONV) plus the reference values the methods use.
-struct Inputs<'a> {
-    x: &'a [f32],
-    s: &'a [f32],
-    p: &'a [f32],
-    r: &'a [f32],
-    zu: &'a [f32],
-    zl: &'a [f32],
-    method: f32,
-    ellip: f32,
-    alphas: &'a [f32],
-    sref: f32,
-    cbarr: f32,
-    blref: f32,
-    roughness: f32,
-    xcg: f32,
+/// Scalars the case omits keep `UNUSED`, as in the original.
+pub(super) struct Inputs<'a> {
+    pub(super) x: &'a [f32],
+    pub(super) s: &'a [f32],
+    pub(super) p: &'a [f32],
+    pub(super) r: &'a [f32],
+    pub(super) zu: &'a [f32],
+    pub(super) zl: &'a [f32],
+    /// BNOSE/BTAIL shape codes (1 = cone, 2 = ogive), nose and afterbody
+    /// lengths BLN/BLA and the hypersonic nose bluntness diameter DS.
+    pub(super) bnose: f32,
+    pub(super) btail: f32,
+    pub(super) bln: f32,
+    pub(super) bla: f32,
+    pub(super) ds: f32,
+    pub(super) method: f32,
+    pub(super) ellip: f32,
+    pub(super) alphas: &'a [f32],
+    pub(super) sref: f32,
+    pub(super) cbarr: f32,
+    pub(super) blref: f32,
+    pub(super) roughness: f32,
+    pub(super) xcg: f32,
+}
+
+impl<'a> Inputs<'a> {
+    /// Collect the converted BODY/FLTCON/SYNTHS values for one case.
+    fn new(geometry: &'a Geometry) -> Result<Self> {
+        let case = &geometry.inputs.case;
+        let body = case.namelist("BODY").expect("BODY schema");
+        let fl = case.namelist("FLTCON").expect("FLTCON schema");
+        let syn = case.namelist("SYNTHS").expect("SYNTHS schema");
+        let n = geometry
+            .body
+            .as_ref()
+            .ok_or_else(|| invalid("no body"))?
+            .stations
+            .x
+            .len();
+        let nalpha = ((fl.values[1] + 0.5) as i32).clamp(0, 20) as usize;
+        let array = |name| &body.get(name).expect("BODY schema")[..n];
+        let reference = &geometry.reference;
+        Ok(Inputs {
+            x: array("X"),
+            s: array("S"),
+            p: array("P"),
+            r: array("R"),
+            zu: array("ZU"),
+            zl: array("ZL"),
+            bnose: body.values[121],
+            btail: body.values[122],
+            bln: body.values[123],
+            bla: body.values[124],
+            ds: body.values[125],
+            method: body.values[127],
+            ellip: body.values[128],
+            alphas: &fl.values[22..22 + nalpha],
+            sref: reference
+                .area
+                .ok_or_else(|| invalid("SREF is required for body aerodynamics"))?,
+            cbarr: reference
+                .chord
+                .ok_or_else(|| invalid("CBARR is required for body aerodynamics"))?,
+            // The main program defaults BLREF to 2*SSPN, i.e. 2*UNUSED with no wing.
+            blref: reference.span.unwrap_or(2.0 * UNUSED),
+            roughness: reference.roughness,
+            xcg: syn.values[0],
+        })
+    }
 }
 
 fn value(axis: &[f32], values: &[f32], at: f32, l: Limits) -> Result<f32> {
@@ -255,9 +341,15 @@ struct Drag {
     total: f32,
 }
 
+/// `b1` is the original's B(1), normally the Mach number (see
+/// [`transonic`] for the exception), and sets the cutoff Reynolds number
+/// (FIG 4.1.5.1-27). `fig26_mach` is B(1), except 0.6 for BODYRT at
+/// transonic points.
 fn zero_lift_drag(
     inp: &Inputs,
     point: &FlightPoint,
+    b1: f32,
+    fig26_mach: f32,
     wetted_area: f32,
     maximum_area: f32,
     base_area: f32,
@@ -265,15 +357,14 @@ fn zero_lift_drag(
     let length = inp.x[inp.x.len() - 1];
     let bd55 = 12.0 * length / inp.roughness;
     let length_reynolds = point.reynolds * length;
-    let cept = value(&X27M, &X27I, point.mach, HOLD)?;
+    let cept = value(&X27M, &X27I, b1, HOLD)?;
     let cutoff_reynolds = powr(bd55, 1.0482) * powr(10.0, cept);
     let ruse = if cutoff_reynolds < length_reynolds {
         cutoff_reynolds
     } else {
         length_reynolds
     };
-    // BODYRT evaluates FIG26 at Mach 0.6 for transonic points (checkpoint 7c).
-    let skin_friction = fig26(ruse, point.mach);
+    let skin_friction = fig26(ruse, fig26_mach);
     let base_diameter = (base_area * 4. / PI).sqrt();
     let maximum_diameter = (maximum_area * 4. / PI).sqrt();
     let fineness_ratio = length / maximum_diameter;
@@ -311,18 +402,21 @@ struct Coefficients {
     cma: f32,
 }
 
-/// BODYRT: slender-body potential lift plus viscous crossflow.
+/// BODYRT: slender-body potential lift plus viscous crossflow. At transonic
+/// points it stops after the drag (`IF(TRANSN)RETURN`): the curves and
+/// crossflow drag stay empty and `eta` is `None`.
 struct Bodyrt {
     coefficients: Coefficients,
     drag: Drag,
     maximum_area: f32,
     base_area: f32,
     apparent_mass_factor: f32,
-    eta: f32,
+    eta: Option<f32>,
     crossflow_drag: Vec<f32>,
 }
 
-fn bodyrt(inp: &Inputs, point: &FlightPoint) -> Result<Bodyrt> {
+fn bodyrt(inp: &Inputs, point: &FlightPoint, b1: f32) -> Result<Bodyrt> {
+    let transonic = point.regime == Regime::Transonic;
     let (x, s) = (inp.x, inp.s);
     let n = x.len();
     let length = x[n - 1];
@@ -386,12 +480,15 @@ fn bodyrt(inp: &Inputs, point: &FlightPoint) -> Result<Bodyrt> {
     let planform = last(&xe, &re)?;
     let tst: Vec<f32> = re.iter().zip(&xe).map(|(r, x)| r * x).collect();
     let moment = last(&xe, &tst)?;
-    let drag = zero_lift_drag(inp, point, wetted_area, maximum_area, base_area)?;
-    let eta = value(
-        &X1217A,
-        &Y1217A,
-        drag.fineness_ratio,
-        limits(Extrapolation::Quadratic, Extrapolation::Quadratic),
+    let fig26_mach = if transonic { 0.6 } else { b1 };
+    let drag = zero_lift_drag(
+        inp,
+        point,
+        b1,
+        fig26_mach,
+        wetted_area,
+        maximum_area,
+        base_area,
     )?;
     let count = inp.alphas.len();
     let mut c = Coefficients {
@@ -401,6 +498,23 @@ fn bodyrt(inp: &Inputs, point: &FlightPoint) -> Result<Bodyrt> {
         cla,
         cma,
     };
+    if transonic {
+        return Ok(Bodyrt {
+            coefficients: c,
+            drag,
+            maximum_area,
+            base_area,
+            apparent_mass_factor: k,
+            eta: None,
+            crossflow_drag: Vec::new(),
+        });
+    }
+    let eta = value(
+        &X1217A,
+        &Y1217A,
+        drag.fineness_ratio,
+        limits(Extrapolation::Quadratic, Extrapolation::Quadratic),
+    )?;
     let mut crossflow_drag = Vec::with_capacity(count);
     for &alpha in inp.alphas {
         // SETUP1's ALPHAB = alpha + BD(81); INITZE leaves BD(81) = UNUSED for
@@ -428,7 +542,7 @@ fn bodyrt(inp: &Inputs, point: &FlightPoint) -> Result<Bodyrt> {
         maximum_area,
         base_area,
         apparent_mass_factor: k,
-        eta,
+        eta: Some(eta),
         crossflow_drag,
     })
 }
@@ -451,21 +565,8 @@ fn bodyjm(inp: &Inputs, geometry: &Geometry, rt: &Bodyrt) -> Result<Coefficients
         a1 = c.cma * RAD / 2.0;
         a3 = c.cla * sref * RAD / 2.0;
     }
-    // Elliptic cross-section corrections to the potential (CNOCNS) and
-    // viscous (CNOCNN) normal force; both are 1 for a circle.
-    let aob = if ellip < 1. { 1. / ellip } else { ellip };
-    let cnocns = if ellip >= 1. { 1. / aob } else { aob };
-    let a2b = aob * aob;
-    let cnocnn = if ellip < 1. {
-        let q = 1. - 1. / a2b;
-        1.5 * aob.sqrt() * (-1. / a2b / powr(q, 1.5) * (aob * (1. + q.sqrt())).ln() + 1. / q)
-    } else if ellip > 1. {
-        1.5 * (1. / aob).sqrt()
-            * (a2b / powr(a2b - 1., 1.5) * (a2b - 1.).sqrt().atan() - 1. / (a2b - 1.))
-    } else {
-        1.0
-    };
-    let eta = rt.eta;
+    let (cnocns, cnocnn) = ellipse_factors(ellip);
+    let eta = rt.eta.expect("subsonic BODYRT sets eta");
     let cd0 = rt.drag.total;
     let count = inp.alphas.len();
     let mut out = Coefficients {
@@ -520,7 +621,15 @@ fn bodopt(inp: &Inputs, point: &FlightPoint) -> Result<Bodopt> {
     let geometry_error = |e| AeroError::Invalid(format!("{e}"));
     let eq = eqspce(&stations(r.to_vec(), inp.p.to_vec()), 20).map_err(geometry_error)?;
     let wetted_area = last(&eq.stations.x, &eq.stations.perimeter)?;
-    let drag = zero_lift_drag(inp, point, wetted_area, maximum_area, base_area)?;
+    let drag = zero_lift_drag(
+        inp,
+        point,
+        point.mach,
+        point.mach,
+        wetted_area,
+        maximum_area,
+        base_area,
+    )?;
     // Camber line relative to the chord joining the end midpoints.
     let z0 = 0.5 * (inp.zu[0] + inp.zl[0]);
     let znx = 0.5 * (inp.zu[n - 1] + inp.zl[n - 1]);
@@ -675,41 +784,9 @@ pub fn subsonic(
     point: &FlightPoint,
     experimental: Option<&Namelist>,
 ) -> Result<BodyAero> {
-    let case = &geometry.inputs.case;
-    let body = case.namelist("BODY").expect("BODY schema");
-    let fl = case.namelist("FLTCON").expect("FLTCON schema");
-    let syn = case.namelist("SYNTHS").expect("SYNTHS schema");
-    let n = geometry
-        .body
-        .as_ref()
-        .ok_or_else(|| invalid("no body"))?
-        .stations
-        .x
-        .len();
-    let nalpha = ((fl.values[1] + 0.5) as i32).clamp(0, 20) as usize;
-    let array = |name| &body.get(name).expect("BODY schema")[..n];
-    let reference = &geometry.reference;
-    let inp = Inputs {
-        x: array("X"),
-        s: array("S"),
-        p: array("P"),
-        r: array("R"),
-        zu: array("ZU"),
-        zl: array("ZL"),
-        method: body.values[127],
-        ellip: body.values[128],
-        alphas: &fl.values[22..22 + nalpha],
-        sref: reference
-            .area
-            .ok_or_else(|| invalid("SREF is required for body aerodynamics"))?,
-        cbarr: reference
-            .chord
-            .ok_or_else(|| invalid("CBARR is required for body aerodynamics"))?,
-        // The main program defaults BLREF to 2*SSPN, i.e. 2*UNUSED with no wing.
-        blref: reference.span.unwrap_or(2.0 * UNUSED),
-        roughness: reference.roughness,
-        xcg: syn.values[0],
-    };
+    let inp = Inputs::new(geometry)?;
+    let nalpha = inp.alphas.len();
+    let n = inp.x.len();
     let asymmetric = !(inp.zl[0] == UNUSED || inp.method > 1.5);
     let (method, mut c, drag, maximum_area, base_area, extra) = if asymmetric {
         let o = bodopt(&inp, point)?;
@@ -723,7 +800,7 @@ pub fn subsonic(
             extra,
         )
     } else {
-        let rt = bodyrt(&inp, point)?;
+        let rt = bodyrt(&inp, point, point.mach)?;
         let (method, c) = if inp.method > 1.5 {
             (BodyMethod::Jorgensen, bodyjm(&inp, geometry, &rt)?)
         } else {
@@ -731,7 +808,7 @@ pub fn subsonic(
         };
         let extra = (
             Some(rt.apparent_mass_factor),
-            Some(rt.eta),
+            rt.eta,
             rt.crossflow_drag,
             None,
             None,
@@ -798,21 +875,260 @@ pub fn subsonic(
         cyb,
         cnb,
         clb: vec![0.0; nalpha],
-        length: inp.x[n - 1],
-        maximum_area,
-        base_area,
-        fineness_ratio: drag.fineness_ratio,
-        length_reynolds: drag.length_reynolds,
-        cutoff_reynolds: drag.cutoff_reynolds,
-        skin_friction: drag.skin_friction,
-        wetted_area: drag.wetted_area,
-        friction_drag: drag.friction,
-        base_drag: drag.base,
-        zero_lift_drag: drag.total,
-        apparent_mass_factor,
-        eta,
-        crossflow_drag,
-        alpha_zero,
-        cm0,
+        slender: Some(SlenderBody::new(
+            inp.x[n - 1],
+            maximum_area,
+            base_area,
+            &drag,
+            (apparent_mass_factor, eta, crossflow_drag, alpha_zero, cm0),
+        )),
+        supersonic: None,
+        hypersonic: None,
     })
+}
+
+impl SlenderBody {
+    /// Gather the drag build-up plus the method values `(k, eta, crossflow
+    /// drag, alpha zero, CM0)`.
+    #[allow(clippy::type_complexity)]
+    fn new(
+        length: f32,
+        maximum_area: f32,
+        base_area: f32,
+        drag: &Drag,
+        extra: (Option<f32>, Option<f32>, Vec<f32>, Option<f32>, Option<f32>),
+    ) -> Self {
+        let (apparent_mass_factor, eta, crossflow_drag, alpha_zero, cm0) = extra;
+        SlenderBody {
+            length,
+            maximum_area,
+            base_area,
+            fineness_ratio: drag.fineness_ratio,
+            length_reynolds: drag.length_reynolds,
+            cutoff_reynolds: drag.cutoff_reynolds,
+            skin_friction: drag.skin_friction,
+            wetted_area: drag.wetted_area,
+            friction_drag: drag.friction,
+            base_drag: drag.base,
+            zero_lift_drag: drag.total,
+            apparent_mass_factor,
+            eta,
+            crossflow_drag,
+            alpha_zero,
+            cm0,
+        }
+    }
+}
+
+// The BODY(1..200) common block as the overlays leave it: CD 0.., CL 20..,
+// CM 40.., CN 60.., CA 80.., CLA 100.., CMA 120.., CYB 140.., CNB 160..,
+// CLB 180.. (0-based). The transonic/supersonic drivers below replay the
+// original overlay sequence on this array so that EXPR substitutions and
+// the UNUSED/-UNUSED markers end up exactly where the original puts them.
+const SLOTS: usize = 200;
+const CD: usize = 0;
+const CL: usize = 20;
+const CM: usize = 40;
+const CN: usize = 60;
+const CA: usize = 80;
+const CLA: usize = 100;
+const CMA: usize = 120;
+const CYB: usize = 140;
+const CNB: usize = 160;
+const CLB: usize = 180;
+
+/// EXSUBT for the body: given EXPR values replace BODY's CD, CL, CM, CLA and
+/// CMA entries (EXPR slots 0/20/40/60/80). Returns KBODY, true when any of
+/// the five first entries is given. A no-op without EXPR data.
+fn exsubt(experimental: Option<&Namelist>, b: &mut [f32], nalpha: usize) -> bool {
+    let Some(data) = experimental else {
+        return false;
+    };
+    let v = &data.values;
+    let mut kbody = false;
+    for (slot, base) in [(0, CD), (20, CL), (40, CM), (60, CLA), (80, CMA)] {
+        kbody |= v[slot] != UNUSED;
+        for j in 0..nalpha {
+            if v[slot + j] != UNUSED {
+                b[base + j] = v[slot + j];
+            }
+        }
+    }
+    kbody
+}
+
+/// TBFUNX slope (hold extrapolation) of the curve at BODY(base..) at alpha j.
+fn slope(alphas: &[f32], b: &[f32], base: usize, j: usize) -> Result<f32> {
+    let curve = &b[base..base + alphas.len()];
+    Ok(interp::tbfunx_unordered(alphas, curve, alphas[j], HOLD)?.derivative)
+}
+
+/// Body-axis CN/CA from the stability-axis CL/CD in the slots, alpha j.
+fn axis_pass(alphas: &[f32], b: &mut [f32], j: usize) {
+    let a = alphas[j] / RAD;
+    let (ca, sa) = (a.cos(), a.sin());
+    b[CN + j] = b[CL + j] * ca + b[CD + j] * sa;
+    b[CA + j] = b[CD + j] * ca - b[CL + j] * sa;
+}
+
+/// Store per-alpha method curves into their BODY slots.
+fn store(b: &mut [f32], curves: &supersonic::Curves) {
+    for (base, curve) in [
+        (CD, &curves.cd),
+        (CL, &curves.cl),
+        (CM, &curves.cm),
+        (CN, &curves.cn),
+        (CA, &curves.ca),
+    ] {
+        b[base..base + curve.len()].copy_from_slice(curve);
+    }
+}
+
+/// Unpack the BODY slots into a [`BodyAero`].
+fn from_slots(b: &[f32], nalpha: usize, method: BodyMethod) -> Result<BodyAero> {
+    let take = |base: usize| -> Result<Vec<f32>> {
+        let v = b[base..base + nalpha].to_vec();
+        finite(&v)?;
+        Ok(v)
+    };
+    Ok(BodyAero {
+        method,
+        cd: take(CD)?,
+        cl: take(CL)?,
+        cm: take(CM)?,
+        cn: take(CN)?,
+        ca: take(CA)?,
+        cla: take(CLA)?,
+        cma: take(CMA)?,
+        cyb: take(CYB)?,
+        cnb: take(CNB)?,
+        clb: take(CLB)?,
+        slender: None,
+        supersonic: None,
+        hypersonic: None,
+    })
+}
+
+/// MAIN03's body path for one transonic point. BODYRT gives only the
+/// alpha(1) slopes and drag (its curves need EXPR data), SYPBOD runs in
+/// transonic mode for SBD alone, then M24O30 marks every alpha after the
+/// first as not computed (-UNUSED) and CNCA re-derives what EXPR allows.
+///
+/// `b1` is the original's B(1) as BODYRT sees it: the Mach number, except
+/// at the case's first transonic point without lifting surfaces, where
+/// MAIN03's DOL2 pre-pass (SETUP2) leaves B(1) = TRAH(6) = UNUSED.
+pub fn transonic(
+    geometry: &Geometry,
+    point: &FlightPoint,
+    experimental: Option<&Namelist>,
+    b1: f32,
+) -> Result<BodyAero> {
+    let inp = Inputs::new(geometry)?;
+    let (alphas, na) = (inp.alphas, inp.alphas.len());
+    let mut b = vec![UNUSED; SLOTS];
+    exsubt(experimental, &mut b, na);
+    // M06O06: BODYRT (BODYJM is subsonic only), EXSUBT, slope/axis pass.
+    let rt = bodyrt(&inp, point, b1)?;
+    b[CLA] = rt.coefficients.cla;
+    b[CMA] = rt.coefficients.cma;
+    let kbody = exsubt(experimental, &mut b, na);
+    let bfact = inp.cbarr / inp.blref;
+    for j in 0..na {
+        if j > 0 || kbody {
+            b[CLA + j] = slope(alphas, &b, CL, j)?;
+            b[CMA + j] = slope(alphas, &b, CM, j)?;
+        }
+        b[CYB + j] = -b[CLA + j];
+        b[CNB + j] = -bfact * b[CMA + j];
+        b[CLB + j] = 0.0;
+        axis_pass(alphas, &mut b, j);
+    }
+    // M19O23: transonic SYPBOD fills SBD only, then EXSUBT and return. The
+    // original carries on with NaN/Inf SBD (e.g. BLN unset gives a zero nose
+    // diameter); nothing reads SBD for a lone body, so rudatcom reports no
+    // SYPBOD values instead of failing the point.
+    let sbd = match supersonic::sypbod(&inp, point) {
+        Ok((sbd, _)) => Some(sbd),
+        Err(AeroError::Numerical(_)) => None,
+        Err(e) => return Err(e),
+    };
+    exsubt(experimental, &mut b, na);
+    // M24O30.
+    exsubt(experimental, &mut b, na);
+    b[CYB] = -b[CLA];
+    b[CNB] = -b[CMA] * inp.cbarr / inp.blref;
+    for j in 0..na {
+        b[CN + j] = UNUSED;
+        b[CA + j] = UNUSED;
+        if j > 0 {
+            for base in [CL, CM, CN, CA, CLA, CMA, CYB, CNB] {
+                b[base + j] = -UNUSED;
+            }
+        }
+        b[CLB + j] = 0.0;
+    }
+    exsubt(experimental, &mut b, na);
+    // CNCA (via M35O43/SECLEV): only entries with a known CL (and CD).
+    for j in 0..na {
+        let known_cl = b[CL + j].abs() != UNUSED;
+        if known_cl && j >= 1 {
+            b[CLA + j] = slope(alphas, &b, CL, j)?;
+        }
+        if known_cl && b[CD + j].abs() != UNUSED {
+            axis_pass(alphas, &mut b, j);
+        }
+    }
+    let mut out = from_slots(&b, na, BodyMethod::Transonic)?;
+    out.slender = Some(SlenderBody::new(
+        inp.x[inp.x.len() - 1],
+        rt.maximum_area,
+        rt.base_area,
+        &rt.drag,
+        (Some(rt.apparent_mass_factor), None, Vec::new(), None, None),
+    ));
+    out.supersonic = sbd;
+    Ok(out)
+}
+
+/// MAIN04's body path for one supersonic point: M26O32 (HYPBOD) for FLTCON
+/// HYPERS with METHOD = 1, else M19O23 (SYPBOD). Both form the slopes from
+/// the alpha curves; only M19O23 applies EXPR before doing so and
+/// recomputes CN/CA.
+pub fn supersonic(
+    geometry: &Geometry,
+    point: &FlightPoint,
+    experimental: Option<&Namelist>,
+    hypersonic: bool,
+) -> Result<BodyAero> {
+    let inp = Inputs::new(geometry)?;
+    let (alphas, na) = (inp.alphas, inp.alphas.len());
+    let bfact = inp.cbarr / inp.blref;
+    let mut b = vec![UNUSED; SLOTS];
+    exsubt(experimental, &mut b, na);
+    let (method, sbd, hbd) = if hypersonic {
+        let (hbd, curves) = supersonic::hypbod(&inp, point)?;
+        store(&mut b, &curves);
+        (BodyMethod::Hypersonic, None, Some(hbd))
+    } else {
+        let (sbd, curves) = supersonic::sypbod(&inp, point)?;
+        store(&mut b, &curves);
+        exsubt(experimental, &mut b, na);
+        (BodyMethod::Supersonic, Some(sbd), None)
+    };
+    for j in 0..na {
+        b[CLA + j] = slope(alphas, &b, CL, j)?;
+        b[CMA + j] = slope(alphas, &b, CM, j)?;
+        if !hypersonic {
+            axis_pass(alphas, &mut b, j);
+        }
+        b[CYB + j] = -b[CLA + j];
+        b[CNB + j] = -bfact * b[CMA + j];
+        b[CLB + j] = 0.0;
+    }
+    // MAIN04's closing EXSUBT.
+    exsubt(experimental, &mut b, na);
+    let mut out = from_slots(&b, na, method)?;
+    out.supersonic = sbd;
+    out.hypersonic = hbd;
+    Ok(out)
 }
