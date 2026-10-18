@@ -82,7 +82,7 @@ impl SurfaceGeometry {
 
 // ANGLES has its own rounded constants, distinct from CONSNT's DEG/RAD.
 #[allow(clippy::excessive_precision, clippy::approx_constant)]
-fn angles(mode: u8, arg: &mut [f32]) -> Result<()> {
+pub(crate) fn angles(mode: u8, arg: &mut [f32]) -> Result<()> {
     const CON: f32 = 1.74532925199433E-2;
     const HPI: f32 = 1.57079632679489;
     const OPI: f32 = 3.14159265358979;

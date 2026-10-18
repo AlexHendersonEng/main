@@ -123,8 +123,8 @@ const fn limits(lower: Extrapolation, upper: Extrapolation) -> Limits {
 }
 
 // FIG 4.1.5.1-27 roughness cutoff exponent vs Mach.
-const X27M: [f32; 4] = [0.0, 1.0, 2.0, 3.0];
-const X27I: [f32; 4] = [1.57780, 1.67221, 1.98509, 2.28874];
+pub(super) const X27M: [f32; 4] = [0.0, 1.0, 2.0, 3.0];
+pub(super) const X27I: [f32; 4] = [1.57780, 1.67221, 1.98509, 2.28874];
 // FIG 4.2.1.2-35B crossflow drag vs Mach normal to the axis.
 const X1217B: [f32; 14] = [
     0., 0.2, 0.3, 0.36, 0.4, 0.5, 0.6, 0.7, 0.77, 0.8, 0.86, 0.9, 0.98, 1.,

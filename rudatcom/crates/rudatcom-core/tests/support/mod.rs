@@ -122,15 +122,23 @@ pub fn run_original(reference: &Reference, input: &str, result: &str) -> String 
     fs::read_to_string(scratch.path().join(result)).unwrap_or_default()
 }
 
+/// Whether two values agree within the default tolerance (both finite).
+pub fn is_close(original: f32, rust: f32) -> bool {
+    let tolerance = Tolerance::default();
+    let error = (f64::from(original) - f64::from(rust)).abs();
+    original.is_finite()
+        && rust.is_finite()
+        && error <= tolerance.abs + tolerance.rel * f64::from(original.abs().max(rust.abs()))
+}
+
 pub fn assert_close(original: f32, rust: f32, context: &str) {
     assert!(
         original.is_finite() && rust.is_finite(),
         "{context}: non-finite value"
     );
-    let tolerance = Tolerance::default();
     let error = (f64::from(original) - f64::from(rust)).abs();
     assert!(
-        error <= tolerance.abs + tolerance.rel * f64::from(original.abs().max(rust.abs())),
+        is_close(original, rust),
         "{context}: original={original:e}, rudatcom={rust:e}, difference={error:e}"
     );
 }

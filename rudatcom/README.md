@@ -117,3 +117,27 @@ boat tails, Jorgensen with elliptic sections, rough/blunt bodies, asymmetric
 bodies, LOOP/altitude/VINF sweeps, experimental data carried by `SAVE`,
 custom STMACH/TSMACH, cone/ogive noses and boat-tail/flare tails at
 transonic and supersonic speeds, and hypersonic bodies.
+
+`rudatcom_core::aero::wing` ports the subsonic wing-alone methods into
+`PointAero::wing`:
+- **Lift** (M15O17): CALCA0 zero-lift angle with twist and camber
+  corrections, WTLIFT lift-curve slope and CLmax, and LIFTCF lift curves for
+  straight, double-delta, cranked and curved planforms.
+- **Drag** (M03O03): CDRAG skin friction, induced and FIG53A suction terms.
+- **Moment** (M31O37): CMALPH/FWDXAC aerodynamic centre and pitching moment,
+  then normal/axial force and the alpha slopes.
+- **Lateral** (M29O35/M17O21): SUBLAT wing CYbeta, Cnbeta and Clbeta,
+  including partial-span dihedral.
+
+The Mach-zero CLMCH0 pre-pass runs once per case, and `$EXPRnn` wing data
+replaces computed values, as in the original. Wing results cover the case's
+leading run of subsonic points; later points are marked `wing_deferred`
+until the transonic (7e) and supersonic (7f) wing ports land. The wing-body
+overlay (M07O07), body terms in SUBLAT/M29O35 and the DWASH downwash
+quantities are left to later checkpoints.
+
+`tests/wing.rs` instruments the original after `M17O21` and compares the
+WING results and the A/B/C/D/STB/WINGIN work arrays for every recorded
+point. It runs the 7 samples with wings plus `tests/cases/wing/`: straight,
+double-delta, cranked and curved planforms, twist, experimental data,
+forward sweep, partial dihedral and wing-body decks.

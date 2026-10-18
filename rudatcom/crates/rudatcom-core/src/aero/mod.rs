@@ -1,11 +1,13 @@
 //! Aerodynamic methods, driven per flight point like the original's MAIN00.
 //!
 //! Ported so far: body-alone aerodynamics in every regime (MAIN01's
-//! M04O04/M06O06, MAIN03's transonic body path and MAIN04's M19O23/M26O32).
-//! The lifting surfaces follow in later checkpoints.
+//! M04O04/M06O06, MAIN03's transonic body path and MAIN04's M19O23/M26O32)
+//! and the subsonic wing alone (MAIN01's wing overlays, [`wing`]). The
+//! other lifting-surface methods follow in later checkpoints.
 
 pub mod body;
 pub mod supersonic;
+pub mod wing;
 
 use crate::{
     flight::{flight_points, FlightPoint, Regime},
@@ -15,6 +17,7 @@ use crate::{
 };
 pub use body::{BodyAero, BodyMethod, SlenderBody};
 pub use supersonic::{HypersonicBody, SupersonicBody};
+pub use wing::{WingAero, WingWork};
 
 #[derive(Debug, thiserror::Error)]
 pub enum AeroError {
@@ -35,6 +38,12 @@ pub struct PointAero {
     /// yet ported (MAIN03's DOL2 pre-pass with lifting surfaces); `body` is
     /// `None` rather than an approximation.
     pub deferred: bool,
+    /// Wing-alone coefficients (subsonic so far).
+    pub wing: Option<WingAero>,
+    /// The original computes wing results here with methods not yet ported
+    /// (transonic/supersonic wing, or a subsonic point after one of those
+    /// or a bypassed point, whose persistent wing state is then unknown).
+    pub wing_deferred: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -69,8 +78,20 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
     let lifting = present("WGPLNF") || present("HTPLNF");
     // SETUP2's DONE: the DOL2 pre-pass runs once per case (INITZE resets it).
     let mut done = false;
+    let flights = flight_points(case)?;
+    // Per-case wing state; the CLMCH0 pre-pass runs here. A numerical
+    // failure there (e.g. CLAMO unset with transonic Machs) defers the wing
+    // for the whole case rather than reporting the original's inf/NaN.
+    let (mut wing_state, wing_present) = match wing::WingCase::new(geometry, &flights) {
+        Ok(state) => {
+            let present = state.is_some();
+            (state, present)
+        }
+        Err(AeroError::Numerical(_)) => (None, true),
+        Err(e) => return Err(e),
+    };
     let mut points = Vec::new();
-    for flight in flight_points(case)? {
+    for flight in flights {
         // MAIN00 runs only the hypersonic-flap (HYPEFF, HYPERS, Mach >= 5) or
         // TRNJET overlays at such points, and LOASRT (LARWB) bypasses the
         // regime overlays entirely.
@@ -80,14 +101,24 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
         let prepass = !bypass && flight.regime == Regime::Transonic && dol2 && !done;
         done |= prepass;
         let deferred = prepass && lifting && geometry.body.is_some();
+        // EXPDAT: measured data for this Mach index replaces results.
+        let experimental = case
+            .experimental(flight.mach_index + 1)
+            .map_err(|e| AeroError::Invalid(format!("experimental data: {e}")))?;
+        let experimental = experimental.as_ref();
+        // The wing state stays trustworthy only through the leading run of
+        // ported (subsonic, non-bypassed) points.
+        if bypass || flight.regime != Regime::Subsonic {
+            wing_state = None;
+        }
+        let wing = match wing_state.as_mut() {
+            Some(state) => Some(state.subsonic(&flight, experimental)?),
+            None => None,
+        };
+        let wing_deferred = wing_present && wing.is_none() && !bypass;
         let body = if geometry.body.is_none() || bypass || deferred {
             None
         } else {
-            // EXPDAT: measured data for this Mach index replaces results.
-            let experimental = case
-                .experimental(flight.mach_index + 1)
-                .map_err(|e| AeroError::Invalid(format!("experimental data: {e}")))?;
-            let experimental = experimental.as_ref();
             match flight.regime {
                 Regime::Subsonic => Some(body::subsonic(geometry, &flight, experimental)?),
                 Regime::Transonic => {
@@ -111,6 +142,8 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
             flight,
             body,
             deferred,
+            wing,
+            wing_deferred,
         });
     }
     Ok(CaseAero { points })
