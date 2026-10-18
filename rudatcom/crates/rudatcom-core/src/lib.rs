@@ -4,6 +4,9 @@
 
 pub mod compare;
 pub mod input;
+pub mod interp;
+pub mod math;
+pub mod tables;
 
 /// Errors returned by the library.
 #[derive(Debug, thiserror::Error)]
@@ -23,7 +26,7 @@ pub enum Error {
 
 /// Run a DATCOM input deck and return the `datcom.out` report text.
 ///
-/// Placeholder until the parser and methods are ported; the golden tests call this.
+/// Placeholder until the methods and report writer are ported; live reference tests call this.
 pub fn run_case(_input: &str) -> Result<String, Error> {
     Err(Error::NotImplemented)
 }
