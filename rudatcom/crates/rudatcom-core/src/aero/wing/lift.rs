@@ -306,7 +306,11 @@ impl WingCase {
                 a[153] = b[j + 22] * (1.0 + temp) - 90.0 * temp;
                 angles(&mut a[153..159])?;
                 let rat = (a[151] / a[157]).abs();
-                let dj = tb(&t3::TIR, &t3::D, rat, 0, 0)?;
+                // RAT is +Inf at alpha 0 when alpha(CLmax) < 0 (MAIN03's
+                // pre-pass); TBFUNX holds the table end for it like any
+                // large value, and the NaN CL that follows is the original's.
+                let tir_end = t3::TIR[t3::TIR.len() - 1];
+                let dj = tb(&t3::TIR, &t3::D, rat.min(tir_end), 0, 0)?;
                 // AR and AI share TIR's storage in the original.
                 let cnaa90 = if a[7] > 1.0 {
                     tb(&t3::TIR, &t3::C90I, 1.0 / a[7], 0, 0)? * a[3] / sref

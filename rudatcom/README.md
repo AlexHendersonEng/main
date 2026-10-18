@@ -132,17 +132,36 @@ transonic and supersonic speeds, and hypersonic bodies.
   wave drag, SUPLNG normal force (subsonic/supersonic leading edges, shock
   detachment, FIG60B), pitching moment and FWDXAC centre, and SUPLAT wing
   lateral derivatives.
+- **Transonic** (MAIN03's DOL2 pre-pass, M24O30/TRSONI, TRANCM, SECLEV's
+  WINGCL and CNCA): for straight-tapered wings, the case's first transonic
+  point runs the pre-pass (MAIN01 at Mach 0.6, MAIN04 at 1.4, plus
+  CLBCLC). TRSONI then fairs the lift-curve slope between the force-break
+  estimates and TRANWG's Mach 1.4 value, and computes low-AR CLmax and the
+  faired wave drag. TRANCM fairs CMalpha. WINGCL builds the CL curve between
+  `$EXPRnn` ALPOW/ALPLW, and CNCA gives normal and axial force. For other
+  planforms the original skips the pre-pass and these fairings and runs
+  only CNCA; rudatcom does the same.
 
 The Mach-zero CLMCH0 pre-pass runs once per case, and `$EXPRnn` wing data
 replaces computed values, as in the original. Wing results cover the case's
-leading run of subsonic points followed by supersonic points without a body
-or power; other points are marked `wing_deferred`.
+leading run of subsonic points, followed by transonic and supersonic points
+without a body, power or horizontal tail. Other points are marked
+`wing_deferred`. The original computes the transonic pre-pass with NaN/Inf
+intermediates for some wings (alpha 0 beyond a negative pre-pass
+alpha(CLmax)) and then discards them. Only there does rudatcom relax its
+non-finite checks, so that it reproduces the same values.
 The wing-body overlay (M07O07), body terms in SUBLAT/M29O35/SUPLAT and
 the DWASH downwash quantities are left to later checkpoints.
 
-`tests/wing.rs` instruments the original after `M17O21` and MAIN04's `M23O27`
-and compares the WING results and the A/B/C/D/STB/WINGIN (plus supersonic
-SLG) work arrays for every recorded point. It runs the 7 samples with wings plus `tests/cases/wing/`: straight,
-double-delta, cranked and curved planforms, twist, experimental data,
-forward sweep, partial dihedral, wing-body and supersonic (round/sharp
-edges, rectangular, delta, double-delta and cranked) decks.
+`tests/wing.rs` instruments the original after `M17O21`, after MAIN04's
+`M23O27` and before MAIN03's `M49O61`. It compares the WING results and the
+A/B/C/D/STB/WINGIN work arrays for every recorded point, plus SLG for
+supersonic and transonic points and TRA/SECOND for transonic points. It
+runs the 7 samples with wings plus the decks in `tests/cases/wing/`:
+- straight, double-delta, cranked and curved planforms;
+- twist, experimental data, forward sweep and partial dihedral;
+- wing-body;
+- supersonic: round and sharp edges, rectangular, delta, double-delta and
+  cranked;
+- transonic: thin and thick, unswept, low and high aspect ratio, high
+  taper, non-straight and experimental ALPOW/ALPLW decks.

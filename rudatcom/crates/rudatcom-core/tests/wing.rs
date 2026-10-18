@@ -1,7 +1,8 @@
-//! Live differential test of the wing-alone methods (checkpoints 7d and 7e).
+//! Live differential test of the wing-alone methods (checkpoints 7d-7f).
 //! The original is rebuilt with control-flow hooks only (no formulas
 //! changed) that record its wing COMMON blocks after MAIN01's and MAIN04's
-//! lateral derivatives; nothing from the original is stored.
+//! lateral derivatives and before MAIN03's M49O61; nothing from the
+//! original is stored.
 
 mod support;
 
@@ -15,13 +16,15 @@ use std::{collections::HashMap, fs};
 
 /// Build the original with probe hooks: CASE markers at the end of CHECK, a
 /// subsonic flag around MAIN00's CALL MAIN01, a wing snapshot after
-/// MAIN01's M29O35/M17O21 and a supersonic one after MAIN04's M23O27.
+/// MAIN01's M29O35/M17O21, a supersonic one after MAIN04's M23O27 and a
+/// transonic one between MAIN03's M35O43 and M49O61.
 fn reference() -> support::Reference {
     let source = support::original_source().replace('\r', "");
     let main01 = "        IF(LOASRT) GO TO 1030\n          CALL MAIN01\n";
     let lateral = "      CALL M29O35\n      CALL M17O21\n";
     let main04 = "      IF(NF .LT. 0) GO TO 1080\n      CALL M49O61\n";
-    for hook in [support::CHECK_END, main01, lateral, main04] {
+    let main03 = "      CALL M35O43\n      CALL M49O61\n";
+    for hook in [support::CHECK_END, main01, lateral, main04, main03] {
         assert_eq!(source.matches(hook).count(), 1, "hook {hook:?}");
     }
     let source = source
@@ -40,6 +43,10 @@ fn reference() -> support::Reference {
         .replace(
             main04,
             &format!("      IF(NF .GE. 0 .AND. WGPL) CALL RUDATCOM_SUPERSONIC_PROBE\n{main04}"),
+        )
+        .replace(
+            main03,
+            "      CALL M35O43\n      IF(WGPL) CALL RUDATCOM_TRANSONIC_PROBE\n      CALL M49O61\n",
         );
     support::compile(&source, include_str!("wing_driver.f90"))
 }
@@ -59,6 +66,7 @@ fn decks() -> Vec<(String, String)> {
                 "dihedral",
                 "body",
                 "supersonic",
+                "transonic",
             ]
             .iter()
             .map(|n| format!("wing/{n}.inp")),
@@ -90,11 +98,10 @@ fn snapshots(case: &str) -> Vec<HashMap<&str, Vec<f32>>> {
         .collect()
 }
 
-/// Points at which the original records a wing: subsonic MAIN01 calls and
+/// Points at which the original records a wing: subsonic MAIN01, MAIN03 and
 /// MAIN04 calls (no deck here uses power, which skips MAIN04's methods).
 fn recorded(p: &PointAero) -> bool {
-    p.wing.is_some()
-        || (p.wing_deferred && matches!(p.flight.regime, Regime::Subsonic | Regime::Supersonic))
+    p.wing.is_some() || p.wing_deferred
 }
 
 #[test]
@@ -102,6 +109,7 @@ fn wing_matches_original() {
     let reference = reference();
     let mut compared = 0;
     let mut supersonic = 0;
+    let mut transonic = 0;
     // Every mismatch is collected so one run shows the whole picture.
     let mut failures = Vec::new();
     for (deck, input) in decks() {
@@ -143,6 +151,7 @@ fn wing_matches_original() {
                 };
                 compared += 1;
                 supersonic += usize::from(r.flight.regime == Regime::Supersonic);
+                transonic += usize::from(r.flight.regime == Regime::Transonic);
                 let n = w.cl.len();
                 for (block, values) in [
                     &w.cd, &w.cl, &w.cm, &w.cn, &w.ca, &w.cla, &w.cma, &w.cyb, &w.cnb, &w.clb,
@@ -164,8 +173,11 @@ fn wing_matches_original() {
                     ("STB", &work.stb),
                     ("WINGIN", &work.wingin),
                     ("SLG", &work.slg),
+                    ("TRA", &work.tra),
+                    ("SECOND", &work.second),
                 ] {
-                    // Subsonic snapshots have no SLG row.
+                    // Subsonic snapshots have no SLG row, only transonic
+                    // ones have TRA and SECOND.
                     let Some(row) = o.get(name) else {
                         continue;
                     };
@@ -174,10 +186,15 @@ fn wing_matches_original() {
                         if name == "WINGIN" && k == 14 {
                             continue;
                         }
-                        // WINGIN(64) is the LOGICAL CAMBER and SLG(94) the
-                        // LOGICAL DETACH (.TRUE. has the bit pattern 1, a
-                        // denormal within the absolute tolerance of 0).
-                        if (name == "WINGIN" && k == 63) || (name == "SLG" && k == 93) {
+                        // WINGIN(64) is the LOGICAL CAMBER, SLG(94) the
+                        // LOGICAL DETACH and SECOND(15)/(16) DONE/DOL2
+                        // (.TRUE. has the bit pattern 1, a denormal within
+                        // the absolute tolerance of 0).
+                        let logical = matches!(
+                            (name, k),
+                            ("WINGIN", 63) | ("SLG", 93) | ("SECOND", 14 | 15)
+                        );
+                        if logical {
                             if (row[k] != 0.0) != (v != 0.0) {
                                 check(name, k + 1, row[k], v);
                             }
@@ -205,5 +222,6 @@ fn wing_matches_original() {
     );
     assert!(compared > 0, "no wing points compared");
     assert!(supersonic > 0, "no supersonic wing points compared");
-    eprintln!("compared {compared} wing points ({supersonic} supersonic)");
+    assert!(transonic > 0, "no transonic wing points compared");
+    eprintln!("compared {compared} wing points ({supersonic} supersonic, {transonic} transonic)");
 }

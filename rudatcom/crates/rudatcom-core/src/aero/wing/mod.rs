@@ -7,8 +7,10 @@
 //! (COMMON /WINGD/) and WINGIN alive for the whole case, and several
 //! routines write to them (CMALPH, CDRAG, M29O35's defaults), so
 //! [`WingCase`] holds 1-based copies that persist across flight points.
-//! WING, C, D and STB are reset to UNUSED per point, as INITZ1 does.
-//! Index 0 of every array is unused so subscripts read like the Fortran.
+//! WING, C, D, STB, SLG and TRA are reset to UNUSED per point, as INITZ1
+//! does. Index 0 of every array is unused so subscripts read like the
+//! Fortran. The supersonic (MAIN04) and transonic (MAIN03) paths live in
+//! [`supersonic`] and [`transonic`].
 
 mod data;
 mod drag;
@@ -16,6 +18,7 @@ mod lateral;
 mod lift;
 mod moment;
 mod supersonic;
+mod transonic;
 
 use super::{AeroError, Result};
 use crate::{
@@ -63,8 +66,13 @@ pub struct WingWork {
     pub d: Vec<f32>,
     pub stb: Vec<f32>,
     pub wingin: Vec<f32>,
-    /// SLG(1..141); all UNUSED at subsonic points.
+    /// SLG(1..141); all UNUSED at subsonic and transonic points.
     pub slg: Vec<f32>,
+    /// TRA(1..108), the transonic work array (UNUSED in other regimes).
+    pub tra: Vec<f32>,
+    /// SECOND(1..23) (COMMON /LEVEL2/), the per-case DOL2 pre-pass results;
+    /// SECOND(15) DONE and SECOND(16) DOL2 hold LOGICAL bit patterns.
+    pub second: Vec<f32>,
 }
 
 /// Per-case wing state (COMMON /WINGD/, /WINGI/, /IWING/, /WHAERO/ C and
@@ -79,6 +87,14 @@ pub struct WingCase {
     stb: [f32; 136],
     /// COMMON /SUPWH/ SLG(141): supersonic work slots (see `supersonic`).
     slg: [f32; 142],
+    /// COMMON /SBETA/ TRA(108): transonic work slots (see `transonic`).
+    tra: [f32; 109],
+    /// COMMON /LEVEL2/ SECOND(23), kept for the whole case.
+    second: [f32; 24],
+    /// EXPR ALPOW/ALPLW (/EXPER/): EXPDAT resets them per point, EXSUBT
+    /// sets them from the point's EXPR namelists.
+    alpow: f32,
+    alplw: f32,
     /// A as WTGEOM leaves it, which M18O22 restores per supersonic point.
     a_geometry: [f32; 196],
     /// SYNTHS XCG, XW and ALIW (SYNA(1), SYNA(2), SYNA(4)).
@@ -207,6 +223,16 @@ impl WingCase {
             d: [UNUSED; 56],
             stb: [UNUSED; 136],
             slg: [UNUSED; 142],
+            tra: [UNUSED; 109],
+            // INITZE: SECOND = UNUSED, then DONE = DOL2 = .FALSE. (0 bits).
+            second: {
+                let mut s = [UNUSED; 24];
+                s[15] = 0.0;
+                s[16] = 0.0;
+                s
+            },
+            alpow: UNUSED,
+            alplw: UNUSED,
             a_geometry: a,
             syna: (syn.values[0], syn.values[1], syn.values[3]),
             kind,
@@ -266,13 +292,19 @@ impl WingCase {
     }
 
     /// EXSUBT for the wing: given EXPR values replace WING's CD, CL, CM,
-    /// CLA and CMA entries (EXPR slots 100/120/140/160/180). Returns KWING,
-    /// true when any of the five first entries is given.
+    /// CLA and CMA entries (EXPR slots 100/120/140/160/180), ALPOW/ALPLW
+    /// and TRA(37)/TRA(38) (ACLMW/CLMW). Returns KWING, true when any of
+    /// the five first entries is given.
     fn exsubt(&mut self, experimental: Option<&Namelist>) -> bool {
         let Some(data) = experimental else {
             return false;
         };
         let v = &data.values;
+        let given = |slot: usize, current: f32| if v[slot] != UNUSED { v[slot] } else { current };
+        self.alpow = given(461, self.alpow);
+        self.alplw = given(462, self.alplw);
+        self.tra[37] = given(465, self.tra[37]);
+        self.tra[38] = given(466, self.tra[38]);
         let mut kwing = false;
         for (slot, base) in [(100, 1), (120, 21), (140, 41), (160, 101), (180, 121)] {
             kwing |= v[slot] != UNUSED;
@@ -293,15 +325,38 @@ impl WingCase {
         point: &FlightPoint,
         experimental: Option<&Namelist>,
     ) -> Result<WingAero> {
-        self.wing.fill(UNUSED);
-        self.c.fill(UNUSED);
-        self.d.fill(UNUSED);
-        self.stb.fill(UNUSED);
+        self.main00(point);
+        self.main01(experimental)?;
+        self.result()
+    }
+
+    /// MAIN00's per-point setup: Mach index, B(1) = Mach, B(2) = beta and
+    /// A(129) = Reynolds number per unit length. EXPDAT (overlay 48) also
+    /// resets ALPOW/ALPLW for every point before EXSUBT reads them.
+    fn main00(&mut self, point: &FlightPoint) {
         self.mach = point.mach;
         self.i = point.mach_index + 1;
         self.b[1] = point.mach;
         self.b[2] = (1.0 - point.mach * point.mach).abs().sqrt();
         self.a[129] = point.reynolds;
+        self.alpow = UNUSED;
+        self.alplw = UNUSED;
+    }
+
+    /// M51O63 (INITZ1): the per-point arrays start as UNUSED.
+    fn initz1(&mut self) {
+        self.wing.fill(UNUSED);
+        self.c.fill(UNUSED);
+        self.d.fill(UNUSED);
+        self.stb.fill(UNUSED);
+        self.slg.fill(UNUSED);
+        self.tra.fill(UNUSED);
+    }
+
+    /// MAIN01's wing overlays at `self.mach` with B(1)/B(2) as set by the
+    /// caller (MAIN00, or SETUP2 in the transonic pre-pass).
+    fn main01(&mut self, experimental: Option<&Namelist>) -> Result<()> {
+        self.initz1();
         self.exsubt(experimental);
         self.a[131] = self.ain[self.i + 20];
         self.a[132] = self.ain[self.i + 40];
@@ -313,8 +368,7 @@ impl WingCase {
         self.slopes(kwing)?;
         self.exsubt(experimental);
         self.m29o35();
-        self.sublat()?;
-        self.result()
+        self.sublat()
     }
 
     fn result(&mut self) -> Result<WingAero> {
@@ -344,6 +398,8 @@ impl WingCase {
                 stb: self.stb[1..].to_vec(),
                 wingin: self.ain[1..].to_vec(),
                 slg: self.slg[1..].to_vec(),
+                tra: self.tra[1..].to_vec(),
+                second: self.second[1..].to_vec(),
             },
         })
     }

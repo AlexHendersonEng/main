@@ -94,7 +94,7 @@ const G_CNATO: usize = 140;
 /// and DEP is read with the strides of `len`, so a stale LENGTH (SUPLNG
 /// reuses LGB(1) = 12 for the 56A-F lookup at label 1350) reads the table
 /// exactly as the original does. `flags` are LX1L..LX4L, LX1U..LX4U.
-fn ix(
+pub(super) fn ix(
     table: &[f32],
     lind: usize,
     len: &[usize],
@@ -161,25 +161,17 @@ impl WingCase {
         point: &crate::flight::FlightPoint,
         experimental: Option<&crate::input::Namelist>,
     ) -> Result<super::WingAero> {
-        self.wing.fill(UNUSED);
-        self.c.fill(UNUSED);
-        self.d.fill(UNUSED);
-        self.stb.fill(UNUSED);
-        self.slg.fill(UNUSED);
-        self.mach = point.mach;
-        self.i = point.mach_index + 1;
-        self.b[1] = point.mach;
-        self.b[2] = (1.0 - point.mach * point.mach).abs().sqrt();
-        self.a[129] = point.reynolds;
+        self.main00(point);
+        self.main04(experimental)?;
+        self.result()
+    }
+
+    /// MAIN04's wing overlays at `self.mach` with B(1)/B(2) left as they are
+    /// (MAIN00's, or the transonic pre-pass's, which no routine here reads).
+    pub(super) fn main04(&mut self, experimental: Option<&crate::input::Namelist>) -> Result<()> {
+        self.initz1();
         self.exsubt(experimental);
-        // M18O22 reruns WTGEOM: slots it fills are restored, others (written
-        // by earlier subsonic points) persist. A(147..158) are INITZE angle
-        // caches that only LIFTCF rewrites.
-        for k in (1..196).filter(|k| !(147..=158).contains(k)) {
-            if self.a_geometry[k] != UNUSED {
-                self.a[k] = self.a_geometry[k];
-            }
-        }
+        self.m18o22_restore();
         self.supdrg()?;
         self.suplng()?;
         self.m27o33_slopes()?;
@@ -190,7 +182,18 @@ impl WingCase {
             self.wing[j + 140] = -UNUSED;
             self.wing[j + 160] = -UNUSED;
         }
-        self.result()
+        Ok(())
+    }
+
+    /// M18O22 reruns WTGEOM: slots it fills are restored, others (written
+    /// by earlier points) persist. A(147..158) are INITZE angle caches that
+    /// only LIFTCF rewrites.
+    pub(super) fn m18o22_restore(&mut self) {
+        for k in (1..196).filter(|k| !(147..=158).contains(k)) {
+            if self.a_geometry[k] != UNUSED {
+                self.a[k] = self.a_geometry[k];
+            }
+        }
     }
 
     /// TANLEO/TANLEI = 0 become 1e-5 inside SUPDRG/SUPLNG.
@@ -211,7 +214,7 @@ impl WingCase {
     }
 
     /// ROUGFC as M18O22 leaves it (1.6e-4 when below 1e-10).
-    fn rough(&self) -> f32 {
+    pub(super) fn rough(&self) -> f32 {
         if self.roughness < 1.0e-10 {
             1.6e-4
         } else {

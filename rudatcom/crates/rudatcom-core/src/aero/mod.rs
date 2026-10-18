@@ -2,9 +2,9 @@
 //!
 //! Ported so far: body-alone aerodynamics in every regime (MAIN01's
 //! M04O04/M06O06, MAIN03's transonic body path and MAIN04's M19O23/M26O32)
-//! and the subsonic and supersonic wing alone (MAIN01's and MAIN04's wing
-//! overlays, [`wing`]). The other lifting-surface methods follow in later
-//! checkpoints.
+//! and the wing alone in every regime but hypersonic (MAIN01's, MAIN03's
+//! and MAIN04's wing overlays, [`wing`]). The other lifting-surface methods
+//! follow in later checkpoints.
 
 pub mod body;
 pub mod supersonic;
@@ -39,12 +39,14 @@ pub struct PointAero {
     /// yet ported (MAIN03's DOL2 pre-pass with lifting surfaces); `body` is
     /// `None` rather than an approximation.
     pub deferred: bool,
-    /// Wing-alone coefficients (subsonic, and supersonic without a body).
+    /// Wing-alone coefficients (subsonic, and transonic or supersonic
+    /// without a body or power; transonic also without a horizontal tail).
     pub wing: Option<WingAero>,
     /// The original computes wing results here with methods not yet ported
-    /// (transonic wing, supersonic wing with a body or power, or a point
-    /// after one of those, a bypassed point or a subsonic point following a
-    /// supersonic one, whose persistent wing state is then unknown).
+    /// (transonic or supersonic wing with a body or power, transonic wing
+    /// with a horizontal tail, a point after one of those, a bypassed point
+    /// or a subsonic point following a transonic or supersonic one, whose
+    /// persistent wing state is then unknown).
     pub wing_deferred: bool,
 }
 
@@ -93,7 +95,7 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
         Err(e) => return Err(e),
     };
     let mut points = Vec::new();
-    let mut seen_supersonic = false;
+    let mut seen_high = false;
     for flight in flights {
         // MAIN00 runs only the hypersonic-flap (HYPEFF, HYPERS, Mach >= 5) or
         // TRNJET overlays at such points, and LOASRT (LARWB) bypasses the
@@ -110,24 +112,25 @@ pub fn analyze(geometry: &Geometry) -> Result<CaseAero> {
             .map_err(|e| AeroError::Invalid(format!("experimental data: {e}")))?;
         let experimental = experimental.as_ref();
         // The wing state stays trustworthy only through the leading run of
-        // subsonic points followed by supersonic ones (M18O22 re-derives A
-        // per supersonic point). Supersonic wings with a body or power
-        // await SUPLAT's wing-body part and the power methods.
-        let supersonic_ok =
-            flight.regime == Regime::Supersonic && !powered && geometry.body.is_none();
+        // subsonic points followed by transonic and supersonic ones (M18O22
+        // re-derives A per point there; MAIN03 and MAIN04 alter state a
+        // later MAIN01 would read). Wings with a body or power await the
+        // wing-body and power methods; a horizontal tail changes MAIN03's
+        // pre-pass, so transonic wings with one wait for the tail methods.
+        let high_ok = !powered && geometry.body.is_none();
         match flight.regime {
             _ if bypass => wing_state = None,
-            Regime::Subsonic if seen_supersonic => wing_state = None,
+            Regime::Subsonic if seen_high => wing_state = None,
             Regime::Subsonic => {}
-            Regime::Supersonic if supersonic_ok => seen_supersonic = true,
+            Regime::Supersonic if high_ok => seen_high = true,
+            Regime::Transonic if high_ok && !present("HTPLNF") => seen_high = true,
             _ => wing_state = None,
         }
-        let wing = match wing_state.as_mut() {
-            Some(state) if flight.regime == Regime::Supersonic => {
-                Some(state.supersonic(&flight, experimental)?)
-            }
-            Some(state) => Some(state.subsonic(&flight, experimental)?),
-            None => None,
+        let wing = match (wing_state.as_mut(), flight.regime) {
+            (Some(state), Regime::Supersonic) => Some(state.supersonic(&flight, experimental)?),
+            (Some(state), Regime::Transonic) => Some(state.transonic(&flight, experimental)?),
+            (Some(state), Regime::Subsonic) => Some(state.subsonic(&flight, experimental)?),
+            (None, _) => None,
         };
         let wing_deferred = wing_present && wing.is_none() && !bypass;
         let body = if geometry.body.is_none() || bypass || deferred {
@@ -198,8 +201,8 @@ mod tests {
         );
     }
 
-    /// A subsonic point after a supersonic one sees MAIN04-modified wing
-    /// state that is not modelled, so it is deferred.
+    /// A subsonic point after a supersonic (or transonic) one sees MAIN04-
+    /// or MAIN03-modified wing state that is not modelled, so it is deferred.
     #[test]
     fn subsonic_wing_after_supersonic_is_deferred() {
         let deck = " $FLTCON NMACH=3.,MACH(1)=0.4,2.0,0.5,NALPHA=2.,ALSCHD(1)=0.,4.,\n \

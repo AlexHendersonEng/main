@@ -4,13 +4,35 @@
 //! fused multiply-add can change the downstream aerodynamic results.
 
 use crate::{interp, tables::*};
+use std::cell::Cell;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 #[error("{0}")]
 pub struct MathError(pub &'static str);
 
+thread_local! {
+    /// Set while a computation whose NaN/Inf intermediates the original
+    /// discards (MAIN03's transonic pre-pass) runs; see `tolerate_non_finite`.
+    static TOLERATE: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Run `f` with the non-finite checks disabled, so NaN/Inf propagate with
+/// IEEE semantics as in the original. Only for passes whose non-finite
+/// values never reach reported results.
+pub(crate) fn tolerate_non_finite<T>(f: impl FnOnce() -> T) -> T {
+    // Restores the previous state even if `f` panics.
+    struct Restore(bool);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            TOLERATE.with(|t| t.set(self.0));
+        }
+    }
+    let _restore = Restore(TOLERATE.with(|t| t.replace(true)));
+    f()
+}
+
 pub(crate) fn finite(values: &[f32]) -> Result<(), MathError> {
-    if values.iter().all(|x| x.is_finite()) {
+    if TOLERATE.with(Cell::get) || values.iter().all(|x| x.is_finite()) {
         Ok(())
     } else {
         Err(MathError("non-finite numerical input or result"))
