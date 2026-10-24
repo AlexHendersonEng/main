@@ -1,0 +1,18 @@
+{
+  "name": "personal-marketplace",
+  "owner": {
+    "name": "Alex Henderson"
+  },
+  "metadata": {
+    "description": "Personal coding standards and skills for GitHub Copilot CLI",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "coding-standards",
+      "description": "Coding standards (formatting, documentation, British English, structure, testing) plus skills to apply them",
+      "version": "1.0.0",
+      "source": "./agent-marketplace/plugins/coding-standards"
+    }
+  ]
+}

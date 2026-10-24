@@ -1,0 +1,10 @@
+{
+  "name": "coding-standards",
+  "version": "1.0.0",
+  "description": "Coding standards (formatting, documentation, British English, structure, testing) plus skills to apply them",
+  "author": {
+    "name": "Alex Henderson"
+  },
+  "license": "MIT",
+  "keywords": ["standards", "formatting", "documentation", "testing", "cpp", "python", "typescript", "markdown"]
+}
