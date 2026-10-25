@@ -17,3 +17,8 @@ GitHub Copilot CLI:
 /plugin marketplace add ./
 /plugin install coding-standards@personal-marketplace
 ```
+
+OpenCode:
+
+OpenCode v2 loads the plugin from `.opencode/plugins/coding-standards/` automatically; no install command is needed.
+See `.opencode/plugins/coding-standards/README.md` for copying it to another project or to your global config.
