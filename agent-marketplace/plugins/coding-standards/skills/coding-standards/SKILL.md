@@ -38,4 +38,3 @@ Ask rather than guess, at any stage. List the options with their trade-offs and 
 - `restructure-modules` splits code into folders with an umbrella entry point.
 - `review-standards` audits files against these rules without editing them.
 - `format-and-lint` runs the project's own tooling.
-- `install-instructions` installs these rules as native always-on instruction files.
