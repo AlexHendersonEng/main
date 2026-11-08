@@ -5,6 +5,7 @@ description = "Aircraft design"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "aerosandbox[full]>=4.2.10",
     "avlpy",
     "charm",
     "degen-geom",
@@ -19,6 +20,9 @@ dependencies = [
     "utilities",
     "vsp-airfoils",
 ]
+
+[tool.ruff.lint.isort]
+no-lines-before = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
 [tool.uv.sources]
 vsp-airfoils = { path = "OpenVSP/python/vsp_airfoils" }
