@@ -1,9 +1,11 @@
-"""Build a simple general-aviation aircraft and run an aerodynamic study with AeroSandbox."""
+"""Study the aerodynamics and flight dynamics of a simple general-aviation aircraft with AeroSandbox."""
 
+from collections.abc import Callable
 from pathlib import Path
 import aerosandbox as asb
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import root
 
 # Save the geometry render beside this script.
 OUTPUT_GEOMETRY_PATH = Path(__file__).resolve().parent / "aircraft_demo.png"
@@ -45,6 +47,52 @@ COEFFICIENT_COLOURS = {
     "Cm": "tab:purple",
     "Cn": "tab:brown",
 }
+# Set the gravitational acceleration used by the trajectory model.
+GRAVITY = 9.81
+# Set the aircraft mass used for the six-degree-of-freedom simulations.
+TRAJECTORY_MASS = 1400.0
+# Start the trajectories at a representative cruising altitude.
+TRAJECTORY_ALTITUDE = 500.0
+# Integrate each example trajectory for eight seconds.
+TRAJECTORY_DURATION = 8.0
+# Sample the trajectory states every twentieth of a second.
+TRAJECTORY_SAMPLE_INTERVAL = 0.02
+# Limit the adaptive integrator to a tenth-of-a-second step.
+TRAJECTORY_MAX_STEP = 0.1
+# Set the start, switch and end times of every control doublet.
+TRAJECTORY_PULSE_TIMES = (1.0, 1.5, 2.0)
+# Describe the control doublet used by each example trajectory.
+TRAJECTORY_CASES = {
+    "elevator": {"control": "Elevator", "amplitude": 4.0},
+    "aileron": {"control": "Aileron", "amplitude": 4.0},
+    "rudder": {"control": "Rudder", "amplitude": 3.0},
+}
+# List the twelve state variables in integration order.
+STATE_NAMES = (
+    "x_e",
+    "y_e",
+    "z_e",
+    "u_b",
+    "v_b",
+    "w_b",
+    "phi",
+    "theta",
+    "psi",
+    "p",
+    "q",
+    "r",
+)
+# List the controls recorded in every trajectory history.
+RECORDED_CONTROLS = ("Elevator", "Aileron", "Rudder")
+# Save each trajectory plot beside this script.
+OUTPUT_TRAJECTORY_PATHS = {
+    name: Path(__file__).resolve().parent / f"aircraft_trajectory_{name}.png"
+    for name in TRAJECTORY_CASES
+}
+# Save the combined three-dimensional trajectory plot beside this script.
+OUTPUT_TRAJECTORY_3D_PATH = (
+    Path(__file__).resolve().parent / "aircraft_trajectory_3d.png"
+)
 
 
 def build_fuselage() -> asb.Fuselage:
@@ -405,6 +453,411 @@ def print_control_derivatives(
     print("Control derivatives are per radian of trailing-edge-down deflection.")
 
 
+def build_mass_properties() -> asb.MassProperties:
+    """Assemble the component masses into a combined mass-properties object."""
+    # List the mass, centre of gravity and inertia of every major component.
+    components = [
+        # Fuselage structure, systems and cabin.
+        asb.MassProperties(
+            mass=560.0,
+            x_cg=2.80,
+            y_cg=0.0,
+            z_cg=0.05,
+            Ixx=120.0,
+            Iyy=2557.0,
+            Izz=2000.0,
+        ),
+        # Main wing, including the flaps and ailerons.
+        asb.MassProperties(
+            mass=300.0,
+            x_cg=2.35,
+            y_cg=0.0,
+            z_cg=1.05,
+            Ixx=3025.0,
+            Iyy=30.0,
+            Izz=3025.0,
+        ),
+        # Horizontal stabiliser and elevator.
+        asb.MassProperties(
+            mass=45.0,
+            x_cg=6.15,
+            y_cg=0.0,
+            z_cg=0.40,
+            Ixx=49.0,
+            Iyy=3.0,
+            Izz=49.0,
+        ),
+        # Vertical stabiliser and rudder.
+        asb.MassProperties(
+            mass=35.0,
+            x_cg=6.20,
+            y_cg=0.0,
+            z_cg=0.90,
+            Ixx=5.0,
+            Iyy=5.0,
+            Izz=3.0,
+        ),
+        # Engine, propeller and accessories.
+        asb.MassProperties(
+            mass=280.0,
+            x_cg=0.60,
+            y_cg=0.0,
+            z_cg=0.0,
+            Ixx=50.0,
+            Iyy=70.0,
+            Izz=70.0,
+        ),
+        # Fuel and payload.
+        asb.MassProperties(
+            mass=180.0,
+            x_cg=2.40,
+            y_cg=0.0,
+            z_cg=0.15,
+            Ixx=40.0,
+            Iyy=60.0,
+            Izz=60.0,
+        ),
+    ]
+    # Start from the first component and add the remaining components.
+    total = components[0]
+    for component in components[1:]:
+        # Combine the component mass properties about their common centre of gravity.
+        total = total + component
+
+    # Confirm that the component masses match the intended aircraft mass.
+    if not np.isclose(total.mass, TRAJECTORY_MASS):
+        raise ValueError(
+            f"Component masses total {total.mass:.1f} kg, "
+            f"expected {TRAJECTORY_MASS:.1f} kg"
+        )
+
+    # Return the combined mass properties.
+    return total
+
+
+def reference_offset_body(
+    aircraft: asb.Airplane,
+    mass_props: asb.MassProperties,
+) -> np.ndarray:
+    """Return the aerodynamic reference point relative to the centre of gravity in body axes."""
+    # Read the aerodynamic moment reference point in geometry axes.
+    reference = np.asarray(aircraft.xyz_ref, dtype=float)
+    # Read the centre of gravity in geometry axes.
+    centre = np.asarray(
+        [mass_props.x_cg, mass_props.y_cg, mass_props.z_cg],
+        dtype=float,
+    )
+    # Form the offset in geometry axes.
+    offset = reference - centre
+
+    # Return the offset with the geometry-to-body sign changes.
+    return np.array([-offset[0], offset[1], -offset[2]])
+
+
+def body_aero_loads(
+    results: dict,
+    offset_body: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return the aerodynamic force and centre-of-gravity moment in body axes."""
+    # Extract the body-axis force components from the AeroBuildup result.
+    force = np.array([to_float(results["F_b"][axis]) for axis in range(3)])
+    # Extract the body-axis moments about the aerodynamic reference point.
+    moment = np.array([to_float(results["M_b"][axis]) for axis in range(3)])
+    # Transfer the moment to the centre of gravity.
+    moment = moment + np.cross(offset_body, force)
+
+    # Return the force and the centre-of-gravity moment.
+    return force, moment
+
+
+def trim_aircraft(
+    aircraft: asb.Airplane,
+    atmosphere: asb.Atmosphere,
+    mass_props: asb.MassProperties,
+) -> tuple[float, float]:
+    """Find the angle of attack and elevator deflection that trim the aircraft."""
+    # Locate the aerodynamic reference point relative to the centre of gravity.
+    offset_body = reference_offset_body(aircraft, mass_props)
+    # Read the reference geometry needed to non-dimensionalise the moment.
+    area = aircraft.s_ref
+    chord = aircraft.c_ref
+
+    def residual(values: np.ndarray) -> list[float]:
+        """Return the body-z force error and the centre-of-gravity pitching moment."""
+        # Unpack the angle of attack and elevator deflection in degrees.
+        alpha, elevator = values
+        # Apply the elevator deflection to the neutral aircraft.
+        deflected = aircraft.with_control_deflections({"Elevator": elevator})
+        # Build the operating point at the cruise speed and zero sideslip.
+        op_point = asb.OperatingPoint(
+            atmosphere=atmosphere,
+            velocity=CRUISE_SPEED,
+            alpha=alpha,
+            beta=0.0,
+        )
+        # Run the aerodynamic analysis at this trim guess.
+        results = asb.AeroBuildup(deflected, op_point).run()
+        # Extract the centre-of-gravity moment.
+        _, moment = body_aero_loads(results, offset_body)
+        # Resolve the lift and drag into the body-z direction.
+        alpha_rad = np.radians(alpha)
+        vertical = to_float(results["L"]) * np.cos(alpha_rad) + to_float(
+            results["D"]
+        ) * np.sin(alpha_rad)
+        # Non-dimensionalise the body-z force error and pitching moment.
+        force_error = (vertical - mass_props.mass * GRAVITY * np.cos(alpha_rad)) / (
+            mass_props.mass * GRAVITY
+        )
+        moment_coefficient = moment[1] / (op_point.dynamic_pressure() * area * chord)
+
+        # Return both trim residuals.
+        return [force_error, moment_coefficient]
+
+    # Solve the two trim equations from a level-flight initial guess.
+    solution = root(residual, [CRUISE_ALPHA, -6.0], method="hybr", tol=1e-8)
+    # Stop if the trim solve did not converge.
+    if not solution.success:
+        raise RuntimeError(f"Trim solution failed: {solution.message}")
+
+    # Return the trimmed angle of attack and elevator deflection in degrees.
+    alpha, elevator = (float(value) for value in solution.x)
+
+    return alpha, elevator
+
+
+def trim_thrust(
+    aircraft: asb.Airplane,
+    atmosphere: asb.Atmosphere,
+    mass_props: asb.MassProperties,
+    alpha: float,
+    elevator: float,
+) -> float:
+    """Return the constant thrust that balances body-axis forces at trim."""
+    # Apply the trim elevator deflection.
+    deflected = aircraft.with_control_deflections({"Elevator": elevator})
+    # Build the trim operating point.
+    op_point = asb.OperatingPoint(
+        atmosphere=atmosphere,
+        velocity=CRUISE_SPEED,
+        alpha=alpha,
+        beta=0.0,
+    )
+    # Run the aerodynamic analysis at trim.
+    results = asb.AeroBuildup(deflected, op_point).run()
+    # Balance the body-axis aerodynamic force with the weight component and thrust.
+    thrust = mass_props.mass * GRAVITY * np.sin(np.radians(alpha)) - to_float(
+        results["F_b"][0]
+    )
+
+    # Return the constant thrust.
+    return thrust
+
+
+def build_initial_state(alpha: float) -> np.ndarray:
+    """Return the level-flight state vector at the trim angle of attack."""
+    # Convert the trim angle of attack to radians.
+    alpha_rad = np.radians(alpha)
+    # Build the position, body velocity, attitude and rate states.
+    initial_state = np.array(
+        [
+            0.0,
+            0.0,
+            -TRAJECTORY_ALTITUDE,
+            CRUISE_SPEED * np.cos(alpha_rad),
+            0.0,
+            CRUISE_SPEED * np.sin(alpha_rad),
+            0.0,
+            alpha_rad,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+    )
+
+    # Return the twelve-state vector.
+    return initial_state
+
+
+def build_control_schedule(
+    trim_elevator: float,
+    control_name: str,
+    amplitude: float,
+) -> Callable[[float], dict[str, float]]:
+    """Return a doublet schedule for one control surface relative to trim."""
+    # Read the doublet timing.
+    start, switch, end = TRAJECTORY_PULSE_TIMES
+
+    def schedule(time_value: float) -> dict[str, float]:
+        """Return the control deflections at one time."""
+        # Start from the trim elevator and neutral lateral controls.
+        deflections = {
+            "Elevator": trim_elevator,
+            "Aileron": 0.0,
+            "Rudder": 0.0,
+        }
+        # Select the sign of the doublet at this time.
+        sign = 0.0
+        if start <= time_value < switch:
+            sign = 1.0
+        elif switch <= time_value < end:
+            sign = -1.0
+        # Add the doublet to the active control surface.
+        deflections[control_name] += sign * amplitude
+
+        # Return the complete deflection set.
+        return deflections
+
+    # Return the time-dependent schedule.
+    return schedule
+
+
+def simulate_trajectory(
+    aircraft: asb.Airplane,
+    mass_props: asb.MassProperties,
+    atmosphere: asb.Atmosphere,
+    initial_state: np.ndarray,
+    control_schedule: Callable[[float], dict[str, float]],
+    thrust: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Integrate the six-degree-of-freedom equations of motion for one trajectory."""
+    # Locate the aerodynamic reference point relative to the centre of gravity.
+    offset_body = reference_offset_body(aircraft, mass_props)
+
+    def equations_of_motion(time_value: float, state: np.ndarray) -> np.ndarray:
+        """Return the twelve state derivatives at one integration step."""
+        # Create a dynamics object for the current state.
+        dynamics = asb.DynamicsRigidBody3DBodyEuler(mass_props=mass_props)
+        # Unpack the twelve state variables.
+        (
+            dynamics.x_e,
+            dynamics.y_e,
+            dynamics.z_e,
+            dynamics.u_b,
+            dynamics.v_b,
+            dynamics.w_b,
+            dynamics.phi,
+            dynamics.theta,
+            dynamics.psi,
+            dynamics.p,
+            dynamics.q,
+            dynamics.r,
+        ) = state
+        # Guard against a stationary operating point.
+        speed = max(float(dynamics.speed), 5.0)
+        # Build the operating point from the current body-axis state.
+        op_point = asb.OperatingPoint(
+            atmosphere=atmosphere,
+            velocity=speed,
+            alpha=float(dynamics.alpha),
+            beta=float(dynamics.beta),
+            p=float(dynamics.p),
+            q=float(dynamics.q),
+            r=float(dynamics.r),
+        )
+        # Apply the scheduled control deflections.
+        configured = aircraft.with_control_deflections(control_schedule(time_value))
+        # Run the aerodynamic analysis at the current state.
+        results = asb.AeroBuildup(configured, op_point).run()
+        # Extract the body-axis force and centre-of-gravity moment.
+        force, moment = body_aero_loads(results, offset_body)
+        # Add the aerodynamic force and moment.
+        dynamics.add_force(*force, axes="body")
+        dynamics.add_moment(*moment, axes="body")
+        # Add the weight in earth axes.
+        dynamics.add_force(
+            0.0,
+            0.0,
+            mass_props.mass * GRAVITY,
+            axes="earth",
+        )
+        # Add the constant thrust along the body x-axis.
+        dynamics.add_force(thrust, 0.0, 0.0, axes="body")
+        # Compute the state derivatives.
+        derivatives = dynamics.state_derivatives()
+
+        # Return the derivatives in integration order.
+        return np.array([derivatives[name] for name in STATE_NAMES])
+
+    # Build the regular sample times for the trajectory.
+    sample_times = np.arange(
+        0.0,
+        TRAJECTORY_DURATION + TRAJECTORY_SAMPLE_INTERVAL,
+        TRAJECTORY_SAMPLE_INTERVAL,
+    )
+    # Integrate the equations of motion.
+    solution = asb.numpy.integrate.solve_ivp(
+        equations_of_motion,
+        (0.0, TRAJECTORY_DURATION),
+        initial_state,
+        method="RK45",
+        t_eval=sample_times,
+        rtol=1e-4,
+        atol=1e-6,
+        max_step=TRAJECTORY_MAX_STEP,
+    )
+    # Stop if the integrator did not converge.
+    if not solution.success:
+        raise RuntimeError(f"Trajectory integration failed: {solution.message}")
+
+    # Return the sample times and states.
+    return solution.t, solution.y
+
+
+def print_trajectory_setup(
+    mass_props: asb.MassProperties,
+    alpha: float,
+    elevator: float,
+    thrust: float,
+) -> None:
+    """Print the mass properties and trim condition used by the trajectories."""
+    print()
+    print("Six-degree-of-freedom trajectory setup")
+    print("--------------------------------------")
+    # Print the mass properties.
+    print(f"Mass: {mass_props.mass:.1f} kg")
+    print(
+        "Centre of gravity: "
+        f"[{mass_props.x_cg:.3f}, {mass_props.y_cg:.3f}, {mass_props.z_cg:.3f}] m"
+    )
+    print(
+        f"Inertia: Ixx = {mass_props.Ixx:.1f}, "
+        f"Iyy = {mass_props.Iyy:.1f}, "
+        f"Izz = {mass_props.Izz:.1f} kg m^2"
+    )
+    # Print the trim condition and thrust.
+    print(f"Trim angle of attack: {alpha:.3f} deg")
+    print(f"Trim elevator deflection: {elevator:.3f} deg")
+    print(f"Trim thrust: {thrust:.1f} N")
+    # Print the trajectory settings.
+    print(f"Constant-atmosphere altitude: {TRAJECTORY_ALTITUDE:.1f} m")
+    print(f"Simulation duration: {TRAJECTORY_DURATION:.1f} s")
+
+
+def print_trajectory_summary(name: str, states: np.ndarray) -> None:
+    """Print the peak response of one trajectory."""
+    # Convert the attitude and rate states to degrees.
+    phi = np.degrees(states[6])
+    theta = np.degrees(states[7])
+    psi = np.degrees(states[8])
+    p = np.degrees(states[9])
+    q = np.degrees(states[10])
+    r = np.degrees(states[11])
+    # Compute the altitude and airspeed histories.
+    altitude = -states[2]
+    speed = np.sqrt(states[3] ** 2 + states[4] ** 2 + states[5] ** 2)
+    # Print the response ranges.
+    print(f"{name.capitalize()} doublet:")
+    print(f"  Bank range: {phi.min(): .2f} to {phi.max(): .2f} deg")
+    print(f"  Pitch range: {theta.min(): .2f} to {theta.max(): .2f} deg")
+    print(f"  Yaw range: {psi.min(): .2f} to {psi.max(): .2f} deg")
+    print(f"  Roll rate range: {p.min(): .2f} to {p.max(): .2f} deg/s")
+    print(f"  Pitch rate range: {q.min(): .2f} to {q.max(): .2f} deg/s")
+    print(f"  Yaw rate range: {r.min(): .2f} to {r.max(): .2f} deg/s")
+    print(f"  Altitude range: {altitude.min(): .2f} to {altitude.max(): .2f} m")
+    print(f"  Airspeed range: {speed.min(): .2f} to {speed.max(): .2f} m/s")
+
+
 def plot_aircraft(aircraft: asb.Airplane) -> None:
     """Draw the aircraft in an isometric view and save the figure."""
     # Draw the complete aircraft with AeroSandbox, deferring display.
@@ -640,8 +1093,117 @@ def plot_control_derivatives(derivatives: dict[str, dict[str, float]]) -> None:
     print(f"Saved control-derivative plots to: {OUTPUT_CONTROL_DERIVATIVE_PATH}")
 
 
+def plot_trajectory(
+    name: str,
+    times: np.ndarray,
+    states: np.ndarray,
+    control_history: dict[str, np.ndarray],
+    control_name: str,
+    output_path: Path,
+) -> None:
+    """Plot one six-degree-of-freedom trajectory and save the figure."""
+    # Extract the position and velocity histories.
+    x_e = states[0]
+    z_e = states[2]
+    u_b = states[3]
+    v_b = states[4]
+    w_b = states[5]
+    # Convert the attitude and rate histories to degrees.
+    phi = np.degrees(states[6])
+    theta = np.degrees(states[7])
+    psi = np.degrees(states[8])
+    p = np.degrees(states[9])
+    q = np.degrees(states[10])
+    r = np.degrees(states[11])
+    # Compute the airspeed, altitude and aerodynamic angles.
+    speed = np.sqrt(u_b**2 + v_b**2 + w_b**2)
+    altitude = -z_e
+    alpha = np.degrees(np.arctan2(w_b, u_b))
+    beta = np.degrees(np.arctan2(v_b, np.hypot(u_b, w_b)))
+    # Create a three-by-two panel of trajectory plots.
+    figure, axes = plt.subplots(3, 2, figsize=(13, 11))
+    # Plot the active control input.
+    axes[0, 0].plot(times, control_history[control_name], color="tab:red")
+    axes[0, 0].set_xlabel("Time [s]")
+    axes[0, 0].set_ylabel(f"{control_name} deflection [deg]")
+    axes[0, 0].set_title(f"{control_name} doublet")
+    axes[0, 0].grid(True, alpha=0.3)
+    # Plot the Euler angles.
+    for values, label in ((phi, "phi"), (theta, "theta"), (psi, "psi")):
+        axes[0, 1].plot(times, values, label=label)
+    axes[0, 1].set_xlabel("Time [s]")
+    axes[0, 1].set_ylabel("Attitude [deg]")
+    axes[0, 1].set_title("Euler angles")
+    axes[0, 1].legend()
+    axes[0, 1].grid(True, alpha=0.3)
+    # Plot the body angular rates.
+    for values, label in ((p, "p"), (q, "q"), (r, "r")):
+        axes[1, 0].plot(times, values, label=label)
+    axes[1, 0].set_xlabel("Time [s]")
+    axes[1, 0].set_ylabel("Body rate [deg/s]")
+    axes[1, 0].set_title("Angular rates")
+    axes[1, 0].legend()
+    axes[1, 0].grid(True, alpha=0.3)
+    # Plot the airspeed on the left axis.
+    axes[1, 1].plot(times, speed, color="tab:blue")
+    axes[1, 1].set_xlabel("Time [s]")
+    axes[1, 1].set_ylabel("Airspeed [m/s]", color="tab:blue")
+    axes[1, 1].tick_params(axis="y", labelcolor="tab:blue")
+    axes[1, 1].set_title("Airspeed and altitude")
+    axes[1, 1].grid(True, alpha=0.3)
+    # Plot the altitude on the right axis.
+    altitude_axis = axes[1, 1].twinx()
+    altitude_axis.plot(times, altitude, color="tab:green")
+    altitude_axis.set_ylabel("Altitude [m]", color="tab:green")
+    altitude_axis.tick_params(axis="y", labelcolor="tab:green")
+    # Plot the aerodynamic angles.
+    axes[2, 0].plot(times, alpha, label="alpha")
+    axes[2, 0].plot(times, beta, label="beta")
+    axes[2, 0].set_xlabel("Time [s]")
+    axes[2, 0].set_ylabel("Angle [deg]")
+    axes[2, 0].set_title("Aerodynamic angles")
+    axes[2, 0].legend()
+    axes[2, 0].grid(True, alpha=0.3)
+    # Plot the flown path in the vertical plane.
+    axes[2, 1].plot(x_e, altitude, color="tab:purple")
+    axes[2, 1].set_xlabel("Earth x [m]")
+    axes[2, 1].set_ylabel("Altitude [m]")
+    axes[2, 1].set_title("Flight path")
+    axes[2, 1].grid(True, alpha=0.3)
+    # Add a shared title and tidy the panel spacing.
+    figure.suptitle(f"Six-degree-of-freedom response: {name} doublet")
+    figure.tight_layout(rect=(0, 0, 1, 0.97))
+    # Save a high-resolution copy of the trajectory figure.
+    figure.savefig(output_path, dpi=200, bbox_inches="tight")
+    # Report the output location.
+    print(f"Saved {name} trajectory plot to: {output_path}")
+
+
+def plot_trajectories_3d(
+    trajectories: dict[str, tuple[np.ndarray, np.ndarray]],
+) -> None:
+    """Plot all example trajectories in a three-dimensional view."""
+    # Create a single three-dimensional axis.
+    figure = plt.figure(figsize=(11, 8))
+    axis = figure.add_subplot(111, projection="3d")
+    # Plot each trajectory with its own colour.
+    for name, (_, states) in trajectories.items():
+        axis.plot(states[0], states[1], -states[2], label=name.capitalize())
+    # Label the axes and set a readable box shape.
+    axis.set_xlabel("Earth x [m]")
+    axis.set_ylabel("Earth y [m]")
+    axis.set_zlabel("Altitude [m]")
+    axis.set_title("Six-degree-of-freedom trajectories")
+    axis.set_box_aspect((2.0, 1.0, 0.4))
+    axis.legend()
+    # Save a high-resolution copy of the combined plot.
+    figure.savefig(OUTPUT_TRAJECTORY_3D_PATH, dpi=200, bbox_inches="tight")
+    # Report the output location.
+    print(f"Saved combined trajectory plot to: {OUTPUT_TRAJECTORY_3D_PATH}")
+
+
 def main() -> None:
-    """Build the aircraft, run the aerodynamic study, report results and plot them."""
+    """Run the aerodynamic study and trajectory simulations, report results and plot them."""
     # Build the complete geometry.
     aircraft = build_aircraft()
     # Use sea-level conditions for the study.
@@ -677,6 +1239,66 @@ def main() -> None:
     plot_aero_study(alpha_values, alpha_results, beta_values, beta_results)
     plot_control_surface_response(CONTROL_SWEEP_RANGES, control_results)
     plot_control_derivatives(control_derivatives)
+    # Build the mass properties used by the trajectory simulations.
+    mass_props = build_mass_properties()
+    # Use a constant atmosphere at the initial trajectory altitude.
+    trajectory_atmosphere = asb.Atmosphere(altitude=TRAJECTORY_ALTITUDE)
+    # Trim the aircraft for level flight.
+    trim_alpha, trim_elevator = trim_aircraft(
+        aircraft,
+        trajectory_atmosphere,
+        mass_props,
+    )
+    # Compute the constant thrust that balances drag at trim.
+    thrust = trim_thrust(
+        aircraft,
+        trajectory_atmosphere,
+        mass_props,
+        trim_alpha,
+        trim_elevator,
+    )
+    # Report the trajectory setup.
+    print_trajectory_setup(mass_props, trim_alpha, trim_elevator, thrust)
+    # Build the common initial state for every trajectory.
+    initial_state = build_initial_state(trim_alpha)
+    # Store each trajectory for the combined plot.
+    trajectories = {}
+    for name, case in TRAJECTORY_CASES.items():
+        # Build the control doublet for this case.
+        schedule = build_control_schedule(
+            trim_elevator,
+            case["control"],
+            case["amplitude"],
+        )
+        # Integrate the six-degree-of-freedom trajectory.
+        times, states = simulate_trajectory(
+            aircraft,
+            mass_props,
+            trajectory_atmosphere,
+            initial_state,
+            schedule,
+            thrust,
+        )
+        # Record the control history at every sample time.
+        control_history = {
+            control: np.array([schedule(time_value)[control] for time_value in times])
+            for control in RECORDED_CONTROLS
+        }
+        # Store the trajectory for the combined plot.
+        trajectories[name] = (times, states)
+        # Plot the trajectory response.
+        plot_trajectory(
+            name,
+            times,
+            states,
+            control_history,
+            case["control"],
+            OUTPUT_TRAJECTORY_PATHS[name],
+        )
+        # Report the peak response.
+        print_trajectory_summary(name, states)
+    # Plot all trajectories together in three dimensions.
+    plot_trajectories_3d(trajectories)
     # Display all figures when a GUI backend is available.
     plt.show()
 
